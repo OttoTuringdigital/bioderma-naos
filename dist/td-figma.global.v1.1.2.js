@@ -1,7 +1,7 @@
-/* TD Figma global JS Bundle v1.1.1 */
+/* TD Figma global JS Bundle v1.1.2 */
 
-/* ===== TD_Figma_All_Pages_Core_Style_GTM_v1.3.5.html ===== */
-(function(){window.TDFigmaStyleReady=window.TDFigmaStyleReady||{};window.TDFigmaStyleReady.allPages="1.3.5";}());
+/* ===== TD_Figma_All_Pages_Core_Style_GTM_v1.3.4.html ===== */
+(function(){window.TDFigmaStyleReady=window.TDFigmaStyleReady||{};window.TDFigmaStyleReady.allPages="1.3.4";}());
 
 /* ===== TD_Figma_All_Pages_ProductCard_Style_GTM_v1.0.1.html ===== */
 (function () {
@@ -168,12 +168,12 @@
   flushJobs();
 }());
 
-/* ===== TD_Figma_All_Pages_Navigation_GTM_v3.0.1.html ===== */
+/* ===== TD_Figma_All_Pages_Navigation_GTM_v3.0.2.html ===== */
 (function () {
   'use strict';
 
   var job = {
-    key: 'td-figma-navigation-v301',
+    key: 'td-figma-navigation-v302',
     ready: function () {
       return !!(window.TDFigmaData && window.TDFigmaData.allPages && window.TDFigmaData.allPages.navigation);
     },
@@ -320,13 +320,13 @@ href: item.linkUrl || ''
 };
 var closest = Core.dom.closest;
 var escapeHtml = Core.text.escapeHtml;
-var VERSION = '3.0.1';
+var VERSION = '3.0.2';
 var LOAD_ATTR = 'data-tdfn-v1-loaded';
 if (document.documentElement.getAttribute(LOAD_ATTR) === VERSION) {
 return;
 }
 document.documentElement.setAttribute(LOAD_ATTR, VERSION);
-var STYLE_ID = 'tdfn-v1-style-v135';
+var STYLE_ID = 'tdfn-v1-style-v136';
 var PORTAL_ID = 'tdfn-v1-desktop-portal';
 var DESKTOP_SELECTOR = '.nav-menu-ul';
 var DESKTOP_HOST_SELECTORS = ['.headerA__top', '.layout-nav-menu.nav-main-menu'];
@@ -368,11 +368,7 @@ maxIndex: 0,
 moved: false
 },
 observer: null,
-mobileDrawer: null,
-mobileDrawerObserver: null,
-mobileDrawerOpen: false,
-mobileRefreshTimer: null,
-mobileRenderCycle: 0
+mobileRepaintTimers: []
 };
 function injectStyle() {}
 function getItemLabel(item) {
@@ -1646,95 +1642,62 @@ source.parentNode.replaceChild(replacement, source);
 state.mobileRoot = replacement;
 bindMobile(replacement);
 }
-function rebuildMobileRoot() {
-var source = findMobileSource();
-var root;
-if (!source) {
-return;
+function clearMobileRepaintTimers() {
+var i;
+for (i = 0; i < state.mobileRepaintTimers.length; i += 1) {
+window.clearTimeout(state.mobileRepaintTimers[i]);
 }
-if (source.getAttribute('data-tdfn-v1') !== 'mobile') {
-mountMobile(source);
-root = state.mobileRoot;
-} else {
-root = source;
-state.mobileRoot = source;
+state.mobileRepaintTimers = [];
 }
-if (!root) {
-return;
+function dispatchResizeEvent() {
+var event;
+try {
+event = new Event('resize');
+} catch (error) {
+event = document.createEvent('UIEvents');
+event.initUIEvent('resize', true, false, window, 0);
 }
-resetMobileCarouselDrag();
-state.mobilePanelId = '';
-state.mobileRenderCycle += 1;
-root.innerHTML =
-'<div class="tdfn-v1-m-stage">' +
-renderMobileMain() +
-'</div>';
-root.scrollTop = 0;
-root.setAttribute(
-'data-tdfn-mobile-render-cycle',
-String(state.mobileRenderCycle)
-);
-root.offsetHeight;
+window.dispatchEvent(event);
 }
-function scheduleMobileRootRefresh(delay) {
-if (state.mobileRefreshTimer) {
-window.clearTimeout(state.mobileRefreshTimer);
-}
-state.mobileRefreshTimer = window.setTimeout(function () {
-state.mobileRefreshTimer = null;
-rebuildMobileRoot();
-syncMobileDrawerWatcher();
-}, delay || 0);
-}
-function isMobileDrawerOpen(drawer) {
-var rect;
-var computed;
-if (!drawer || !document.documentElement.contains(drawer)) {
-return false;
-}
-rect = drawer.getBoundingClientRect();
-computed = window.getComputedStyle
-? window.getComputedStyle(drawer)
-: null;
+function forceMobileRepaint() {
+var root = state.mobileRoot;
+var main;
+var rootDisplay;
+var mainTransition;
+var mainTransform;
 if (
-computed &&
-(
-computed.display === 'none' ||
-computed.visibility === 'hidden'
-)
+!root ||
+window.innerWidth >= BREAKPOINT ||
+!document.documentElement.contains(root)
 ) {
-return false;
+return;
 }
-return rect.left > -2 && rect.right > 2;
+main = root.querySelector('[data-tdfn-m-main]');
+if (!main) {
+return;
 }
-function syncMobileDrawerWatcher() {
-var drawer = document.getElementById(
-'slide-push-menu__left-container'
+rootDisplay = root.style.display;
+mainTransition = main.style.transition;
+mainTransform = main.style.transform;
+main.style.transition = 'none';
+root.style.display = 'none';
+root.offsetHeight;
+root.style.display = rootDisplay;
+main.style.transform = 'translateX(.01px)';
+main.offsetHeight;
+main.style.transform = mainTransform;
+main.offsetHeight;
+main.style.transition = mainTransition;
+dispatchResizeEvent();
+}
+function scheduleMobileRepaint() {
+clearMobileRepaintTimers();
+state.mobileRepaintTimers.push(
+window.setTimeout(forceMobileRepaint, 40)
 );
-if (!drawer || !window.MutationObserver) {
-return;
-}
-if (state.mobileDrawer === drawer) {
-return;
-}
-if (state.mobileDrawerObserver) {
-state.mobileDrawerObserver.disconnect();
-}
-state.mobileDrawer = drawer;
-state.mobileDrawerOpen = isMobileDrawerOpen(drawer);
-state.mobileDrawerObserver = new MutationObserver(function () {
-window.requestAnimationFrame(function () {
-var isOpen = isMobileDrawerOpen(drawer);
-if (isOpen && !state.mobileDrawerOpen) {
-scheduleMobileRootRefresh(0);
-}
-state.mobileDrawerOpen = isOpen;
-});
-});
-state.mobileDrawerObserver.observe(drawer, {
-attributes: true,
-attributeFilter: ['class', 'style']
-});
+state.mobileRepaintTimers.push(
+window.setTimeout(forceMobileRepaint, 360)
+);
 }
 function findDesktopSource() {
 var hosts = [];
@@ -1808,7 +1771,6 @@ mountMobile(mobile);
 } else if (mobile) {
 state.mobileRoot = mobile;
 }
-syncMobileDrawerWatcher();
 }
 function bindGlobalEvents() {
 window.addEventListener('mousemove', moveMobileCarouselDrag, false);
@@ -1821,7 +1783,7 @@ null
 );
 var link = closest(event.target, '[data-tdfn-link]', null);
 if (menuToggle) {
-scheduleMobileRootRefresh(0);
+scheduleMobileRepaint();
 }
 if (!link) {
 return;
@@ -1836,6 +1798,17 @@ td_nav_label: link.getAttribute('data-label') || '',
 td_nav_href: link.getAttribute('href') || ''
 });
 }, false);
+document.addEventListener('transitionend', function (event) {
+var drawer = event.target;
+if (
+!drawer ||
+!matches(drawer, '.slide-push-menu__left') ||
+!drawer.classList.contains('slide-push-menu__left--open')
+) {
+return;
+}
+scheduleMobileRepaint();
+}, true);
 document.addEventListener('keydown', function (event) {
 if (event.key === 'Escape' || event.keyCode === 27) {
 if (!closeMobilePanel()) {
