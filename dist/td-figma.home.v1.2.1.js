@@ -1,4 +1,4 @@
-/* TD Figma home JS Bundle v1.1.3 */
+/* TD Figma home JS Bundle v1.2.1 */
 
 /* ===== TD_Figma_Home_Style_GTM_v1.0.1.html ===== */
 (function(){window.TDFigmaStyleReady=window.TDFigmaStyleReady||{};window.TDFigmaStyleReady.homePage="1.0.1";}());

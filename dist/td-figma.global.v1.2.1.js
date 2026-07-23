@@ -1,7 +1,7 @@
-/* TD Figma global JS Bundle v1.1.3 */
+/* TD Figma global JS Bundle v1.2.1 */
 
-/* ===== TD_Figma_All_Pages_Core_Style_GTM_v1.3.5.html ===== */
-(function(){window.TDFigmaStyleReady=window.TDFigmaStyleReady||{};window.TDFigmaStyleReady.allPages="1.3.5";}());
+/* ===== TD_Figma_All_Pages_Core_Style_GTM_v1.4.1.html ===== */
+(function(){window.TDFigmaStyleReady=window.TDFigmaStyleReady||{};window.TDFigmaStyleReady.allPages="1.4.1";}());
 
 /* ===== TD_Figma_All_Pages_ProductCard_Style_GTM_v1.0.1.html ===== */
 (function () {
@@ -168,12 +168,12 @@
   flushJobs();
 }());
 
-/* ===== TD_Figma_All_Pages_Navigation_GTM_v3.1.0.html ===== */
+/* ===== TD_Figma_All_Pages_Navigation_GTM_v4.0.1.html ===== */
 (function () {
   'use strict';
 
   var job = {
-    key: 'td-figma-navigation-v310',
+    key: 'td-figma-navigation-v401',
     ready: function () {
       return !!(window.TDFigmaData && window.TDFigmaData.allPages && window.TDFigmaData.allPages.navigation);
     },
@@ -320,20 +320,20 @@ href: item.linkUrl || ''
 };
 var closest = Core.dom.closest;
 var escapeHtml = Core.text.escapeHtml;
-var VERSION = '3.1.0';
+var VERSION = '4.0.1';
 var LOAD_ATTR = 'data-tdfn-v1-loaded';
 if (document.documentElement.getAttribute(LOAD_ATTR) === VERSION) {
 return;
 }
 document.documentElement.setAttribute(LOAD_ATTR, VERSION);
-var STYLE_ID = 'tdfn-v1-style-v135';
+var STYLE_ID = 'tdfn-v1-style-v141';
 var PORTAL_ID = 'tdfn-v1-desktop-portal';
 var MOBILE_PORTAL_ID = 'tdfn-v1-mobile-portal';
+var MOBILE_LOGO_URL = 'https://i.imgur.com/URvr7w5.png';
+var MOBILE_LOGO_HREF = 'https://www.bioderma-naos.com.tw/';
 var DESKTOP_SELECTOR = '.nav-menu-ul';
 var DESKTOP_HOST_SELECTORS = ['.headerA__top', '.layout-nav-menu.nav-main-menu'];
 var DESKTOP_HOST_QUERY = DESKTOP_HOST_SELECTORS.join(',');
-var MOBILE_SELECTORS = ['.nav-slide-push-container', '.aside-section-container'];
-var MOBILE_SELECTOR_QUERY = MOBILE_SELECTORS.join(',');
 var BREAKPOINT = 992;
 var HEADER_TOP_EXTRA_SPACE = 20;
 var HEADER_BOTTOM_EXTRA_SPACE = 0;
@@ -349,13 +349,13 @@ desktopRoot: null,
 desktopSource: null,
 desktopHost: null,
 mobileRoot: null,
-mobileSource: null,
 mobilePortal: null,
-mobileDrawer: null,
-mobileDrawerObserver: null,
-mobileSyncFrame: null,
-mobileSyncUntil: 0,
-mountTimer: null,
+mobileTrigger: null,
+nativeMenuButton: null,
+mobileMenuOpen: false,
+mobilePreviousFocus: null,
+mountRetryTimer: null,
+mountRetryCount: 0,
 portal: null,
 activeDesktopId: '',
 desktopCloseTimer: null,
@@ -374,8 +374,7 @@ startIndex: 0,
 step: 0,
 maxIndex: 0,
 moved: false
-},
-observer: null
+}
 };
 function injectStyle() {}
 function getItemLabel(item) {
@@ -391,34 +390,50 @@ function isPlaceholderHref(href) {
 return !href || href === '#';
 }
 function chevronDown() {
-return '<svg class="tdfn-v1-d-chevron" viewBox="0 0 10 7" aria-hidden="true"><path d="M1 1.25 5 5.25 9 1.25" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+return '<i class="ico ico-chevron-down tdfn-v1-d-chevron" aria-hidden="true"></i>';
 }
 function chevronRight() {
-return '<svg class="tdfn-v1-m-right" viewBox="0 0 7 12" aria-hidden="true"><path d="M1 1 6 6 1 11" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+return '<i class="ico ico-chevron-right tdfn-v1-m-right" aria-hidden="true"></i>';
 }
 function backArrow() {
-return '<svg viewBox="0 0 20 20" aria-hidden="true"><path d="M12.75 4.5 7.25 10l5.5 5.5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+return '<i class="ico ico-chevron-left" aria-hidden="true"></i>';
 }
 function smallArrow(direction) {
-var path = direction === 'prev' ? 'M6.5 3 3.5 6 6.5 9' : 'M3.5 3 6.5 6 3.5 9';
-return '<svg viewBox="0 0 10 12" width="10" height="12" aria-hidden="true"><path d="'+path+'" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+var iconClass = direction === 'prev' ?
+'ico-chevron-left' :
+'ico-chevron-right';
+return '<i class="ico ' +
+iconClass +
+' tdfn-v1-m-carousel-icon" aria-hidden="true"></i>';
 }
 function socialIcons() {
 var icons = {
-facebook: '<svg viewBox="0 0 30 30" aria-hidden="true"><circle cx="15" cy="15" r="15" fill="currentColor"/><path d="M17.2 9.1h2.4V5.3c-.42-.06-1.85-.18-3.55-.18-3.5 0-5.9 2.14-5.9 6.08v3.4H6.2v4.25h3.95V29h4.84V18.85h4.04l.64-4.25h-4.68v-2.98c0-1.23.33-2.52 2.21-2.52Z" fill="#fff" transform="scale(.72) translate(5.8 3.6)"/></svg>',
-instagram: '<svg viewBox="0 0 30 30" aria-hidden="true"><circle cx="15" cy="15" r="15" fill="currentColor"/><rect x="7.2" y="7.2" width="15.6" height="15.6" rx="4.2" fill="none" stroke="#fff" stroke-width="2"/><circle cx="15" cy="15" r="3.7" fill="none" stroke="#fff" stroke-width="2"/><circle cx="20.5" cy="9.8" r="1.2" fill="#fff"/></svg>',
-line: '<svg viewBox="0 0 30 30" aria-hidden="true"><circle cx="15" cy="15" r="15" fill="currentColor"/><path d="M23.4 14.3c0-4-3.8-7.2-8.4-7.2s-8.4 3.2-8.4 7.2c0 3.55 3 6.52 7.05 7.08.27.06.65.18.74.42.08.22.05.56.03.78l-.12.74c-.04.22-.17.86.73.47.9-.38 4.86-2.86 6.63-4.9 1.23-1.35 1.74-2.73 1.74-4.6Z" fill="#fff"/><text x="15" y="16.7" text-anchor="middle" font-size="5.2" font-family="Arial,sans-serif" font-weight="700" fill="currentColor">LINE</text></svg>'
+facebook: 'ico-facebook',
+instagram: 'ico-instagram',
+line: 'ico-line'
 };
 var html = [];
+var iconClass;
 var i;
 var item;
 for (i = 0; i < DATA.social.length; i += 1) {
 item = DATA.social[i];
+iconClass = icons[item.id] || '';
 html.push(
-'<a class="tdfn-v1-social-link" href="' + escapeHtml(getItemHref(item)) + '" ' +
-'data-tdfn-link data-menu="social" data-label="' + escapeHtml(item.label) + '" ' +
-'aria-label="' + escapeHtml(item.label) + '">' +
-(icons[item.id] || '') +
+'<a class="tdfn-v1-social-link" href="' +
+escapeHtml(getItemHref(item)) +
+'" data-tdfn-link data-menu="social" data-label="' +
+escapeHtml(item.label) +
+'" aria-label="' +
+escapeHtml(item.label) +
+'">' +
+(
+iconClass ?
+'<i class="ico ' +
+iconClass +
+'" aria-hidden="true"></i>' :
+''
+) +
 '</a>'
 );
 }
@@ -1371,9 +1386,6 @@ return host;
 }
 return queryByPriority(DESKTOP_HOST_SELECTORS, document);
 }
-function findMobileSource() {
-return queryByPriority(MOBILE_SELECTORS, document);
-}
 function numericPixel(value, fallback) {
 var parsed = parseFloat(value);
 return isNaN(parsed) ? fallback : parsed;
@@ -1637,163 +1649,240 @@ state.desktopRoot = root;
 syncDesktopGeometry();
 window.requestAnimationFrame(syncDesktopGeometry);
 }
+function findNativeMenuButton() {
+var buttons = document.querySelectorAll(
+'.main-menu-btn:not([data-tdfn-v1-menu-trigger])'
+);
+var button;
+var rect;
+var i;
+for (i = 0; i < buttons.length; i += 1) {
+button = buttons[i];
+rect = button.getBoundingClientRect();
+if (
+rect.width > 0 ||
+rect.height > 0 ||
+window.innerWidth >= BREAKPOINT
+) {
+return button;
+}
+}
+return buttons.length ? buttons[0] : null;
+}
+function ensureMobileTrigger() {
+var nativeButton = findNativeMenuButton();
+var trigger;
+if (!nativeButton || !nativeButton.parentNode) {
+return null;
+}
+if (
+state.mobileTrigger &&
+document.documentElement.contains(state.mobileTrigger) &&
+state.nativeMenuButton === nativeButton
+) {
+return state.mobileTrigger;
+}
+if (
+state.mobileTrigger &&
+state.mobileTrigger.parentNode
+) {
+state.mobileTrigger.parentNode.removeChild(
+state.mobileTrigger
+);
+}
+if (
+state.nativeMenuButton &&
+state.nativeMenuButton !== nativeButton
+) {
+state.nativeMenuButton.removeAttribute(
+'data-tdfn-v1-native-menu'
+);
+state.nativeMenuButton.removeAttribute('aria-hidden');
+state.nativeMenuButton.removeAttribute('tabindex');
+}
+nativeButton.setAttribute(
+'data-tdfn-v1-native-menu',
+'hidden'
+);
+nativeButton.setAttribute('aria-hidden', 'true');
+nativeButton.setAttribute('tabindex', '-1');
+trigger = document.createElement('a');
+trigger.className =
+'main-menu-btn tdfn-v1-menu-trigger';
+trigger.href = '#';
+trigger.setAttribute(
+'data-tdfn-v1-menu-trigger',
+'true'
+);
+trigger.setAttribute('role', 'button');
+trigger.setAttribute('aria-label', '開啟主選單');
+trigger.setAttribute('aria-expanded', 'false');
+trigger.setAttribute(
+'aria-controls',
+MOBILE_PORTAL_ID
+);
+trigger.innerHTML =
+'<i class="ico ico-menu" aria-hidden="true"></i>';
+trigger.addEventListener('click', function (event) {
+event.preventDefault();
+event.stopPropagation();
+openMobileMenu();
+}, false);
+nativeButton.parentNode.insertBefore(
+trigger,
+nativeButton
+);
+state.nativeMenuButton = nativeButton;
+state.mobileTrigger = trigger;
+return trigger;
+}
 function ensureMobilePortal() {
-var portal = document.getElementById(MOBILE_PORTAL_ID);
+var portal = document.getElementById(
+MOBILE_PORTAL_ID
+);
 var root;
-if (!portal) {
+if (portal) {
+state.mobilePortal = portal;
+state.mobileRoot = portal.querySelector(
+'[data-tdfn-v1="mobile"]'
+);
+return portal;
+}
 portal = document.createElement('div');
 portal.id = MOBILE_PORTAL_ID;
-portal.setAttribute('aria-label', '手機版全站導覽');
-document.body.appendChild(portal);
-}
-root = portal.querySelector('[data-tdfn-v1="mobile"]');
-if (!root) {
-root = document.createElement('div');
-root.setAttribute('data-tdfn-v1', 'mobile');
-root.setAttribute('data-tdfn-version', VERSION);
-root.innerHTML =
+portal.className = 'tdfn-v1-mobile-portal';
+portal.setAttribute('aria-hidden', 'true');
+portal.innerHTML =
+'<button class="tdfn-v1-mobile-backdrop" ' +
+'type="button" data-tdfn-mobile-close ' +
+'aria-label="關閉主選單"></button>' +
+'<aside class="tdfn-v1-mobile-drawer" ' +
+'role="dialog" aria-modal="true" ' +
+'aria-label="全站主選單">' +
+'<header class="tdfn-v1-mobile-header">' +
+'<a class="tdfn-v1-mobile-logo" href="' +
+escapeHtml(MOBILE_LOGO_HREF) +
+'" aria-label="前往貝膚黛瑪首頁">' +
+'<img src="' +
+escapeHtml(MOBILE_LOGO_URL) +
+'" alt="BIODERMA 貝膚黛瑪">' +
+'</a>' +
+'<button class="tdfn-v1-mobile-close" ' +
+'type="button" data-tdfn-mobile-close ' +
+'aria-label="關閉主選單">' +
+'<i class="ico ico-close" aria-hidden="true"></i>' +
+'</button>' +
+'</header>' +
+'<div class="tdfn-v1-mobile-body">' +
+'<div data-tdfn-v1="mobile" ' +
+'data-tdfn-version="' +
+escapeHtml(VERSION) +
+'">' +
 '<div class="tdfn-v1-m-stage">' +
 renderMobileMain() +
-'</div>';
-portal.appendChild(root);
+'</div>' +
+'</div>' +
+'</div>' +
+'</aside>';
+document.body.appendChild(portal);
+root = portal.querySelector(
+'[data-tdfn-v1="mobile"]'
+);
 bindMobile(root);
+portal.addEventListener('click', function (event) {
+var close = closest(
+event.target,
+'[data-tdfn-mobile-close]',
+portal
+);
+if (!close) {
+return;
 }
+event.preventDefault();
+closeMobileMenu();
+}, false);
 state.mobilePortal = portal;
 state.mobileRoot = root;
 return portal;
 }
-function findMobileDrawer(source) {
-if (!source) {
-return null;
+function resetMobileMenuPanel() {
+var root = state.mobileRoot;
+var main;
+if (!root) {
+return;
 }
-return closest(
-source,
-'.slide-push-menu__left,.aside-section-container',
-null
+resetMobileCarouselDrag();
+state.mobilePanelId = '';
+root.innerHTML =
+'<div class="tdfn-v1-m-stage">' +
+renderMobileMain() +
+'</div>';
+main = root.querySelector(
+'[data-tdfn-m-main]'
+);
+if (main) {
+main.scrollTop = 0;
+}
+}
+function openMobileMenu() {
+var portal;
+var trigger;
+if (window.innerWidth >= BREAKPOINT) {
+return;
+}
+trigger = ensureMobileTrigger();
+portal = ensureMobilePortal();
+if (!trigger || !portal || state.mobileMenuOpen) {
+return;
+}
+state.mobilePreviousFocus =
+document.activeElement;
+state.mobileMenuOpen = true;
+portal.setAttribute('aria-hidden', 'false');
+portal.offsetWidth;
+portal.classList.add('is-open');
+trigger.setAttribute('aria-expanded', 'true');
+document.documentElement.classList.add(
+'tdfn-v1-mobile-menu-open'
+);
+document.body.classList.add(
+'tdfn-v1-mobile-menu-open'
 );
 }
-function isMobileDrawerOpen(drawer, source) {
-var rect;
-var computed;
-if (
-window.innerWidth >= BREAKPOINT ||
-!source ||
-!document.documentElement.contains(source)
-) {
+function closeMobileMenu(silent) {
+var portal = state.mobilePortal;
+var trigger = state.mobileTrigger;
+if (!state.mobileMenuOpen) {
 return false;
 }
+state.mobileMenuOpen = false;
+if (portal) {
+portal.classList.remove('is-open');
+portal.setAttribute('aria-hidden', 'true');
+}
+if (trigger) {
+trigger.setAttribute('aria-expanded', 'false');
+}
+document.documentElement.classList.remove(
+'tdfn-v1-mobile-menu-open'
+);
+document.body.classList.remove(
+'tdfn-v1-mobile-menu-open'
+);
+window.setTimeout(resetMobileMenuPanel, 320);
 if (
-drawer &&
-drawer.classList &&
-drawer.classList.contains('slide-push-menu__left--open')
+!silent &&
+state.mobilePreviousFocus &&
+typeof state.mobilePreviousFocus.focus === 'function'
 ) {
+state.mobilePreviousFocus.focus();
+}
+state.mobilePreviousFocus = null;
 return true;
 }
-rect = source.getBoundingClientRect();
-computed = window.getComputedStyle ?
-window.getComputedStyle(source) :
-null;
-if (
-computed &&
-(
-computed.display === 'none' ||
-computed.visibility === 'hidden'
-)
-) {
-return false;
-}
-return (
-rect.width > 0 &&
-rect.height > 0 &&
-rect.right > 0 &&
-rect.left < window.innerWidth
-);
-}
-function syncMobilePortal() {
-var source = state.mobileSource;
-var portal = state.mobilePortal;
-var drawer = state.mobileDrawer;
-var rect;
-if (!source || !portal) {
-return;
-}
-if (!document.documentElement.contains(source)) {
-portal.style.display = 'none';
-scheduleMountAll();
-return;
-}
-rect = source.getBoundingClientRect();
-portal.style.top = Math.round(rect.top) + 'px';
-portal.style.left = Math.round(rect.left) + 'px';
-portal.style.width = Math.round(rect.width) + 'px';
-portal.style.height = Math.round(rect.height) + 'px';
-portal.style.display = isMobileDrawerOpen(drawer, source) ?
-'block' :
-'none';
-}
-function runMobilePortalSync(duration) {
-state.mobileSyncUntil =
-new Date().getTime() + (duration || 420);
-if (state.mobileSyncFrame) {
-return;
-}
-function frame() {
-state.mobileSyncFrame = null;
-syncMobilePortal();
-if (new Date().getTime() < state.mobileSyncUntil) {
-state.mobileSyncFrame =
-window.requestAnimationFrame(frame);
-}
-}
-state.mobileSyncFrame =
-window.requestAnimationFrame(frame);
-}
-function bindMobileDrawer(drawer) {
-if (state.mobileDrawer === drawer) {
-return;
-}
-if (state.mobileDrawerObserver) {
-state.mobileDrawerObserver.disconnect();
-state.mobileDrawerObserver = null;
-}
-state.mobileDrawer = drawer;
-if (!drawer || !window.MutationObserver) {
-return;
-}
-state.mobileDrawerObserver =
-new MutationObserver(function () {
-runMobilePortalSync(420);
-});
-state.mobileDrawerObserver.observe(drawer, {
-attributes: true,
-attributeFilter: ['class', 'style']
-});
-}
-function mountMobile(source) {
-var portal;
-var drawer;
-if (!source) {
-return;
-}
-if (
-state.mobileSource &&
-state.mobileSource !== source &&
-document.documentElement.contains(state.mobileSource)
-) {
-state.mobileSource.removeAttribute(
-'data-tdfn-v1-native-mobile'
-);
-}
-state.mobileSource = source;
-source.setAttribute(
-'data-tdfn-v1-native-mobile',
-'hidden'
-);
-portal = ensureMobilePortal();
-drawer = findMobileDrawer(source);
-bindMobileDrawer(drawer);
-syncMobilePortal();
-return portal;
+function mountMobileMenu() {
+ensureMobileTrigger();
+ensureMobilePortal();
 }
 function findDesktopSource() {
 var hosts = [];
@@ -1858,41 +1947,16 @@ function mountAll() {
 syncHeaderVisuals();
 syncHeaderTopSpacing();
 var desktop = findDesktopSource();
-var mobile = findMobileSource();
 if (desktop) {
 mountDesktop(desktop);
 }
-if (mobile) {
-mountMobile(mobile);
-} else if (state.mobilePortal) {
-state.mobilePortal.style.display = 'none';
-}
-}
-function scheduleMountAll() {
-if (state.mountTimer) {
-return;
-}
-state.mountTimer = window.setTimeout(function () {
-state.mountTimer = null;
-mountAll();
-}, 60);
+mountMobileMenu();
 }
 function bindGlobalEvents() {
 window.addEventListener('mousemove', moveMobileCarouselDrag, false);
 window.addEventListener('mouseup', endMobileCarouselDrag, false);
 document.addEventListener('click', function (event) {
-var menuControl = closest(
-event.target,
-'[data-qe-id="header-menu-icon"],' +
-'[data-qe-id="drawer-close-icon"],' +
-'.slide-push-menu__backdrop',
-null
-);
 var link = closest(event.target, '[data-tdfn-link]', null);
-if (menuControl) {
-scheduleMountAll();
-runMobilePortalSync(500);
-}
 if (!link) {
 return;
 }
@@ -1905,21 +1969,39 @@ td_nav_menu: link.getAttribute('data-menu') || '',
 td_nav_label: link.getAttribute('data-label') || '',
 td_nav_href: link.getAttribute('href') || ''
 });
+if (
+state.mobileMenuOpen &&
+state.mobilePortal &&
+state.mobilePortal.contains(link) &&
+!isPlaceholderHref(link.getAttribute('href'))
+) {
+closeMobileMenu(true);
+}
 }, false);
 document.addEventListener('keydown', function (event) {
-if (event.key === 'Escape' || event.keyCode === 27) {
+if (event.key !== 'Escape' && event.keyCode !== 27) {
+return;
+}
+if (state.mobileMenuOpen) {
 if (!closeMobilePanel()) {
+closeMobileMenu();
+}
+return;
+}
 closeDesktop(false);
-}
-}
 });
 window.addEventListener('resize', function () {
 resetMobileCarouselDrag();
 closeDesktop(true);
 syncHeaderTopSpacing();
 syncDesktopGeometry();
-scheduleMountAll();
-runMobilePortalSync(420);
+mountAll();
+if (
+window.innerWidth >= BREAKPOINT &&
+state.mobileMenuOpen
+) {
+closeMobileMenu(true);
+}
 if (state.mobileRoot) {
 var carousels = state.mobileRoot.querySelectorAll('[data-tdfn-carousel]');
 var i;
@@ -1950,24 +2032,25 @@ var portal = ensurePortal();
 portal.addEventListener('mouseenter', clearDesktopTimer);
 portal.addEventListener('mouseleave', scheduleDesktopClose);
 }
-function startObserver() {
-if (state.observer || !window.MutationObserver) {
-return;
+function startMountRetries() {
+function retry() {
+state.mountRetryTimer = null;
+state.mountRetryCount += 1;
+mountAll();
+if (state.mountRetryCount < 10) {
+state.mountRetryTimer =
+window.setTimeout(retry, 250);
 }
-state.observer = new MutationObserver(function () {
-scheduleMountAll();
-});
-state.observer.observe(document.documentElement, {
-childList: true,
-subtree: true
-});
+}
+retry();
 }
 function init() {
 injectStyle();
-mountAll();
 bindPortalEvents();
 bindGlobalEvents();
-startObserver();
+startMountRetries();
+window.addEventListener('pageshow', mountAll);
+window.addEventListener('popstate', mountAll);
 }
 if (document.readyState === 'loading') {
 document.addEventListener('DOMContentLoaded', init);
