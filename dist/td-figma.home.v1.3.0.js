@@ -1,14 +1,234 @@
-/* TD Figma home JS Bundle v1.2.1 */
+/* TD Figma Home JavaScript Bundle v1.3.0 */
 
-/* ===== TD_Figma_Home_Style_GTM_v1.0.1.html ===== */
-(function(){window.TDFigmaStyleReady=window.TDFigmaStyleReady||{};window.TDFigmaStyleReady.homePage="1.0.1";}());
+/* TD_Figma_Home_Style_GTM_v1.1.0.html */
+(function () {
+  'use strict';
 
-/* ===== TD_Figma_Home_Slider_GTM_v2.0.0.html ===== */
+  var ROOT_ID = 'td-figma-home-root';
+  var VERSION = '1.0.0';
+  var ORDER = [
+    'slider',
+    'trust-bar',
+    'skin-carousel',
+    'hot-keywords',
+    'exclusive-offer',
+    'product-tabs',
+    'user-reviews',
+    'product-series',
+    'member-assurance'
+  ];
+  var orderMap = {};
+  var root = null;
+  var retryTimer = null;
+  var retryCount = 0;
+  var i;
+
+  for (i = 0; i < ORDER.length; i += 1) {
+    orderMap[ORDER[i]] = i;
+  }
+
+  function insertAfter(reference, node) {
+    if (!reference || !reference.parentNode) {
+      return false;
+    }
+
+    if (reference.nextSibling) {
+      reference.parentNode.insertBefore(
+        node,
+        reference.nextSibling
+      );
+    } else {
+      reference.parentNode.appendChild(node);
+    }
+
+    return true;
+  }
+
+  function placeRoot() {
+    var appRoot;
+
+    if (!root || !document.body) {
+      return false;
+    }
+
+    appRoot = document.getElementById('root');
+
+    if (
+      appRoot &&
+      appRoot.parentNode === document.body
+    ) {
+      if (
+        root.parentNode !== document.body ||
+        appRoot.nextSibling !== root
+      ) {
+        insertAfter(appRoot, root);
+      }
+
+      return true;
+    }
+
+    if (root.parentNode !== document.body) {
+      document.body.appendChild(root);
+    }
+
+    return true;
+  }
+
+  function ensureRoot() {
+    if (
+      root &&
+      document.documentElement.contains(root)
+    ) {
+      placeRoot();
+      return root;
+    }
+
+    root = document.getElementById(ROOT_ID);
+
+    if (!root) {
+      root = document.createElement('main');
+      root.id = ROOT_ID;
+      root.setAttribute(
+        'data-tdhm-v1-version',
+        VERSION
+      );
+      root.setAttribute(
+        'aria-label',
+        '首頁內容'
+      );
+    }
+
+    document.body.classList.add(
+      'tdhm-v1-active'
+    );
+
+    placeRoot();
+    return root;
+  }
+
+  function getOrder(sectionId) {
+    if (
+      Object.prototype.hasOwnProperty.call(
+        orderMap,
+        sectionId
+      )
+    ) {
+      return orderMap[sectionId];
+    }
+
+    return ORDER.length;
+  }
+
+  function mount(sectionId, node) {
+    var children;
+    var child;
+    var nodeOrder;
+    var childOrder;
+    var i;
+
+    if (!sectionId || !node) {
+      return false;
+    }
+
+    ensureRoot();
+
+    if (!root) {
+      return false;
+    }
+
+    node.setAttribute(
+      'data-tdhm-v1-section',
+      sectionId
+    );
+
+    nodeOrder = getOrder(sectionId);
+    children = root.children;
+
+    for (i = 0; i < children.length; i += 1) {
+      child = children[i];
+
+      if (child === node) {
+        continue;
+      }
+
+      childOrder = getOrder(
+        child.getAttribute(
+          'data-tdhm-v1-section'
+        ) || ''
+      );
+
+      if (childOrder > nodeOrder) {
+        root.insertBefore(node, child);
+        return true;
+      }
+    }
+
+    root.appendChild(node);
+    return true;
+  }
+
+  function unmount(node) {
+    if (
+      node &&
+      node.parentNode === root
+    ) {
+      root.removeChild(node);
+    }
+  }
+
+  function startRetries() {
+    function retry() {
+      retryTimer = null;
+      retryCount += 1;
+      ensureRoot();
+
+      if (retryCount < 8) {
+        retryTimer = window.setTimeout(
+          retry,
+          250
+        );
+      }
+    }
+
+    retry();
+  }
+
+  window.TDFigmaHomeMount = {
+    version: VERSION,
+    order: ORDER.slice(0),
+    ensureRoot: ensureRoot,
+    mount: mount,
+    unmount: unmount,
+    getRoot: function () {
+      return ensureRoot();
+    }
+  };
+
+  window.TDFigmaStyleReady =
+    window.TDFigmaStyleReady || {};
+
+  window.TDFigmaStyleReady.homePage =
+    '1.1.0';
+
+  startRetries();
+
+  window.addEventListener(
+    'pageshow',
+    ensureRoot
+  );
+
+  window.addEventListener(
+    'popstate',
+    ensureRoot
+  );
+}());
+
+/* TD_Figma_Home_Slider_GTM_v2.1.0.html */
 (function () {
   'use strict';
 
   var job = {
-    key: 'td-figma-home-slider-v200',
+    key: 'td-figma-home-slider-v210',
     ready: function () {
       return !!(window.TDFigmaData && window.TDFigmaData.homePage && window.TDFigmaData.homePage.heroSlider);
     },
@@ -16,6 +236,7 @@
 (function () {
 'use strict';
 var Core = window.TDFigmaCore;
+var HomeMount = window.TDFigmaHomeMount;
 var SOURCE_DATA = window.TDFigmaData.homePage.heroSlider;
 var CONTENT = {
 slides: (SOURCE_DATA.slides || []).map(function (item) {
@@ -32,9 +253,9 @@ var createElement = Core.dom.createElement;
 var query = Core.dom.query;
 var closest = Core.dom.closest;
 var getSafeHref = Core.url.sanitize;
-var VERSION = '2.0.0';
+var VERSION = '2.1.0';
 var CONFIG = {
-targetSelector: '.layout-center',
+slotId: 'slider',
 rootId: 'tdhs-v1-root',
 breakpoint: 992,
 autoplayDelay: 3000,
@@ -541,7 +762,7 @@ window.removeEventListener('resize', handleResize, false);
 document.removeEventListener('visibilitychange', handleVisibilityChange, false);
 }
 function mount() {
-var target = query(CONFIG.targetSelector);
+var target = HomeMount && HomeMount.getRoot();
 if (!target) {
 return false;
 }
@@ -550,34 +771,9 @@ createStructure();
 bindEvents();
 rebuild();
 }
-if (state.root.parentNode !== target) {
-target.insertBefore(state.root, target.firstChild);
-}
+HomeMount.mount(CONFIG.slotId, state.root);
 updateLayout(false);
 return true;
-}
-function scheduleMount() {
-if (state.mountTimer) {
-window.clearTimeout(state.mountTimer);
-}
-state.mountTimer = window.setTimeout(function () {
-state.mountTimer = null;
-mount();
-}, CONFIG.mountDelay);
-}
-function observeDom() {
-if (!window.MutationObserver || state.observer) {
-return;
-}
-state.observer = new MutationObserver(function () {
-if (!state.root || !document.documentElement.contains(state.root)) {
-scheduleMount();
-}
-});
-state.observer.observe(document.documentElement, {
-childList: true,
-subtree: true
-});
 }
 function destroy() {
 clearAutoplay();
@@ -613,7 +809,6 @@ destroy: destroy,
 rebuild: rebuild
 };
 mount();
-observeDom();
 }
 init();
 }());
@@ -628,12 +823,12 @@ init();
   }
 }());
 
-/* ===== TD_Figma_Home_Trust_Bar_GTM_v2.0.1.html ===== */
+/* TD_Figma_Home_Trust_Bar_GTM_v2.1.0.html */
 (function () {
   'use strict';
 
   var job = {
-    key: 'td-figma-home-trust-bar-v201',
+    key: 'td-figma-home-trust-bar-v210',
     ready: function () {
       return !!(window.TDFigmaData && window.TDFigmaData.homePage && window.TDFigmaData.homePage.trustBar);
     },
@@ -641,6 +836,7 @@ init();
 (function () {
 'use strict';
 var Core = window.TDFigmaCore;
+var HomeMount = window.TDFigmaHomeMount;
 var SOURCE_DATA = window.TDFigmaData.homePage.trustBar;
 var CONTENT = {
 items: (SOURCE_DATA.items || []).map(function (item) {
@@ -657,13 +853,10 @@ var query = Core.dom.query;
 var closest = Core.dom.closest;
 var getSafeHref = Core.url.sanitize;
 var insertAfter = Core.dom.insertAfter;
-var VERSION = '2.0.1';
+var VERSION = '2.1.0';
 var CONFIG = {
-targetSelector: '.layout-center',
-sliderSelector: '#tdhs-v1-root, [data-tdhs-v1]',
+slotId: 'trust-bar',
 rootId: 'tdht-v1-root',
-mountDelay: 60,
-fallbackDelay: 3000
 };
 var state = {
 root: null,
@@ -737,9 +930,8 @@ if (state.root) {
 state.root.removeEventListener('click', handleClick, false);
 }
 }
-function mount(allowFallback) {
-var target = query(CONFIG.targetSelector);
-var slider;
+function mount() {
+var target = HomeMount && HomeMount.getRoot();
 if (!target) {
 return false;
 }
@@ -747,65 +939,8 @@ if (!state.root) {
 createStructure();
 bindEvents();
 }
-slider = query(CONFIG.sliderSelector, target);
-if (slider) {
-if (
-state.root.parentNode !== target ||
-state.root.previousElementSibling !== slider
-) {
-insertAfter(slider, state.root);
-}
+HomeMount.mount(CONFIG.slotId, state.root);
 return true;
-}
-if (allowFallback && state.root.parentNode !== target) {
-target.insertBefore(state.root, target.firstChild);
-return true;
-}
-return false;
-}
-function scheduleMount() {
-if (state.mountTimer) {
-window.clearTimeout(state.mountTimer);
-}
-state.mountTimer = window.setTimeout(function () {
-state.mountTimer = null;
-mount(false);
-}, CONFIG.mountDelay);
-}
-function scheduleFallback() {
-if (state.fallbackTimer) {
-window.clearTimeout(state.fallbackTimer);
-}
-state.fallbackTimer = window.setTimeout(function () {
-state.fallbackTimer = null;
-mount(true);
-}, CONFIG.fallbackDelay);
-}
-function observeDom() {
-if (!window.MutationObserver || state.observer) {
-return;
-}
-state.observer = new MutationObserver(function () {
-var target = query(CONFIG.targetSelector);
-var slider = target ? query(CONFIG.sliderSelector, target) : null;
-if (
-!state.root ||
-!document.documentElement.contains(state.root) ||
-(
-slider &&
-(
-state.root.parentNode !== target ||
-state.root.previousElementSibling !== slider
-)
-)
-) {
-scheduleMount();
-}
-});
-state.observer.observe(document.documentElement, {
-childList: true,
-subtree: true
-});
 }
 function destroy() {
 if (state.mountTimer) {
@@ -836,9 +971,7 @@ version: VERSION,
 destroy: destroy,
 mount: mount
 };
-mount(false);
-scheduleFallback();
-observeDom();
+mount();
 trackEvent('td_home_trust_bar_ready', {
 td_trust_bar_count: (CONTENT.items || []).length
 });
@@ -856,12 +989,12 @@ init();
   }
 }());
 
-/* ===== TD_Figma_Home_Skin_Carousel_GTM_v2.0.0.html ===== */
+/* TD_Figma_Home_Skin_Carousel_GTM_v2.1.0.html */
 (function () {
   'use strict';
 
   var job = {
-    key: 'td-figma-home-skin-carousel-v200',
+    key: 'td-figma-home-skin-carousel-v210',
     ready: function () {
       return !!(window.TDFigmaData && window.TDFigmaData.homePage && window.TDFigmaData.homePage.skinConditionCarousel);
     },
@@ -869,6 +1002,7 @@ init();
 (function () {
 'use strict';
 var Core = window.TDFigmaCore;
+var HomeMount = window.TDFigmaHomeMount;
 var SOURCE_DATA = window.TDFigmaData.homePage.skinConditionCarousel;
 var CONTENT = {
 title: SOURCE_DATA.heading || '',
@@ -893,11 +1027,9 @@ var query = Core.dom.query;
 var closest = Core.dom.closest;
 var getSafeHref = Core.url.sanitize;
 var insertAfter = Core.dom.insertAfter;
-var VERSION = '2.0.0';
+var VERSION = '2.1.0';
 var CONFIG = {
-targetSelector: '.layout-center',
-anchorSelector: '#tdht-v1-root, [data-tdht-v1]',
-sliderSelector: '#tdhs-v1-root, [data-tdhs-v1]',
+slotId: 'skin-carousel',
 rootId: 'tdhsc-v1-root',
 breakpoint: 992,
 desktopCanvasWidth: 1300,
@@ -910,8 +1042,6 @@ mobileItemsPerPage: 2,
 mobileStep: 335,
 transitionDuration: 300,
 swipeThreshold: 42,
-mountDelay: 60,
-fallbackDelay: 3000
 };
 var state = {
 root: null,
@@ -1307,10 +1437,8 @@ window.removeEventListener('mousemove', moveDrag, false);
 window.removeEventListener('mouseup', endDrag, false);
 window.removeEventListener('resize', handleResize, false);
 }
-function mount(allowFallback) {
-var target = query(CONFIG.targetSelector);
-var anchor;
-var slider;
+function mount() {
+var target = HomeMount && HomeMount.getRoot();
 if (!target) {
 return false;
 }
@@ -1319,72 +1447,9 @@ createStructure();
 bindEvents();
 render();
 }
-anchor = query(CONFIG.anchorSelector, target);
-if (anchor) {
-if (
-state.root.parentNode !== target ||
-state.root.previousElementSibling !== anchor
-) {
-insertAfter(anchor, state.root);
-}
+HomeMount.mount(CONFIG.slotId, state.root);
 updateScale();
 return true;
-}
-if (!allowFallback) {
-return false;
-}
-slider = query(CONFIG.sliderSelector, target);
-if (slider) {
-insertAfter(slider, state.root);
-} else if (state.root.parentNode !== target) {
-target.insertBefore(state.root, target.firstChild);
-}
-updateScale();
-return true;
-}
-function scheduleMount() {
-if (state.mountTimer) {
-window.clearTimeout(state.mountTimer);
-}
-state.mountTimer = window.setTimeout(function () {
-state.mountTimer = null;
-mount(false);
-}, CONFIG.mountDelay);
-}
-function scheduleFallback() {
-if (state.fallbackTimer) {
-window.clearTimeout(state.fallbackTimer);
-}
-state.fallbackTimer = window.setTimeout(function () {
-state.fallbackTimer = null;
-mount(true);
-}, CONFIG.fallbackDelay);
-}
-function observeDom() {
-if (!window.MutationObserver || state.observer) {
-return;
-}
-state.observer = new MutationObserver(function () {
-var target = query(CONFIG.targetSelector);
-var anchor = target ? query(CONFIG.anchorSelector, target) : null;
-if (
-!state.root ||
-!document.documentElement.contains(state.root) ||
-(
-anchor &&
-(
-state.root.parentNode !== target ||
-state.root.previousElementSibling !== anchor
-)
-)
-) {
-scheduleMount();
-}
-});
-state.observer.observe(document.documentElement, {
-childList: true,
-subtree: true
-});
 }
 function destroy() {
 if (state.mountTimer) {
@@ -1425,9 +1490,7 @@ destroy: destroy,
 render: render,
 mount: mount
 };
-mount(false);
-scheduleFallback();
-observeDom();
+mount();
 trackEvent('td_home_skin_carousel_ready', {
 td_skin_carousel_count: (CONTENT.items || []).length
 });
@@ -1445,12 +1508,12 @@ init();
   }
 }());
 
-/* ===== TD_Figma_Home_Hot_Keywords_GTM_v2.0.0.html ===== */
+/* TD_Figma_Home_Hot_Keywords_GTM_v2.1.0.html */
 (function () {
   'use strict';
 
   var job = {
-    key: 'td-figma-home-hot-keywords-v200',
+    key: 'td-figma-home-hot-keywords-v210',
     ready: function () {
       return !!(window.TDFigmaData && window.TDFigmaData.homePage && window.TDFigmaData.homePage.hotKeywords);
     },
@@ -1458,6 +1521,7 @@ init();
 (function () {
 'use strict';
 var Core = window.TDFigmaCore;
+var HomeMount = window.TDFigmaHomeMount;
 var SOURCE_DATA = window.TDFigmaData.homePage.hotKeywords;
 var CONTENT = {
 title: SOURCE_DATA.heading || '',
@@ -1474,15 +1538,10 @@ var query = Core.dom.query;
 var closest = Core.dom.closest;
 var getSafeHref = Core.url.sanitize;
 var insertAfter = Core.dom.insertAfter;
-var VERSION = '2.0.0';
+var VERSION = '2.1.0';
 var CONFIG = {
-targetSelector: '.layout-center',
-anchorSelector: '#tdhsc-v1-root, [data-tdhsc-v1]',
-fallbackAnchorSelector:
-'#tdht-v1-root, [data-tdht-v1], #tdhs-v1-root, [data-tdhs-v1]',
+slotId: 'hot-keywords',
 rootId: 'tdhk-v1-root',
-mountDelay: 60,
-fallbackDelay: 3000
 };
 var state = {
 root: null,
@@ -1553,10 +1612,8 @@ if (state.root) {
 state.root.removeEventListener('click', handleClick, false);
 }
 }
-function mount(allowFallback) {
-var target = query(CONFIG.targetSelector);
-var anchor;
-var fallbackAnchor;
+function mount() {
+var target = HomeMount && HomeMount.getRoot();
 if (!target) {
 return false;
 }
@@ -1564,70 +1621,8 @@ if (!state.root) {
 createStructure();
 bindEvents();
 }
-anchor = query(CONFIG.anchorSelector, target);
-if (anchor) {
-if (
-state.root.parentNode !== target ||
-state.root.previousElementSibling !== anchor
-) {
-insertAfter(anchor, state.root);
-}
+HomeMount.mount(CONFIG.slotId, state.root);
 return true;
-}
-if (!allowFallback) {
-return false;
-}
-fallbackAnchor = query(CONFIG.fallbackAnchorSelector, target);
-if (fallbackAnchor) {
-insertAfter(fallbackAnchor, state.root);
-} else if (state.root.parentNode !== target) {
-target.insertBefore(state.root, target.firstChild);
-}
-return true;
-}
-function scheduleMount() {
-if (state.mountTimer) {
-window.clearTimeout(state.mountTimer);
-}
-state.mountTimer = window.setTimeout(function () {
-state.mountTimer = null;
-mount(false);
-}, CONFIG.mountDelay);
-}
-function scheduleFallback() {
-if (state.fallbackTimer) {
-window.clearTimeout(state.fallbackTimer);
-}
-state.fallbackTimer = window.setTimeout(function () {
-state.fallbackTimer = null;
-mount(true);
-}, CONFIG.fallbackDelay);
-}
-function observeDom() {
-if (!window.MutationObserver || state.observer) {
-return;
-}
-state.observer = new MutationObserver(function () {
-var target = query(CONFIG.targetSelector);
-var anchor = target ? query(CONFIG.anchorSelector, target) : null;
-if (
-!state.root ||
-!document.documentElement.contains(state.root) ||
-(
-anchor &&
-(
-state.root.parentNode !== target ||
-state.root.previousElementSibling !== anchor
-)
-)
-) {
-scheduleMount();
-}
-});
-state.observer.observe(document.documentElement, {
-childList: true,
-subtree: true
-});
 }
 function destroy() {
 if (state.mountTimer) {
@@ -1658,9 +1653,7 @@ version: VERSION,
 destroy: destroy,
 mount: mount
 };
-mount(false);
-scheduleFallback();
-observeDom();
+mount();
 trackEvent('td_home_hot_keywords_ready', {
 td_hot_keywords_count: (CONTENT.items || []).length
 });
@@ -1678,12 +1671,12 @@ init();
   }
 }());
 
-/* ===== TD_Figma_Home_Exclusive_Offer_GTM_v2.0.0.html ===== */
+/* TD_Figma_Home_Exclusive_Offer_GTM_v2.1.0.html */
 (function () {
   'use strict';
 
   var job = {
-    key: 'td-figma-home-exclusive-offer-v200',
+    key: 'td-figma-home-exclusive-offer-v210',
     ready: function () {
       return !!(window.TDFigmaData && window.TDFigmaData.homePage && window.TDFigmaData.homePage.exclusiveOffer);
     },
@@ -1691,6 +1684,7 @@ init();
 (function () {
 'use strict';
 var Core = window.TDFigmaCore;
+var HomeMount = window.TDFigmaHomeMount;
 var SOURCE_DATA = window.TDFigmaData.homePage.exclusiveOffer;
 var SOURCE_BANNER = SOURCE_DATA.campaignBanner || {};
 var CONTENT = {
@@ -1710,17 +1704,10 @@ var closest = Core.dom.closest;
 var getSafeHref = Core.url.sanitize;
 var getSafeImageUrl = Core.url.sanitize;
 var insertAfter = Core.dom.insertAfter;
-var VERSION = '2.0.0';
+var VERSION = '2.1.0';
 var CONFIG = {
-targetSelector: '.layout-center',
-anchorSelector: '#tdhk-v1-root, [data-tdhk-v1]',
-fallbackAnchorSelector:
-'#tdhsc-v1-root, [data-tdhsc-v1], ' +
-'#tdht-v1-root, [data-tdht-v1], ' +
-'#tdhs-v1-root, [data-tdhs-v1]',
+slotId: 'exclusive-offer',
 rootId: 'tdheo-v1-root',
-mountDelay: 60,
-fallbackDelay: 3000
 };
 var state = {
 root: null,
@@ -1808,10 +1795,8 @@ if (state.root) {
 state.root.removeEventListener('click', handleClick, false);
 }
 }
-function mount(allowFallback) {
-var target = query(CONFIG.targetSelector);
-var anchor;
-var fallbackAnchor;
+function mount() {
+var target = HomeMount && HomeMount.getRoot();
 if (!target) {
 return false;
 }
@@ -1819,70 +1804,8 @@ if (!state.root) {
 createStructure();
 bindEvents();
 }
-anchor = query(CONFIG.anchorSelector, target);
-if (anchor) {
-if (
-state.root.parentNode !== target ||
-state.root.previousElementSibling !== anchor
-) {
-insertAfter(anchor, state.root);
-}
+HomeMount.mount(CONFIG.slotId, state.root);
 return true;
-}
-if (!allowFallback) {
-return false;
-}
-fallbackAnchor = query(CONFIG.fallbackAnchorSelector, target);
-if (fallbackAnchor) {
-insertAfter(fallbackAnchor, state.root);
-} else if (state.root.parentNode !== target) {
-target.insertBefore(state.root, target.firstChild);
-}
-return true;
-}
-function scheduleMount() {
-if (state.mountTimer) {
-window.clearTimeout(state.mountTimer);
-}
-state.mountTimer = window.setTimeout(function () {
-state.mountTimer = null;
-mount(false);
-}, CONFIG.mountDelay);
-}
-function scheduleFallback() {
-if (state.fallbackTimer) {
-window.clearTimeout(state.fallbackTimer);
-}
-state.fallbackTimer = window.setTimeout(function () {
-state.fallbackTimer = null;
-mount(true);
-}, CONFIG.fallbackDelay);
-}
-function observeDom() {
-if (!window.MutationObserver || state.observer) {
-return;
-}
-state.observer = new MutationObserver(function () {
-var target = query(CONFIG.targetSelector);
-var anchor = target ? query(CONFIG.anchorSelector, target) : null;
-if (
-!state.root ||
-!document.documentElement.contains(state.root) ||
-(
-anchor &&
-(
-state.root.parentNode !== target ||
-state.root.previousElementSibling !== anchor
-)
-)
-) {
-scheduleMount();
-}
-});
-state.observer.observe(document.documentElement, {
-childList: true,
-subtree: true
-});
 }
 function destroy() {
 if (state.mountTimer) {
@@ -1913,9 +1836,7 @@ version: VERSION,
 destroy: destroy,
 mount: mount
 };
-mount(false);
-scheduleFallback();
-observeDom();
+mount();
 trackEvent('td_home_exclusive_offer_ready', {
 td_exclusive_offer_id:
 (CONTENT.banner && CONTENT.banner.id) || ''
@@ -1934,12 +1855,12 @@ init();
   }
 }());
 
-/* ===== TD_Figma_Home_Product_Tabs_GTM_v2.0.0.html ===== */
+/* TD_Figma_Home_Product_Tabs_GTM_v2.1.0.html */
 (function () {
   'use strict';
 
   var job = {
-    key: 'td-figma-home-product-tabs-v200',
+    key: 'td-figma-home-product-tabs-v210',
     ready: function () {
       return !!(window.TDFigmaData && window.TDFigmaData.homePage && window.TDFigmaData.homePage.productTabs);
     },
@@ -1947,6 +1868,7 @@ init();
 (function () {
 'use strict';
 var Core = window.TDFigmaCore;
+var HomeMount = window.TDFigmaHomeMount;
 var SOURCE_DATA = window.TDFigmaData.homePage.productTabs;
 function adaptProduct(product) {
 return {
@@ -1988,19 +1910,11 @@ var closest = Core.dom.closest;
 var getSafeHref = Core.url.sanitize;
 var getSafeImageUrl = Core.url.sanitize;
 var insertAfter = Core.dom.insertAfter;
-var VERSION = '2.0.0';
+var VERSION = '2.1.0';
 var CONFIG = {
-targetSelector: '.layout-center',
-anchorSelector: '#tdheo-v1-root, [data-tdheo-v1]',
-fallbackAnchorSelector:
-'#tdhk-v1-root, [data-tdhk-v1], ' +
-'#tdhsc-v1-root, [data-tdhsc-v1], ' +
-'#tdht-v1-root, [data-tdht-v1], ' +
-'#tdhs-v1-root, [data-tdhs-v1]',
+slotId: 'product-tabs',
 rootId: 'tdhpt-v1-root',
 defaultTabId: SOURCE_DATA.defaultTabId || 'recommended',
-mountDelay: 60,
-fallbackDelay: 3000
 };
 var state = {
 root: null,
@@ -2367,10 +2281,8 @@ return;
 state.root.removeEventListener('click', handleClick, false);
 state.root.removeEventListener('keydown', handleKeydown, false);
 }
-function mount(allowFallback) {
-var target = query(CONFIG.targetSelector);
-var anchor;
-var fallbackAnchor;
+function mount() {
+var target = HomeMount && HomeMount.getRoot();
 if (!target) {
 return false;
 }
@@ -2378,70 +2290,8 @@ if (!state.root) {
 createStructure();
 bindEvents();
 }
-anchor = query(CONFIG.anchorSelector, target);
-if (anchor) {
-if (
-state.root.parentNode !== target ||
-state.root.previousElementSibling !== anchor
-) {
-insertAfter(anchor, state.root);
-}
+HomeMount.mount(CONFIG.slotId, state.root);
 return true;
-}
-if (!allowFallback) {
-return false;
-}
-fallbackAnchor = query(CONFIG.fallbackAnchorSelector, target);
-if (fallbackAnchor) {
-insertAfter(fallbackAnchor, state.root);
-} else if (state.root.parentNode !== target) {
-target.insertBefore(state.root, target.firstChild);
-}
-return true;
-}
-function scheduleMount() {
-if (state.mountTimer) {
-window.clearTimeout(state.mountTimer);
-}
-state.mountTimer = window.setTimeout(function () {
-state.mountTimer = null;
-mount(false);
-}, CONFIG.mountDelay);
-}
-function scheduleFallback() {
-if (state.fallbackTimer) {
-window.clearTimeout(state.fallbackTimer);
-}
-state.fallbackTimer = window.setTimeout(function () {
-state.fallbackTimer = null;
-mount(true);
-}, CONFIG.fallbackDelay);
-}
-function observeDom() {
-if (!window.MutationObserver || state.observer) {
-return;
-}
-state.observer = new MutationObserver(function () {
-var target = query(CONFIG.targetSelector);
-var anchor = target ? query(CONFIG.anchorSelector, target) : null;
-if (
-!state.root ||
-!document.documentElement.contains(state.root) ||
-(
-anchor &&
-(
-state.root.parentNode !== target ||
-state.root.previousElementSibling !== anchor
-)
-)
-) {
-scheduleMount();
-}
-});
-state.observer.observe(document.documentElement, {
-childList: true,
-subtree: true
-});
 }
 function destroy() {
 if (state.mountTimer) {
@@ -2474,9 +2324,7 @@ destroy: destroy,
 mount: mount,
 activateTab: activateTab
 };
-mount(false);
-scheduleFallback();
-observeDom();
+mount();
 trackEvent('td_home_product_tabs_ready', {
 td_product_tabs_count: (CONTENT.tabs || []).length,
 td_product_tab_default: state.activeTabId
@@ -2495,12 +2343,12 @@ init();
   }
 }());
 
-/* ===== TD_Figma_Home_User_Reviews_GTM_v2.0.0.html ===== */
+/* TD_Figma_Home_User_Reviews_GTM_v2.1.0.html */
 (function () {
   'use strict';
 
   var job = {
-    key: 'td-figma-home-user-reviews-v200',
+    key: 'td-figma-home-user-reviews-v210',
     ready: function () {
       return !!(window.TDFigmaData && window.TDFigmaData.homePage && window.TDFigmaData.homePage.userReviews);
     },
@@ -2508,6 +2356,7 @@ init();
 (function () {
 'use strict';
 var Core = window.TDFigmaCore;
+var HomeMount = window.TDFigmaHomeMount;
 var SOURCE_DATA = window.TDFigmaData.homePage.userReviews;
 function adaptReviewMedia(item) {
 if ((item || {}).mediaType === 'youtube') {
@@ -2548,16 +2397,9 @@ var query = Core.dom.query;
 var closest = Core.dom.closest;
 var getSafeUrl = Core.url.sanitize;
 var insertAfter = Core.dom.insertAfter;
-var VERSION = '2.0.0';
+var VERSION = '2.1.0';
 var CONFIG = {
-targetSelector: '.layout-center',
-anchorSelector: '#tdhpt-v1-root, [data-tdhpt-v1]',
-fallbackAnchorSelector:
-'#tdheo-v1-root, [data-tdheo-v1], ' +
-'#tdhk-v1-root, [data-tdhk-v1], ' +
-'#tdhsc-v1-root, [data-tdhsc-v1], ' +
-'#tdht-v1-root, [data-tdht-v1], ' +
-'#tdhs-v1-root, [data-tdhs-v1]',
+slotId: 'user-reviews',
 rootId: 'tdhur-v1-root',
 modalId: 'tdhur-v1-modal',
 breakpoint: 992,
@@ -2567,8 +2409,6 @@ desktopSpeed: 64,
 mobileCardWidth: 190,
 mobileGap: 20,
 mobileSpeed: 32,
-mountDelay: 60,
-fallbackDelay: 3000,
 closeDuration: 300
 };
 var state = {
@@ -3182,10 +3022,8 @@ state.modal.removeEventListener('click', handleModalClick, false);
 window.removeEventListener('resize', handleResize, false);
 document.removeEventListener('keydown', handleDocumentKeydown, false);
 }
-function mount(allowFallback) {
-var target = query(CONFIG.targetSelector);
-var anchor;
-var fallbackAnchor;
+function mount() {
+var target = HomeMount && HomeMount.getRoot();
 if (!target) {
 return false;
 }
@@ -3194,70 +3032,8 @@ createStructure();
 bindEvents();
 startMarquee();
 }
-anchor = query(CONFIG.anchorSelector, target);
-if (anchor) {
-if (
-state.root.parentNode !== target ||
-state.root.previousElementSibling !== anchor
-) {
-insertAfter(anchor, state.root);
-}
+HomeMount.mount(CONFIG.slotId, state.root);
 return true;
-}
-if (!allowFallback) {
-return false;
-}
-fallbackAnchor = query(CONFIG.fallbackAnchorSelector, target);
-if (fallbackAnchor) {
-insertAfter(fallbackAnchor, state.root);
-} else if (state.root.parentNode !== target) {
-target.insertBefore(state.root, target.firstChild);
-}
-return true;
-}
-function scheduleMount() {
-if (state.mountTimer) {
-window.clearTimeout(state.mountTimer);
-}
-state.mountTimer = window.setTimeout(function () {
-state.mountTimer = null;
-mount(false);
-}, CONFIG.mountDelay);
-}
-function scheduleFallback() {
-if (state.fallbackTimer) {
-window.clearTimeout(state.fallbackTimer);
-}
-state.fallbackTimer = window.setTimeout(function () {
-state.fallbackTimer = null;
-mount(true);
-}, CONFIG.fallbackDelay);
-}
-function observeDom() {
-if (!window.MutationObserver || state.observer) {
-return;
-}
-state.observer = new MutationObserver(function () {
-var target = query(CONFIG.targetSelector);
-var anchor = target ? query(CONFIG.anchorSelector, target) : null;
-if (
-!state.root ||
-!document.documentElement.contains(state.root) ||
-(
-anchor &&
-(
-state.root.parentNode !== target ||
-state.root.previousElementSibling !== anchor
-)
-)
-) {
-scheduleMount();
-}
-});
-state.observer.observe(document.documentElement, {
-childList: true,
-subtree: true
-});
 }
 function destroy() {
 stopMarquee();
@@ -3312,11 +3088,9 @@ mount: mount,
 openReview: openModal,
 closeReview: closeModal
 };
+mount();
 createModalStructure();
 bindModalEvents();
-mount(false);
-scheduleFallback();
-observeDom();
 trackEvent('td_home_user_reviews_ready', {
 td_user_reviews_count: (CONTENT.reviews || []).length
 });
@@ -3334,12 +3108,12 @@ init();
   }
 }());
 
-/* ===== TD_Figma_Home_Product_Series_GTM_v2.0.0.html ===== */
+/* TD_Figma_Home_Product_Series_GTM_v2.1.0.html */
 (function () {
   'use strict';
 
   var job = {
-    key: 'td-figma-home-product-series-v200',
+    key: 'td-figma-home-product-series-v210',
     ready: function () {
       return !!(window.TDFigmaData && window.TDFigmaData.homePage && window.TDFigmaData.homePage.productSeries);
     },
@@ -3347,6 +3121,7 @@ init();
 (function () {
 'use strict';
 var Core = window.TDFigmaCore;
+var HomeMount = window.TDFigmaHomeMount;
 var SOURCE_DATA = window.TDFigmaData.homePage.productSeries;
 var CONTENT = {
 title: SOURCE_DATA.heading || '',
@@ -3367,20 +3142,10 @@ var query = Core.dom.query;
 var closest = Core.dom.closest;
 var getSafeUrl = Core.url.sanitize;
 var insertAfter = Core.dom.insertAfter;
-var VERSION = '2.0.0';
+var VERSION = '2.1.0';
 var CONFIG = {
-targetSelector: '.layout-center',
-anchorSelector: '#tdhur-v1-root, [data-tdhur-v1]',
-fallbackAnchorSelector:
-'#tdhpt-v1-root, [data-tdhpt-v1], ' +
-'#tdheo-v1-root, [data-tdheo-v1], ' +
-'#tdhk-v1-root, [data-tdhk-v1], ' +
-'#tdhsc-v1-root, [data-tdhsc-v1], ' +
-'#tdht-v1-root, [data-tdht-v1], ' +
-'#tdhs-v1-root, [data-tdhs-v1]',
+slotId: 'product-series',
 rootId: 'tdhps-v1-root',
-mountDelay: 60,
-fallbackDelay: 3000
 };
 var state = {
 root: null,
@@ -3482,10 +3247,8 @@ if (state.root) {
 state.root.removeEventListener('click', handleClick, false);
 }
 }
-function mount(allowFallback) {
-var target = query(CONFIG.targetSelector);
-var anchor;
-var fallbackAnchor;
+function mount() {
+var target = HomeMount && HomeMount.getRoot();
 if (!target) {
 return false;
 }
@@ -3493,70 +3256,8 @@ if (!state.root) {
 createStructure();
 bindEvents();
 }
-anchor = query(CONFIG.anchorSelector, target);
-if (anchor) {
-if (
-state.root.parentNode !== target ||
-state.root.previousElementSibling !== anchor
-) {
-insertAfter(anchor, state.root);
-}
+HomeMount.mount(CONFIG.slotId, state.root);
 return true;
-}
-if (!allowFallback) {
-return false;
-}
-fallbackAnchor = query(CONFIG.fallbackAnchorSelector, target);
-if (fallbackAnchor) {
-insertAfter(fallbackAnchor, state.root);
-} else if (state.root.parentNode !== target) {
-target.insertBefore(state.root, target.firstChild);
-}
-return true;
-}
-function scheduleMount() {
-if (state.mountTimer) {
-window.clearTimeout(state.mountTimer);
-}
-state.mountTimer = window.setTimeout(function () {
-state.mountTimer = null;
-mount(false);
-}, CONFIG.mountDelay);
-}
-function scheduleFallback() {
-if (state.fallbackTimer) {
-window.clearTimeout(state.fallbackTimer);
-}
-state.fallbackTimer = window.setTimeout(function () {
-state.fallbackTimer = null;
-mount(true);
-}, CONFIG.fallbackDelay);
-}
-function observeDom() {
-if (!window.MutationObserver || state.observer) {
-return;
-}
-state.observer = new MutationObserver(function () {
-var target = query(CONFIG.targetSelector);
-var anchor = target ? query(CONFIG.anchorSelector, target) : null;
-if (
-!state.root ||
-!document.documentElement.contains(state.root) ||
-(
-anchor &&
-(
-state.root.parentNode !== target ||
-state.root.previousElementSibling !== anchor
-)
-)
-) {
-scheduleMount();
-}
-});
-state.observer.observe(document.documentElement, {
-childList: true,
-subtree: true
-});
 }
 function destroy() {
 if (state.mountTimer) {
@@ -3590,9 +3291,7 @@ version: VERSION,
 destroy: destroy,
 mount: mount
 };
-mount(false);
-scheduleFallback();
-observeDom();
+mount();
 trackEvent('td_home_product_series_ready', {
 td_product_series_count: (CONTENT.items || []).length
 });
@@ -3610,12 +3309,12 @@ init();
   }
 }());
 
-/* ===== TD_Figma_Home_Member_Assurance_GTM_v2.0.0.html ===== */
+/* TD_Figma_Home_Member_Assurance_GTM_v2.1.0.html */
 (function () {
   'use strict';
 
   var job = {
-    key: 'td-figma-home-member-assurance-v200',
+    key: 'td-figma-home-member-assurance-v210',
     ready: function () {
       return !!(window.TDFigmaData && window.TDFigmaData.homePage && window.TDFigmaData.homePage.memberAssurance);
     },
@@ -3623,6 +3322,7 @@ init();
 (function () {
 'use strict';
 var Core = window.TDFigmaCore;
+var HomeMount = window.TDFigmaHomeMount;
 var SOURCE_DATA = window.TDFigmaData.homePage.memberAssurance;
 var HERO_DATA = SOURCE_DATA.memberBenefitsHero || {};
 var ASSURANCE_DATA = SOURCE_DATA.authenticityAssurance || {};
@@ -3670,21 +3370,10 @@ var query = Core.dom.query;
 var closest = Core.dom.closest;
 var getSafeUrl = Core.url.sanitize;
 var insertAfter = Core.dom.insertAfter;
-var VERSION = '2.0.0';
+var VERSION = '2.1.0';
 var CONFIG = {
-targetSelector: '.layout-center',
-anchorSelector: '#tdhps-v1-root, [data-tdhps-v1]',
-fallbackAnchorSelector:
-'#tdhur-v1-root, [data-tdhur-v1], ' +
-'#tdhpt-v1-root, [data-tdhpt-v1], ' +
-'#tdheo-v1-root, [data-tdheo-v1], ' +
-'#tdhk-v1-root, [data-tdhk-v1], ' +
-'#tdhsc-v1-root, [data-tdhsc-v1], ' +
-'#tdht-v1-root, [data-tdht-v1], ' +
-'#tdhs-v1-root, [data-tdhs-v1]',
+slotId: 'member-assurance',
 rootId: 'tdhma-v1-root',
-mountDelay: 60,
-fallbackDelay: 3000
 };
 var state = {
 root: null,
@@ -3947,10 +3636,8 @@ if (state.root) {
 state.root.removeEventListener('click', handleClick, false);
 }
 }
-function mount(allowFallback) {
-var target = query(CONFIG.targetSelector);
-var anchor;
-var fallbackAnchor;
+function mount() {
+var target = HomeMount && HomeMount.getRoot();
 if (!target) {
 return false;
 }
@@ -3958,70 +3645,8 @@ if (!state.root) {
 createStructure();
 bindEvents();
 }
-anchor = query(CONFIG.anchorSelector, target);
-if (anchor) {
-if (
-state.root.parentNode !== target ||
-state.root.previousElementSibling !== anchor
-) {
-insertAfter(anchor, state.root);
-}
+HomeMount.mount(CONFIG.slotId, state.root);
 return true;
-}
-if (!allowFallback) {
-return false;
-}
-fallbackAnchor = query(CONFIG.fallbackAnchorSelector, target);
-if (fallbackAnchor) {
-insertAfter(fallbackAnchor, state.root);
-} else if (state.root.parentNode !== target) {
-target.insertBefore(state.root, target.firstChild);
-}
-return true;
-}
-function scheduleMount() {
-if (state.mountTimer) {
-window.clearTimeout(state.mountTimer);
-}
-state.mountTimer = window.setTimeout(function () {
-state.mountTimer = null;
-mount(false);
-}, CONFIG.mountDelay);
-}
-function scheduleFallback() {
-if (state.fallbackTimer) {
-window.clearTimeout(state.fallbackTimer);
-}
-state.fallbackTimer = window.setTimeout(function () {
-state.fallbackTimer = null;
-mount(true);
-}, CONFIG.fallbackDelay);
-}
-function observeDom() {
-if (!window.MutationObserver || state.observer) {
-return;
-}
-state.observer = new MutationObserver(function () {
-var target = query(CONFIG.targetSelector);
-var anchor = target ? query(CONFIG.anchorSelector, target) : null;
-if (
-!state.root ||
-!document.documentElement.contains(state.root) ||
-(
-anchor &&
-(
-state.root.parentNode !== target ||
-state.root.previousElementSibling !== anchor
-)
-)
-) {
-scheduleMount();
-}
-});
-state.observer.observe(document.documentElement, {
-childList: true,
-subtree: true
-});
 }
 function destroy() {
 if (state.mountTimer) {
@@ -4055,9 +3680,7 @@ version: VERSION,
 destroy: destroy,
 mount: mount
 };
-mount(false);
-scheduleFallback();
-observeDom();
+mount();
 trackEvent('td_home_member_assurance_ready', {
 td_member_benefit_count:
 ((CONTENT.member || {}).benefits || []).length,
