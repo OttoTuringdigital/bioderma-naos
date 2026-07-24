@@ -1,5 +1,5 @@
-/* TD_Figma_All_Pages_Core_Style_GTM_v1.6.2.html */
-(function(){window.TDFigmaStyleReady=window.TDFigmaStyleReady||{};window.TDFigmaStyleReady.allPages="1.6.2";}());
+/* TD_Figma_All_Pages_Core_Style_GTM_v1.7.0.html */
+(function(){window.TDFigmaStyleReady=window.TDFigmaStyleReady||{};window.TDFigmaStyleReady.allPages="1.7.0";}());
 
 /* TD_Figma_All_Pages_ProductCard_Style_GTM_v1.0.1.html */
 (function () {
@@ -7,18 +7,18 @@
   window.TDFigmaStyleReady.allPagesProductCard = '1.0.1';
 }());
 
-/* TD_Figma_All_Pages_Core_Utility_GTM_v1.1.1.html */
+/* TD_Figma_All_Pages_Core_Utility_GTM_v1.2.0.html */
 (function () {
   'use strict';
 
-  if (window.TDFigmaCore && window.TDFigmaCore.version === '1.1.1') {
+  if (window.TDFigmaCore && window.TDFigmaCore.version === '1.2.0') {
     if (window.TDFigmaCore.jobs) {
       window.TDFigmaCore.jobs.flush();
     }
     return;
   }
 
-  var VERSION = '1.1.1';
+  var VERSION = '1.2.0';
   var startedJobs = {};
 
   function createElement(tagName, className) {
@@ -134,24 +134,76 @@
   }
 
   function createDesktopHeaderPortal() {
-    var ROOT_ID = 'tdfh-v1-desktop-portal-root';
+    var ROOT_ID =
+      'tdfh-v1-desktop-portal-root';
+    var BACKGROUND_ID =
+      'tdfh-v1-desktop-background';
+    var ACTIVE_CLASS =
+      'tdfh-v1-desktop-header-active';
+    var HEADER_ATTRIBUTE =
+      'data-tdfh-v1-native-header';
     var BREAKPOINT = 992;
     var entries = {};
     var root = null;
+    var background = null;
+    var backgroundEntry = null;
     var syncFrame = null;
     var listenersBound = false;
 
+    function ensureBackground() {
+      if (
+        background &&
+        document.documentElement.contains(
+          background
+        )
+      ) {
+        return background;
+      }
+
+      background =
+        document.getElementById(
+          BACKGROUND_ID
+        );
+
+      if (!background && document.body) {
+        background =
+          document.createElement('div');
+        background.id = BACKGROUND_ID;
+        background.setAttribute(
+          'aria-hidden',
+          'true'
+        );
+        document.body.appendChild(
+          background
+        );
+      }
+
+      return background;
+    }
+
     function ensureRoot() {
-      if (root && document.documentElement.contains(root)) {
+      if (
+        root &&
+        document.documentElement.contains(root)
+      ) {
         return root;
       }
-      root = document.getElementById(ROOT_ID);
+
+      root =
+        document.getElementById(ROOT_ID);
+
       if (!root && document.body) {
-        root = document.createElement('div');
+        root =
+          document.createElement('div');
         root.id = ROOT_ID;
-        root.setAttribute('aria-hidden', 'false');
+        root.setAttribute(
+          'aria-hidden',
+          'false'
+        );
         document.body.appendChild(root);
       }
+
+      ensureBackground();
       bindListeners();
       return root;
     }
@@ -159,25 +211,53 @@
     function getSlot(name) {
       var host = ensureRoot();
       var slot;
+
       if (!host) {
         return null;
       }
-      slot = host.querySelector('[data-tdfh-v1-slot="' + name + '"]');
+
+      slot = host.querySelector(
+        '[data-tdfh-v1-slot="' +
+        name +
+        '"]'
+      );
+
       if (!slot) {
-        slot = document.createElement('div');
-        slot.setAttribute('data-tdfh-v1-slot', name);
+        slot =
+          document.createElement('div');
+        slot.setAttribute(
+          'data-tdfh-v1-slot',
+          name
+        );
         host.appendChild(slot);
       }
+
       return slot;
     }
 
     function nativeAttribute(name) {
-      return 'data-tdfh-v1-native-' + name;
+      return (
+        'data-tdfh-v1-native-' +
+        name
+      );
     }
 
     function clearNative(entry) {
       if (entry && entry.anchor) {
-        entry.anchor.removeAttribute(entry.nativeAttribute);
+        entry.anchor.removeAttribute(
+          entry.nativeAttribute
+        );
+      }
+    }
+
+    function clearBackgroundNative() {
+      if (
+        backgroundEntry &&
+        backgroundEntry.anchor
+      ) {
+        backgroundEntry.anchor.removeAttribute(
+          HEADER_ATTRIBUTE
+        );
       }
     }
 
@@ -185,45 +265,180 @@
       if (!rect) {
         return null;
       }
+
       return {
-        top: Number(rect.top) || 0,
-        left: Number(rect.left) || 0,
-        width: Math.max(0, Number(rect.width) || 0),
-        height: Math.max(0, Number(rect.height) || 0),
-        right: Number(rect.right) || ((Number(rect.left) || 0) + (Number(rect.width) || 0)),
-        bottom: Number(rect.bottom) || ((Number(rect.top) || 0) + (Number(rect.height) || 0))
+        top:
+          Number(rect.top) || 0,
+        left:
+          Number(rect.left) || 0,
+        width:
+          Math.max(
+            0,
+            Number(rect.width) || 0
+          ),
+        height:
+          Math.max(
+            0,
+            Number(rect.height) || 0
+          ),
+        right:
+          Number(rect.right) ||
+          (
+            (Number(rect.left) || 0) +
+            (Number(rect.width) || 0)
+          ),
+        bottom:
+          Number(rect.bottom) ||
+          (
+            (Number(rect.top) || 0) +
+            (Number(rect.height) || 0)
+          )
       };
     }
 
     function resolveRect(entry) {
       var rect;
-      if (!entry || !entry.anchor || !document.documentElement.contains(entry.anchor)) {
+
+      if (
+        !entry ||
+        !entry.anchor ||
+        !document.documentElement.contains(
+          entry.anchor
+        )
+      ) {
         return null;
       }
-      if (entry.options && typeof entry.options.resolveRect === 'function') {
-        rect = entry.options.resolveRect(entry.anchor, entry.element, entry.slot);
+
+      if (
+        entry.options &&
+        typeof entry.options.resolveRect ===
+          'function'
+      ) {
+        rect =
+          entry.options.resolveRect(
+            entry.anchor,
+            entry.element,
+            entry.slot
+          );
       }
+
       if (!rect) {
-        rect = entry.anchor.getBoundingClientRect();
+        rect =
+          entry.anchor.getBoundingClientRect();
       }
+
+      return normalizeRect(rect);
+    }
+
+    function resolveBackgroundRect() {
+      var rect;
+
+      if (
+        !backgroundEntry ||
+        !backgroundEntry.anchor ||
+        !document.documentElement.contains(
+          backgroundEntry.anchor
+        )
+      ) {
+        return null;
+      }
+
+      if (
+        backgroundEntry.options &&
+        typeof backgroundEntry.options
+          .resolveRect === 'function'
+      ) {
+        rect =
+          backgroundEntry.options.resolveRect(
+            backgroundEntry.anchor,
+            background
+          );
+      }
+
+      if (!rect) {
+        rect =
+          backgroundEntry.anchor
+            .getBoundingClientRect();
+      }
+
       return normalizeRect(rect);
     }
 
     function applyRect(entry, rect) {
       var slot = entry.slot;
-      if (!slot || !rect || rect.width < 1 || rect.height < 1) {
+
+      if (
+        !slot ||
+        !rect ||
+        rect.width < 1 ||
+        rect.height < 1
+      ) {
         if (slot) {
           slot.style.display = 'none';
         }
         return;
       }
+
       slot.style.display = 'block';
-      slot.style.top = Math.round(rect.top) + 'px';
-      slot.style.left = Math.round(rect.left) + 'px';
-      slot.style.width = Math.round(rect.width) + 'px';
-      slot.style.height = Math.round(rect.height) + 'px';
-      if (entry.options && typeof entry.options.onSync === 'function') {
-        entry.options.onSync(entry.element, rect, entry.anchor, slot);
+      slot.style.top =
+        Math.round(rect.top) + 'px';
+      slot.style.left =
+        Math.round(rect.left) + 'px';
+      slot.style.width =
+        Math.round(rect.width) + 'px';
+      slot.style.height =
+        Math.round(rect.height) + 'px';
+
+      if (
+        entry.options &&
+        typeof entry.options.onSync ===
+          'function'
+      ) {
+        entry.options.onSync(
+          entry.element,
+          rect,
+          entry.anchor,
+          slot
+        );
+      }
+    }
+
+    function applyBackgroundRect(rect) {
+      var layer = ensureBackground();
+
+      if (
+        !layer ||
+        !rect ||
+        rect.width < 1 ||
+        rect.height < 1
+      ) {
+        if (layer) {
+          layer.style.display = 'none';
+        }
+        return;
+      }
+
+      layer.style.display = 'block';
+      layer.style.top =
+        Math.round(rect.top) + 'px';
+      layer.style.left =
+        Math.round(rect.left) + 'px';
+      layer.style.width =
+        Math.round(rect.width) + 'px';
+      layer.style.height =
+        Math.round(rect.height) + 'px';
+
+      if (
+        backgroundEntry &&
+        backgroundEntry.options &&
+        typeof backgroundEntry.options
+          .onSync === 'function'
+      ) {
+        backgroundEntry.options.onSync(
+          layer,
+          rect,
+          backgroundEntry.anchor
+        );
       }
     }
 
@@ -231,16 +446,32 @@
       var name;
       var entry;
       var host = ensureRoot();
+
       if (!host) {
         return;
       }
+
       host.style.display = 'block';
+      applyBackgroundRect(
+        resolveBackgroundRect()
+      );
+
       for (name in entries) {
-        if (!Object.prototype.hasOwnProperty.call(entries, name)) {
+        if (
+          !Object.prototype
+            .hasOwnProperty.call(
+              entries,
+              name
+            )
+        ) {
           continue;
         }
+
         entry = entries[name];
-        applyRect(entry, resolveRect(entry));
+        applyRect(
+          entry,
+          resolveRect(entry)
+        );
       }
     }
 
@@ -248,109 +479,300 @@
       if (syncFrame) {
         return;
       }
-      syncFrame = window.requestAnimationFrame(function () {
-        syncFrame = null;
-        sync();
-      });
+
+      syncFrame =
+        window.requestAnimationFrame(
+          function () {
+            syncFrame = null;
+            sync();
+          }
+        );
     }
 
     function bindListeners() {
       if (listenersBound) {
         return;
       }
+
       listenersBound = true;
-      window.addEventListener('resize', scheduleSync, false);
-      window.addEventListener('orientationchange', scheduleSync, false);
-      window.addEventListener('scroll', scheduleSync, true);
-      window.addEventListener('pageshow', scheduleSync, false);
-      window.addEventListener('popstate', scheduleSync, false);
+
+      window.addEventListener(
+        'resize',
+        scheduleSync,
+        false
+      );
+      window.addEventListener(
+        'orientationchange',
+        scheduleSync,
+        false
+      );
+      window.addEventListener(
+        'scroll',
+        scheduleSync,
+        true
+      );
+      window.addEventListener(
+        'pageshow',
+        scheduleSync,
+        false
+      );
+      window.addEventListener(
+        'popstate',
+        scheduleSync,
+        false
+      );
     }
 
-    function mount(name, element, anchor, options) {
+    function unbindListeners() {
+      if (!listenersBound) {
+        return;
+      }
+
+      listenersBound = false;
+
+      window.removeEventListener(
+        'resize',
+        scheduleSync,
+        false
+      );
+      window.removeEventListener(
+        'orientationchange',
+        scheduleSync,
+        false
+      );
+      window.removeEventListener(
+        'scroll',
+        scheduleSync,
+        true
+      );
+      window.removeEventListener(
+        'pageshow',
+        scheduleSync,
+        false
+      );
+      window.removeEventListener(
+        'popstate',
+        scheduleSync,
+        false
+      );
+    }
+
+    function mountBackground(
+      anchor,
+      options
+    ) {
+      if (!anchor || !document.body) {
+        return false;
+      }
+
+      if (
+        backgroundEntry &&
+        backgroundEntry.anchor !== anchor
+      ) {
+        clearBackgroundNative();
+      }
+
+      backgroundEntry = {
+        anchor: anchor,
+        options: options || {}
+      };
+
+      anchor.setAttribute(
+        HEADER_ATTRIBUTE,
+        'interactive'
+      );
+
+      document.body.classList.add(
+        ACTIVE_CLASS
+      );
+
+      ensureBackground();
+      scheduleSync();
+      return true;
+    }
+
+    function unmountBackground() {
+      clearBackgroundNative();
+      backgroundEntry = null;
+
+      if (background) {
+        background.style.display = 'none';
+      }
+
+      if (document.body) {
+        document.body.classList.remove(
+          ACTIVE_CLASS
+        );
+      }
+    }
+
+    function mount(
+      name,
+      element,
+      anchor,
+      options
+    ) {
       var slot;
       var entry;
+
       if (!name || !element || !anchor) {
         return false;
       }
+
       slot = getSlot(name);
+
       if (!slot) {
         return false;
       }
+
       entry = entries[name];
-      if (entry && entry.anchor !== anchor) {
+
+      if (
+        entry &&
+        entry.anchor !== anchor
+      ) {
         clearNative(entry);
       }
+
       if (element.parentNode !== slot) {
         slot.appendChild(element);
       }
+
       entry = {
         name: name,
         element: element,
         anchor: anchor,
         slot: slot,
-        nativeAttribute: nativeAttribute(name),
+        nativeAttribute:
+          nativeAttribute(name),
         options: options || {}
       };
+
       entries[name] = entry;
-      anchor.setAttribute(entry.nativeAttribute, 'hidden');
-      slot.setAttribute('data-tdfh-v1-mounted', 'true');
+
+      anchor.setAttribute(
+        entry.nativeAttribute,
+        'hidden'
+      );
+
+      slot.setAttribute(
+        'data-tdfh-v1-mounted',
+        'true'
+      );
+
       scheduleSync();
       return true;
     }
 
-    function unmount(name, removeElement) {
+    function unmount(
+      name,
+      removeElement
+    ) {
       var entry = entries[name];
+
       if (!entry) {
         return false;
       }
+
       clearNative(entry);
-      if (removeElement && entry.element && entry.element.parentNode) {
-        entry.element.parentNode.removeChild(entry.element);
+
+      if (
+        removeElement &&
+        entry.element &&
+        entry.element.parentNode
+      ) {
+        entry.element.parentNode
+          .removeChild(entry.element);
       }
-      if (entry.slot && entry.slot.parentNode) {
-        entry.slot.parentNode.removeChild(entry.slot);
+
+      if (
+        entry.slot &&
+        entry.slot.parentNode
+      ) {
+        entry.slot.parentNode
+          .removeChild(entry.slot);
       }
+
       delete entries[name];
       return true;
     }
 
     function destroy() {
       var name;
+
       for (name in entries) {
-        if (Object.prototype.hasOwnProperty.call(entries, name)) {
+        if (
+          Object.prototype
+            .hasOwnProperty.call(
+              entries,
+              name
+            )
+        ) {
           clearNative(entries[name]);
         }
       }
+
       entries = {};
+      clearBackgroundNative();
+      backgroundEntry = null;
+
       if (syncFrame) {
-        window.cancelAnimationFrame(syncFrame);
+        window.cancelAnimationFrame(
+          syncFrame
+        );
         syncFrame = null;
       }
+
+      unbindListeners();
+
+      if (
+        background &&
+        background.parentNode
+      ) {
+        background.parentNode
+          .removeChild(background);
+      }
+
       if (root && root.parentNode) {
         root.parentNode.removeChild(root);
       }
+
+      if (document.body) {
+        document.body.classList.remove(
+          ACTIVE_CLASS
+        );
+      }
+
+      background = null;
       root = null;
     }
 
     return {
-      version: '1.1.1',
+      version: '1.2.0',
       breakpoint: BREAKPOINT,
       mount: mount,
       unmount: unmount,
+      mountBackground:
+        mountBackground,
+      unmountBackground:
+        unmountBackground,
       sync: sync,
       scheduleSync: scheduleSync,
       getRoot: ensureRoot,
       getSlot: getSlot,
+      getBackground:
+        ensureBackground,
       destroy: destroy
     };
   }
 
   if (
     window.TDFigmaDesktopHeaderPortal &&
-    window.TDFigmaDesktopHeaderPortal.version !== '1.1.1' &&
-    typeof window.TDFigmaDesktopHeaderPortal.destroy === 'function'
+    typeof window.TDFigmaDesktopHeaderPortal
+      .destroy === 'function'
   ) {
-    window.TDFigmaDesktopHeaderPortal.destroy();
+    window.TDFigmaDesktopHeaderPortal
+      .destroy();
   }
 
   window.TDFigmaDesktopHeaderPortal =
@@ -390,12 +812,12 @@
   flushJobs();
 }());
 
-/* TD_Figma_All_Pages_Navigation_GTM_v5.0.2.html */
+/* TD_Figma_All_Pages_Navigation_GTM_v5.1.0.html */
 (function () {
   'use strict';
 
   var job = {
-    key: 'td-figma-navigation-v502',
+    key: 'td-figma-navigation-v510',
     ready: function () {
       return !!(window.TDFigmaData && window.TDFigmaData.allPages && window.TDFigmaData.allPages.navigation && window.TDFigmaDesktopHeaderPortal);
     },
@@ -543,13 +965,13 @@ href: item.linkUrl || ''
 };
 var closest = Core.dom.closest;
 var escapeHtml = Core.text.escapeHtml;
-var VERSION = '5.0.2';
+var VERSION = '5.1.0';
 var LOAD_ATTR = 'data-tdfn-v1-loaded';
 if (document.documentElement.getAttribute(LOAD_ATTR) === VERSION) {
 return;
 }
 document.documentElement.setAttribute(LOAD_ATTR, VERSION);
-var STYLE_ID = 'tdfn-v1-style-v162';
+var STYLE_ID = 'tdfn-v1-style-v170';
 var PORTAL_ID = 'tdfn-v1-desktop-portal';
 var MOBILE_PORTAL_ID = 'tdfn-v1-mobile-portal';
 var MOBILE_LOGO_URL = 'https://i.imgur.com/URvr7w5.png';
@@ -574,6 +996,7 @@ desktopRoot: null,
 desktopSource: null,
 desktopLogoRoot: null,
 desktopLogoAnchor: null,
+desktopHeaderAnchor: null,
 mobileRoot: null,
 mobilePortal: null,
 mobileTrigger: null,
@@ -1804,6 +2227,78 @@ bestScore = score;
 }
 return best;
 }
+function findDesktopHeaderAnchor() {
+var selectors = [
+'header.headerA > .headerA__top.headerA__top--fix',
+'header.headerA > .headerA__top',
+'#officialHeader > #layout-header-fix',
+'#officialHeader > .layout-header',
+'#layout-header-fix',
+'#officialHeader'
+];
+var anchor;
+var rect;
+var i;
+
+for (i = 0; i < selectors.length; i += 1) {
+anchor = document.querySelector(
+selectors[i]
+);
+
+if (!anchor) {
+continue;
+}
+
+rect = anchor.getBoundingClientRect();
+
+if (
+rect.width > 0 &&
+rect.height > 0
+) {
+return anchor;
+}
+}
+
+return null;
+}
+function ensureDesktopHeaderLayers() {
+var anchor =
+findDesktopHeaderAnchor();
+
+if (
+!anchor ||
+!DesktopPortal ||
+typeof DesktopPortal.mountBackground !==
+'function'
+) {
+return false;
+}
+
+state.desktopHeaderAnchor = anchor;
+
+DesktopPortal.mountBackground(
+anchor,
+{
+resolveRect: function (
+nativeHeader
+) {
+var rect =
+nativeHeader.getBoundingClientRect();
+
+return {
+top: rect.top,
+left: rect.left,
+width: rect.width,
+height: rect.height,
+right: rect.right,
+bottom: rect.bottom
+};
+}
+}
+);
+
+return true;
+}
 function ensureDesktopLogoPortal() {
 var anchor = findDesktopLogoAnchor();
 var root = state.desktopLogoRoot;
@@ -1846,6 +2341,7 @@ return true;
 }
 function syncHeaderVisuals() {
 syncHeaderIcons();
+ensureDesktopHeaderLayers();
 ensureDesktopLogoPortal();
 }
 function syncHeaderTopSpacing() {
