@@ -1,15 +1,21 @@
-/* TD Figma global JS Bundle v1.2.1 */
+/* TD Figma global JavaScript Bundle v1.3.1 */
 
-/* ===== TD_Figma_All_Pages_Core_Style_GTM_v1.4.1.html ===== */
-(function(){window.TDFigmaStyleReady=window.TDFigmaStyleReady||{};window.TDFigmaStyleReady.allPages="1.4.1";}());
+/* ===============================================
+ * TD_Figma_All_Pages_Core_Style_GTM_v1.5.0.html
+ * =============================================== */
+(function(){window.TDFigmaStyleReady=window.TDFigmaStyleReady||{};window.TDFigmaStyleReady.allPages="1.5.0";}());
 
-/* ===== TD_Figma_All_Pages_ProductCard_Style_GTM_v1.0.1.html ===== */
+/* ===============================================
+ * TD_Figma_All_Pages_ProductCard_Style_GTM_v1.0.1.html
+ * =============================================== */
 (function () {
   window.TDFigmaStyleReady = window.TDFigmaStyleReady || {};
   window.TDFigmaStyleReady.allPagesProductCard = '1.0.1';
 }());
 
-/* ===== TD_Figma_All_Pages_Core_Utility_GTM_v1.0.0.html ===== */
+/* ===============================================
+ * TD_Figma_All_Pages_Core_Utility_GTM_v1.0.0.html
+ * =============================================== */
 (function () {
   'use strict';
 
@@ -168,7 +174,9 @@
   flushJobs();
 }());
 
-/* ===== TD_Figma_All_Pages_Navigation_GTM_v4.0.1.html ===== */
+/* ===============================================
+ * TD_Figma_All_Pages_Navigation_GTM_v4.0.1.html
+ * =============================================== */
 (function () {
   'use strict';
 
@@ -2069,7 +2077,9 @@ init();
   }
 }());
 
-/* ===== TD_Figma_All_Pages_Search_GTM_v2.0.1.html ===== */
+/* ===============================================
+ * TD_Figma_All_Pages_Search_GTM_v2.0.1.html
+ * =============================================== */
 (function () {
   'use strict';
 
@@ -2359,526 +2369,701 @@ init();
   }
 }());
 
-/* ===== TD_Figma_All_Pages_Footer_GTM_v2.0.1.html ===== */
+/* ===============================================
+ * TD_Figma_All_Pages_Footer_GTM_v3.0.0.html
+ * =============================================== */
 (function () {
   'use strict';
 
   var job = {
-    key: 'td-figma-footer-v201',
+    key: 'td-figma-footer-v300',
     ready: function () {
-      return !!(window.TDFigmaData && window.TDFigmaData.allPages && window.TDFigmaData.allPages.footer);
+      return !!(
+        window.TDFigmaData &&
+        window.TDFigmaData.allPages &&
+        window.TDFigmaData.allPages.footer
+      );
     },
     start: function () {
-(function () {
-'use strict';
-var Core = window.TDFigmaCore;
-var SOURCE_DATA = window.TDFigmaData.allPages.footer;
-function mapFooterSection(section) {
-return {
-title: (section || {}).heading || '',
-items: ((section || {}).links || []).map(function (item) {
-return {
-label: item.text || '',
-href: item.linkUrl || ''
-};
-})
-};
-}
-var CONTENT = {
-about: mapFooterSection(SOURCE_DATA.brandSection),
-member: mapFooterSection(SOURCE_DATA.memberSection),
-skin: mapFooterSection(SOURCE_DATA.skinNeedsSection),
-contact: {
-phone: {
-label: ((SOURCE_DATA.contact || {}).phone || {}).displayText || '',
-href: ((SOURCE_DATA.contact || {}).phone || {}).linkUrl || ''
-},
-offer: {
-label:
-((SOURCE_DATA.contact || {}).firstPurchaseOffer || {}).text || '',
-href:
-((SOURCE_DATA.contact || {}).firstPurchaseOffer || {}).linkUrl || ''
-},
-social: (SOURCE_DATA.contact || {}).socialLinks || {}
-},
-legal: (SOURCE_DATA.legalLinks || []).map(function (item) {
-return {
-label: item.text || '',
-href: item.linkUrl || ''
-};
-})
-};
-Object.keys(CONTENT.contact.social).forEach(function (key) {
-var item = CONTENT.contact.social[key] || {};
-CONTENT.contact.social[key] = {
-label: item.label || '',
-href: item.linkUrl || ''
-};
-});
-var normalizeText = Core.text.normalize;
-var escapeHtml = Core.text.escapeHtml;
-var VERSION = '2.0.1';
-var ROOT_ATTRIBUTE = 'data-tdff-v1';
-var ORIGINAL_ATTRIBUTE = 'data-tdff-v1-original-footer';
-var TARGET_SELECTOR = '.layout-footer';
-var FALLBACK_FOOTER_SELECTOR =
-'footer.layout-footer-wrapper,footer[class*="layout-footer-wrapper"]';
-var GLOBAL_KEY = '__TD_FIGMA_FOOTER_V1__';
-var state = {
-observer: null,
-renderTimer: null
-};
-if (window[GLOBAL_KEY]) {
-if (typeof window[GLOBAL_KEY].render === 'function') {
-window[GLOBAL_KEY].render();
-}
-return;
-}
-function collectOriginalLinks(source) {
-var result = {
-text: {},
-social: {},
-phone: 'tel:0277289768'
-};
-var anchors = source.querySelectorAll('a[href], area[href]');
-var i;
-var anchor;
-var href;
-var text;
-for (i = 0; i < anchors.length; i += 1) {
-anchor = anchors[i];
-href = anchor.getAttribute('href') || '';
-text = normalizeText(anchor.textContent || anchor.innerText || '');
-if (text && !result.text[text]) {
-result.text[text] = href;
-}
-if (/^tel:/i.test(href)) {
-result.phone = href;
-}
-if (/facebook\.com/i.test(href)) {
-result.social.facebook = href;
-}
-if (/instagram\.com/i.test(href)) {
-result.social.instagram = href;
-}
-if (/line\.me|lin\.ee/i.test(href)) {
-result.social.line = href;
-}
-}
-return result;
-}
-function resolveHref(linkMap, text, fallback) {
-var key = normalizeText(text);
-return linkMap.text[key] || fallback || '#';
-}
-function getContentLabel(item) {
-return typeof item === 'string' ? item : (item && item.label) || '';
-}
-function getContentHref(item, linkMap, fallbackText, fallbackHref) {
-var configuredHref = item && typeof item === 'object' ? item.href : '';
-var text = getContentLabel(item) || fallbackText || '';
-if (configuredHref) {
-return configuredHref;
-}
-return resolveHref(linkMap, text, fallbackHref || '#');
-}
-function phoneIcon() {
-return [
-'<svg class="tdff-v1-phone-icon" viewBox="0 0 24 24" aria-hidden="true">',
-'<path fill="currentColor" d="M6.62 10.79a15.46 15.46 0 0 0 6.59 6.59l2.2-2.2a1 1 0 0 1 1.02-.24c1.12.37 2.33.57 3.57.57a1 1 0 0 1 1 1V20a1 1 0 0 1-1 1C10.61 21 3 13.39 3 4a1 1 0 0 1 1-1h3.5a1 1 0 0 1 1 1c0 1.25.2 2.45.57 3.57a1 1 0 0 1-.25 1.02l-2.2 2.2Z"/>',
-'</svg>'
-].join('');
-}
-function socialIcon(type) {
-if (type === 'facebook') {
-return [
-'<svg viewBox="0 0 30 30" aria-hidden="true">',
-'<circle cx="15" cy="15" r="15" fill="#fff"/>',
-'<path fill="#0b396a" d="M16.9 9.2h2V6.1c-.35-.05-1.55-.16-2.97-.16-2.94 0-4.96 1.8-4.96 5.1v2.85H7.64v3.47h3.33V26h4.08v-8.64h3.2l.51-3.47h-3.71v-2.5c0-1 .27-1.69 1.85-1.69Z"/>',
-'</svg>'
-].join('');
-}
-if (type === 'instagram') {
-return [
-'<svg viewBox="0 0 30 30" aria-hidden="true">',
-'<circle cx="15" cy="15" r="15" fill="#fff"/>',
-'<rect x="8.5" y="8.5" width="13" height="13" rx="4" fill="none" stroke="#0b396a" stroke-width="2"/>',
-'<circle cx="15" cy="15" r="3.2" fill="none" stroke="#0b396a" stroke-width="2"/>',
-'<circle cx="19.4" cy="10.7" r="1.15" fill="#0b396a"/>',
-'</svg>'
-].join('');
-}
-return [
-'<svg viewBox="0 0 30 30" aria-hidden="true">',
-'<circle cx="15" cy="15" r="15" fill="#fff"/>',
-'<path fill="#0b396a" d="M23.1 14.2c0-3.65-3.66-6.62-8.16-6.62-4.5 0-8.16 2.97-8.16 6.62 0 3.27 2.9 6 6.82 6.52.27.06.63.18.72.42.08.22.05.56.03.78l-.11.74c-.03.22-.17.86.71.47.88-.37 4.75-2.8 6.48-4.79 1.2-1.32 1.67-2.66 1.67-4.16Z"/>',
-'<text x="15" y="16.1" text-anchor="middle" font-family="Arial,sans-serif" font-size="5.2" font-weight="700" fill="#fff">LINE</text>',
-'</svg>'
-].join('');
-}
-function arrowIcon() {
-return [
-'<svg viewBox="0 0 7 11" aria-hidden="true">',
-'<path d="M1 1l5 4.5L1 10" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/>',
-'</svg>'
-].join('');
-}
-function makeAnchor(className, text, href, extraAttributes) {
-return '<a class="' + className + '" href="' + escapeHtml(href || '#') + '"' + (extraAttributes || '') + '>' + escapeHtml(text) + '</a>';
-}
-function desktopColumn(section, linkMap) {
-var html = [];
-var i;
-html.push('<section class="tdff-v1-desktop-column">');
-html.push('<h2 class="tdff-v1-desktop-heading">' + escapeHtml(section.title) + '</h2>');
-html.push('<ul class="tdff-v1-desktop-list">');
-for (i = 0; i < section.items.length; i += 1) {
-html.push('<li>' + makeAnchor(
-'tdff-v1-desktop-link',
-getContentLabel(section.items[i]),
-getContentHref(section.items[i], linkMap, getContentLabel(section.items[i]), '#'),
-' data-tdff-v1-link="' + escapeHtml(getContentLabel(section.items[i])) + '"'
-) + '</li>');
-}
-html.push('</ul>');
-html.push('</section>');
-return html.join('');
-}
-function socialMarkup(linkMap) {
-var types = ['facebook', 'instagram', 'line'];
-var html = [];
-var i;
-var item;
-var href;
-html.push('<div class="tdff-v1-socials" aria-label="社群媒體">');
-for (i = 0; i < types.length; i += 1) {
-item = CONTENT.contact.social[types[i]];
-href = item.href || linkMap.social[types[i]] || '#';
-html.push('<a class="tdff-v1-social-link" href="' + escapeHtml(href) + '" aria-label="' + escapeHtml(item.label) + '" data-tdff-v1-social="' + types[i] + '">' + socialIcon(types[i]) + '</a>');
-}
-html.push('</div>');
-return html.join('');
-}
-function contactMarkup(linkMap, mobile) {
-var html = [];
-var offer = CONTENT.contact.offer;
-var offerHref = getContentHref(offer, linkMap, offer.label, '#');
-html.push('<div class="' + (mobile ? 'tdff-v1-mobile-contact' : 'tdff-v1-contact') + '">');
-html.push('<div class="tdff-v1-hours"><span>10:00～17:00</span><span class="tdff-v1-days"><span>星期一</span><span class="tdff-v1-days-dot" aria-hidden="true"></span><span>星期五</span></span></div>');
-html.push(socialMarkup(linkMap));
-html.push(makeAnchor('tdff-v1-offer', offer.label, offerHref, ' data-tdff-v1-link="' + escapeHtml(offer.label) + '"'));
-html.push('</div>');
-return html.join('');
-}
-function legalMarkup(linkMap) {
-var html = [];
-var i;
-html.push('<div class="tdff-v1-bottom">');
-html.push('<nav class="tdff-v1-legal" aria-label="頁尾政策連結">');
-for (i = 0; i < CONTENT.legal.length; i += 1) {
-if (i > 0) {
-html.push('<span class="tdff-v1-legal-separator" aria-hidden="true"></span>');
-}
-html.push(makeAnchor(
-'tdff-v1-legal-link',
-getContentLabel(CONTENT.legal[i]),
-getContentHref(CONTENT.legal[i], linkMap, getContentLabel(CONTENT.legal[i]), '#'),
-' data-tdff-v1-link="' + escapeHtml(getContentLabel(CONTENT.legal[i])) + '"'
-));
-}
-html.push('</nav>');
-html.push('<div class="tdff-v1-copyright">© 2026 by 台灣諾奧思有限公司</div>');
-html.push('</div>');
-return html.join('');
-}
-function mobileAccordionItem(key, section, linkMap) {
-var html = [];
-var i;
-var panelId = 'tdff-v1-panel-' + key;
-html.push('<section class="tdff-v1-accordion-item" data-tdff-v1-accordion-item="' + key + '">');
-html.push('<button class="tdff-v1-accordion-trigger" type="button" aria-expanded="false" aria-controls="' + panelId + '" data-tdff-v1-accordion-trigger="' + key + '">');
-html.push('<span class="tdff-v1-accordion-title">' + escapeHtml(section.title) + '</span>');
-html.push('<span class="tdff-v1-accordion-arrow">' + arrowIcon() + '</span>');
-html.push('</button>');
-html.push('<div class="tdff-v1-accordion-panel" id="' + panelId + '" aria-hidden="true">');
-html.push('<div class="tdff-v1-accordion-panel-inner"><ul class="tdff-v1-mobile-list">');
-for (i = 0; i < section.items.length; i += 1) {
-html.push('<li>' + makeAnchor(
-'tdff-v1-mobile-link',
-getContentLabel(section.items[i]),
-getContentHref(section.items[i], linkMap, getContentLabel(section.items[i]), '#'),
-' data-tdff-v1-link="' + escapeHtml(getContentLabel(section.items[i])) + '"'
-) + '</li>');
-}
-html.push('</ul></div></div>');
-html.push('</section>');
-return html.join('');
-}
-function buildFooter(linkMap) {
-var root = document.createElement('footer');
-var html = [];
-root.className = 'tdff-v1-root';
-root.setAttribute(ROOT_ATTRIBUTE, 'footer');
-root.setAttribute('data-tdff-version', VERSION);
-root.setAttribute('aria-label', '網站頁尾');
-html.push('<div class="tdff-v1-desktop">');
-html.push('<div class="tdff-v1-desktop-main">');
-html.push('<div class="tdff-v1-desktop-columns">');
-html.push(desktopColumn(CONTENT.about, linkMap));
-html.push(desktopColumn(CONTENT.member, linkMap));
-html.push(desktopColumn(CONTENT.skin, linkMap));
-html.push('</div>');
-html.push(contactMarkup(linkMap, false));
-html.push('</div>');
-html.push('<div class="tdff-v1-divider"></div>');
-html.push(legalMarkup(linkMap));
-html.push('</div>');
-html.push('<div class="tdff-v1-mobile">');
-html.push('<div class="tdff-v1-accordion">');
-html.push(mobileAccordionItem('about', CONTENT.about, linkMap));
-html.push(mobileAccordionItem('member', CONTENT.member, linkMap));
-html.push(mobileAccordionItem('skin', CONTENT.skin, linkMap));
-html.push('</div>');
-html.push(contactMarkup(linkMap, true));
-html.push('<div class="tdff-v1-divider"></div>');
-html.push(legalMarkup(linkMap));
-html.push('</div>');
-root.innerHTML = html.join('');
-return root;
-}
-function track(eventName, data) {
-Core.events.push(eventName, data, 'td_footer_version', VERSION);
-}
-function shouldPreventPlaceholder(anchor) {
-var href = anchor.getAttribute('href') || '';
-return href === '#' || href === '';
-}
-function bindFooter(root) {
-root.addEventListener('click', function (event) {
-var trigger = event.target.closest ? event.target.closest('[data-tdff-v1-accordion-trigger]') : null;
-var anchor = event.target.closest ? event.target.closest('a') : null;
-var items;
-var item;
-var panel;
-var isOpen;
-var i;
-if (trigger && root.contains(trigger)) {
-item = trigger.parentNode;
-isOpen = item.classList.contains('is-open');
-items = root.querySelectorAll('.tdff-v1-accordion-item');
-for (i = 0; i < items.length; i += 1) {
-items[i].classList.remove('is-open');
-items[i].querySelector('.tdff-v1-accordion-trigger').setAttribute('aria-expanded', 'false');
-panel = items[i].querySelector('.tdff-v1-accordion-panel');
-panel.setAttribute('aria-hidden', 'true');
-}
-if (!isOpen) {
-item.classList.add('is-open');
-trigger.setAttribute('aria-expanded', 'true');
-item.querySelector('.tdff-v1-accordion-panel').setAttribute('aria-hidden', 'false');
-}
-track('td_footer_accordion_toggle', {
-td_footer_section: trigger.getAttribute('data-tdff-v1-accordion-trigger'),
-td_footer_state: isOpen ? 'close' : 'open'
-});
-return;
-}
-if (anchor && root.contains(anchor)) {
-if (shouldPreventPlaceholder(anchor)) {
-event.preventDefault();
-}
-track('td_footer_link_click', {
-td_footer_label: anchor.getAttribute('data-tdff-v1-link') || anchor.getAttribute('aria-label') || normalizeText(anchor.textContent),
-td_footer_href: anchor.getAttribute('href') || ''
-});
-}
-});
-}
-function hasAncestorMatching(element, selector) {
-var current = element ? element.parentNode : null;
-while (current && current.nodeType === 1) {
-if (
-current.matches &&
-current.matches(selector)
-) {
-return true;
-}
-current = current.parentNode;
-}
-return false;
-}
-function hideOriginalFooter(footer) {
-if (!footer || footer.getAttribute(ROOT_ATTRIBUTE) === 'footer') {
-return;
-}
-footer.setAttribute(ORIGINAL_ATTRIBUTE, 'hidden');
-footer.setAttribute('aria-hidden', 'true');
-footer.setAttribute('hidden', 'hidden');
-if (footer.style && footer.style.setProperty) {
-footer.style.setProperty('display', 'none', 'important');
-}
-}
-function getOriginalFooters(container, preferredFooter) {
-var result = [];
-var footers;
-var i;
-if (preferredFooter) {
-result.push(preferredFooter);
-return result;
-}
-footers = container.querySelectorAll(
-'footer:not([' + ROOT_ATTRIBUTE + '])'
-);
-for (i = 0; i < footers.length; i += 1) {
-result.push(footers[i]);
-}
-return result;
-}
-function findExistingFooter(container) {
-var children = container ? container.children : [];
-var i;
-var child;
-for (i = 0; i < children.length; i += 1) {
-child = children[i];
-if (
-child.tagName &&
-child.tagName.toLowerCase() === 'footer' &&
-child.getAttribute(ROOT_ATTRIBUTE) === 'footer'
-) {
-return child;
-}
-}
-return null;
-}
-function insertFooter(container, originalFooter, footer) {
-if (
-originalFooter &&
-originalFooter.parentNode === container
-) {
-if (originalFooter.nextSibling) {
-container.insertBefore(footer, originalFooter.nextSibling);
-} else {
-container.appendChild(footer);
-}
-return;
-}
-container.appendChild(footer);
-}
-function renderContainer(container, preferredFooter) {
-var existing;
-var originals;
-var linkSource;
-var linkMap;
-var footer;
-var i;
-if (!container) {
-return null;
-}
-existing = findExistingFooter(container);
-originals = getOriginalFooters(container, preferredFooter);
-linkSource = preferredFooter || originals[0] || container;
-for (i = 0; i < originals.length; i += 1) {
-hideOriginalFooter(originals[i]);
-}
-if (existing) {
-return existing;
-}
-linkMap = collectOriginalLinks(linkSource);
-footer = buildFooter(linkMap);
-bindFooter(footer);
-insertFooter(container, preferredFooter, footer);
-return footer;
-}
-function renderFallbackFooters() {
-var fallbackFooters = document.querySelectorAll(
-FALLBACK_FOOTER_SELECTOR
-);
-var allFooters;
-var footer;
-var parent;
-var i;
-var matched = 0;
-for (i = 0; i < fallbackFooters.length; i += 1) {
-footer = fallbackFooters[i];
-if (
-footer.getAttribute(ROOT_ATTRIBUTE) === 'footer' ||
-hasAncestorMatching(footer, TARGET_SELECTOR)
-) {
-continue;
-}
-parent = footer.parentNode;
-if (parent && parent.nodeType === 1) {
-renderContainer(parent, footer);
-matched += 1;
-}
-}
-if (matched > 0) {
-return;
-}
-allFooters = document.querySelectorAll(
-'footer:not([' + ROOT_ATTRIBUTE + '])'
-);
-if (allFooters.length === 1) {
-footer = allFooters[0];
-if (!hasAncestorMatching(footer, TARGET_SELECTOR)) {
-parent = footer.parentNode;
-if (parent && parent.nodeType === 1) {
-renderContainer(parent, footer);
-}
-}
-}
-}
-function render() {
-var containers = document.querySelectorAll(TARGET_SELECTOR);
-var i;
-for (i = 0; i < containers.length; i += 1) {
-renderContainer(containers[i], null);
-}
-renderFallbackFooters();
-}
-function scheduleRender() {
-if (state.renderTimer) {
-window.clearTimeout(state.renderTimer);
-}
-state.renderTimer = window.setTimeout(function () {
-state.renderTimer = null;
-render();
-}, 60);
-}
-function observe() {
-if (!window.MutationObserver || state.observer) {
-return;
-}
-state.observer = new MutationObserver(function () {
-scheduleRender();
-});
-state.observer.observe(document.documentElement, {
-childList: true,
-subtree: true
-});
-}
-function init() {
-window[GLOBAL_KEY] = {
-version: VERSION,
-render: render
-};
-render();
-observe();
-}
-init();
-})();
+      (function () {
+        'use strict';
+
+        var Core = window.TDFigmaCore;
+        var SOURCE_DATA =
+          window.TDFigmaData.allPages.footer;
+        var escapeHtml = Core.text.escapeHtml;
+        var sanitizeUrl = Core.url.sanitize;
+        var closest = Core.dom.closest;
+
+        var VERSION = '3.0.0';
+        var ROOT_ID = 'td-figma-footer-root';
+        var ROOT_ATTRIBUTE = 'data-tdff-v1';
+        var GLOBAL_KEY = '__TD_FIGMA_FOOTER_V3__';
+
+        var CONTENT = {
+          about: mapSection(
+            SOURCE_DATA.brandSection
+          ),
+          member: mapSection(
+            SOURCE_DATA.memberSection
+          ),
+          skin: mapSection(
+            SOURCE_DATA.skinNeedsSection
+          ),
+          offer: {
+            label:
+              (
+                (
+                  SOURCE_DATA.contact || {}
+                ).firstPurchaseOffer || {}
+              ).text || '',
+            href:
+              (
+                (
+                  SOURCE_DATA.contact || {}
+                ).firstPurchaseOffer || {}
+              ).linkUrl || ''
+          },
+          social:
+            (
+              SOURCE_DATA.contact || {}
+            ).socialLinks || {},
+          legal:
+            SOURCE_DATA.legalLinks || []
+        };
+
+        var state = {
+          root: null,
+          retryTimer: null,
+          retryCount: 0
+        };
+
+        if (window[GLOBAL_KEY]) {
+          window[GLOBAL_KEY].mount();
+          return;
+        }
+
+        function mapSection(section) {
+          return {
+            title:
+              (section || {}).heading || '',
+            items:
+              (section || {}).links || []
+          };
+        }
+
+        function cleanUrl(value) {
+          return sanitizeUrl(value) || '#';
+        }
+
+        function anchorMarkup(
+          className,
+          label,
+          href,
+          attributes
+        ) {
+          return (
+            '<a class="' +
+            className +
+            '" href="' +
+            escapeHtml(cleanUrl(href)) +
+            '"' +
+            (attributes || '') +
+            '>' +
+            escapeHtml(label || '') +
+            '</a>'
+          );
+        }
+
+        function desktopColumn(section) {
+          var html = [];
+          var item;
+          var i;
+
+          html.push(
+            '<section class="' +
+            'tdff-v1-desktop-column">'
+          );
+          html.push(
+            '<h2 class="' +
+            'tdff-v1-desktop-heading">' +
+            escapeHtml(section.title) +
+            '</h2>'
+          );
+          html.push(
+            '<ul class="' +
+            'tdff-v1-desktop-list">'
+          );
+
+          for (
+            i = 0;
+            i < section.items.length;
+            i += 1
+          ) {
+            item = section.items[i] || {};
+
+            html.push(
+              '<li>' +
+              anchorMarkup(
+                'tdff-v1-desktop-link',
+                item.text || '',
+                item.linkUrl || ''
+              ) +
+              '</li>'
+            );
+          }
+
+          html.push('</ul>');
+          html.push('</section>');
+
+          return html.join('');
+        }
+
+        function socialMarkup() {
+          var iconMap = {
+            facebook: 'ico-facebook',
+            instagram: 'ico-instagram',
+            line: 'ico-line'
+          };
+          var types = [
+            'facebook',
+            'instagram',
+            'line'
+          ];
+          var html = [];
+          var item;
+          var type;
+          var i;
+
+          html.push(
+            '<div class="tdff-v1-socials" ' +
+            'aria-label="社群媒體">'
+          );
+
+          for (
+            i = 0;
+            i < types.length;
+            i += 1
+          ) {
+            type = types[i];
+            item =
+              CONTENT.social[type] || {};
+
+            html.push(
+              '<a class="' +
+              'tdff-v1-social-link" href="' +
+              escapeHtml(
+                cleanUrl(item.linkUrl)
+              ) +
+              '" aria-label="' +
+              escapeHtml(
+                item.label || type
+              ) +
+              '">' +
+              '<i class="ico ' +
+              iconMap[type] +
+              '" aria-hidden="true"></i>' +
+              '</a>'
+            );
+          }
+
+          html.push('</div>');
+
+          return html.join('');
+        }
+
+        function contactMarkup(mobile) {
+          var html = [];
+
+          html.push(
+            '<div class="' +
+            (
+              mobile ?
+              'tdff-v1-mobile-contact' :
+              'tdff-v1-contact'
+            ) +
+            '">'
+          );
+
+          html.push(
+            '<div class="tdff-v1-hours">' +
+            '<span>10:00～17:00</span>' +
+            '<span class="tdff-v1-days">' +
+            '<span>星期一</span>' +
+            '<span class="tdff-v1-days-dot" ' +
+            'aria-hidden="true"></span>' +
+            '<span>星期五</span>' +
+            '</span>' +
+            '</div>'
+          );
+
+          html.push(socialMarkup());
+
+          html.push(
+            anchorMarkup(
+              'tdff-v1-offer',
+              CONTENT.offer.label,
+              CONTENT.offer.href
+            )
+          );
+
+          html.push('</div>');
+
+          return html.join('');
+        }
+
+        function legalMarkup() {
+          var html = [];
+          var item;
+          var i;
+
+          html.push(
+            '<div class="tdff-v1-bottom">'
+          );
+          html.push(
+            '<nav class="tdff-v1-legal" ' +
+            'aria-label="頁尾政策連結">'
+          );
+
+          for (
+            i = 0;
+            i < CONTENT.legal.length;
+            i += 1
+          ) {
+            item = CONTENT.legal[i] || {};
+
+            if (i > 0) {
+              html.push(
+                '<span class="' +
+                'tdff-v1-legal-separator" ' +
+                'aria-hidden="true"></span>'
+              );
+            }
+
+            html.push(
+              anchorMarkup(
+                'tdff-v1-legal-link',
+                item.text || '',
+                item.linkUrl || ''
+              )
+            );
+          }
+
+          html.push('</nav>');
+          html.push(
+            '<div class="' +
+            'tdff-v1-copyright">' +
+            '© 2026 by 台灣諾奧思有限公司' +
+            '</div>'
+          );
+          html.push('</div>');
+
+          return html.join('');
+        }
+
+        function accordionItem(
+          key,
+          section
+        ) {
+          var panelId =
+            'tdff-v1-panel-' + key;
+          var html = [];
+          var item;
+          var i;
+
+          html.push(
+            '<section class="' +
+            'tdff-v1-accordion-item" ' +
+            'data-tdff-v1-accordion-item="' +
+            key +
+            '">'
+          );
+
+          html.push(
+            '<button class="' +
+            'tdff-v1-accordion-trigger" ' +
+            'type="button" ' +
+            'aria-expanded="false" ' +
+            'aria-controls="' +
+            panelId +
+            '" data-tdff-v1-accordion-trigger>'
+          );
+
+          html.push(
+            '<span class="' +
+            'tdff-v1-accordion-title">' +
+            escapeHtml(section.title) +
+            '</span>'
+          );
+
+          html.push(
+            '<span class="' +
+            'tdff-v1-accordion-arrow">' +
+            '<i class="ico ' +
+            'ico-chevron-right" ' +
+            'aria-hidden="true"></i>' +
+            '</span>'
+          );
+
+          html.push('</button>');
+
+          html.push(
+            '<div class="' +
+            'tdff-v1-accordion-panel" id="' +
+            panelId +
+            '" aria-hidden="true">'
+          );
+
+          html.push(
+            '<div class="' +
+            'tdff-v1-accordion-panel-inner">' +
+            '<ul class="tdff-v1-mobile-list">'
+          );
+
+          for (
+            i = 0;
+            i < section.items.length;
+            i += 1
+          ) {
+            item = section.items[i] || {};
+
+            html.push(
+              '<li>' +
+              anchorMarkup(
+                'tdff-v1-mobile-link',
+                item.text || '',
+                item.linkUrl || ''
+              ) +
+              '</li>'
+            );
+          }
+
+          html.push('</ul></div></div>');
+          html.push('</section>');
+
+          return html.join('');
+        }
+
+        function buildFooter() {
+          var root =
+            document.createElement('footer');
+          var html = [];
+
+          root.id = ROOT_ID;
+          root.className = 'tdff-v1-root';
+          root.setAttribute(
+            ROOT_ATTRIBUTE,
+            'footer'
+          );
+          root.setAttribute(
+            'data-tdff-version',
+            VERSION
+          );
+          root.setAttribute(
+            'aria-label',
+            '網站頁尾'
+          );
+
+          html.push(
+            '<div class="tdff-v1-desktop">'
+          );
+          html.push(
+            '<div class="' +
+            'tdff-v1-desktop-main">'
+          );
+          html.push(
+            '<div class="' +
+            'tdff-v1-desktop-columns">'
+          );
+          html.push(
+            desktopColumn(CONTENT.about)
+          );
+          html.push(
+            desktopColumn(CONTENT.member)
+          );
+          html.push(
+            desktopColumn(CONTENT.skin)
+          );
+          html.push('</div>');
+          html.push(contactMarkup(false));
+          html.push('</div>');
+          html.push(
+            '<div class="tdff-v1-divider">' +
+            '</div>'
+          );
+          html.push(legalMarkup());
+          html.push('</div>');
+
+          html.push(
+            '<div class="tdff-v1-mobile">'
+          );
+          html.push(
+            '<div class="tdff-v1-accordion">'
+          );
+          html.push(
+            accordionItem(
+              'about',
+              CONTENT.about
+            )
+          );
+          html.push(
+            accordionItem(
+              'member',
+              CONTENT.member
+            )
+          );
+          html.push(
+            accordionItem(
+              'skin',
+              CONTENT.skin
+            )
+          );
+          html.push('</div>');
+          html.push(contactMarkup(true));
+          html.push(
+            '<div class="tdff-v1-divider">' +
+            '</div>'
+          );
+          html.push(legalMarkup());
+          html.push('</div>');
+
+          root.innerHTML = html.join('');
+
+          return root;
+        }
+
+        function bindFooter(root) {
+          root.addEventListener(
+            'click',
+            function (event) {
+              var trigger = closest(
+                event.target,
+                '[data-tdff-v1-accordion-trigger]',
+                root
+              );
+              var item;
+              var items;
+              var panel;
+              var isOpen;
+              var i;
+
+              if (!trigger) {
+                return;
+              }
+
+              item = trigger.parentNode;
+              isOpen =
+                item.classList.contains(
+                  'is-open'
+                );
+              items =
+                root.querySelectorAll(
+                  '.tdff-v1-accordion-item'
+                );
+
+              for (
+                i = 0;
+                i < items.length;
+                i += 1
+              ) {
+                items[i].classList.remove(
+                  'is-open'
+                );
+                items[i]
+                  .querySelector(
+                    '.tdff-v1-accordion-trigger'
+                  )
+                  .setAttribute(
+                    'aria-expanded',
+                    'false'
+                  );
+                panel = items[i]
+                  .querySelector(
+                    '.tdff-v1-accordion-panel'
+                  );
+                panel.setAttribute(
+                  'aria-hidden',
+                  'true'
+                );
+              }
+
+              if (!isOpen) {
+                item.classList.add(
+                  'is-open'
+                );
+                trigger.setAttribute(
+                  'aria-expanded',
+                  'true'
+                );
+                item
+                  .querySelector(
+                    '.tdff-v1-accordion-panel'
+                  )
+                  .setAttribute(
+                    'aria-hidden',
+                    'false'
+                  );
+              }
+            },
+            false
+          );
+        }
+
+        function insertAfter(
+          reference,
+          node
+        ) {
+          var parent =
+            reference &&
+            reference.parentNode;
+
+          if (!parent) {
+            return false;
+          }
+
+          if (reference.nextSibling) {
+            parent.insertBefore(
+              node,
+              reference.nextSibling
+            );
+          } else {
+            parent.appendChild(node);
+          }
+
+          return true;
+        }
+
+        function placeFooter(root) {
+          var homeRoot =
+            document.getElementById(
+              'td-figma-home-root'
+            );
+          var appRoot =
+            document.getElementById('root');
+          var anchor = null;
+
+          if (
+            homeRoot &&
+            homeRoot.parentNode ===
+              document.body
+          ) {
+            anchor = homeRoot;
+          } else if (
+            appRoot &&
+            appRoot.parentNode ===
+              document.body
+          ) {
+            anchor = appRoot;
+          }
+
+          if (anchor) {
+            if (
+              root.parentNode !==
+                document.body ||
+              anchor.nextSibling !== root
+            ) {
+              insertAfter(anchor, root);
+            }
+
+            return true;
+          }
+
+          if (
+            root.parentNode !==
+              document.body
+          ) {
+            document.body.appendChild(root);
+          }
+
+          return true;
+        }
+
+        function ensureFooter() {
+          var root =
+            document.getElementById(
+              ROOT_ID
+            );
+
+          document.body.classList.add(
+            'tdff-v1-active'
+          );
+
+          if (!root) {
+            root = buildFooter();
+            bindFooter(root);
+          }
+
+          state.root = root;
+          placeFooter(root);
+
+          return root;
+        }
+
+        function mount() {
+          if (!document.body) {
+            return false;
+          }
+
+          ensureFooter();
+          return true;
+        }
+
+        function startRetries() {
+          function retry() {
+            state.retryTimer = null;
+            state.retryCount += 1;
+            mount();
+
+            if (state.retryCount < 10) {
+              state.retryTimer =
+                window.setTimeout(
+                  retry,
+                  250
+                );
+            }
+          }
+
+          retry();
+        }
+
+        window[GLOBAL_KEY] = {
+          version: VERSION,
+          mount: mount,
+          getRoot: function () {
+            return state.root;
+          }
+        };
+
+        startRetries();
+
+        window.addEventListener(
+          'pageshow',
+          mount
+        );
+        window.addEventListener(
+          'popstate',
+          mount
+        );
+      }());
     }
   };
 
-  window.TDFigmaPendingJobs = window.TDFigmaPendingJobs || [];
+  window.TDFigmaPendingJobs =
+    window.TDFigmaPendingJobs || [];
+
   window.TDFigmaPendingJobs.push(job);
 
-  if (window.TDFigmaCore && window.TDFigmaCore.jobs) {
+  if (
+    window.TDFigmaCore &&
+    window.TDFigmaCore.jobs
+  ) {
     window.TDFigmaCore.jobs.flush();
   }
 }());
 
-/* ===== TD_Figma_All_Pages_ProductCard_GTM_v1.0.1.html ===== */
+/* ===============================================
+ * TD_Figma_All_Pages_ProductCard_GTM_v1.0.1.html
+ * =============================================== */
 (function () {
   'use strict';
 
