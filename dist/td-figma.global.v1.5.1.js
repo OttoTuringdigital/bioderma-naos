@@ -1,5 +1,5 @@
-/* TD_Figma_All_Pages_Core_Style_GTM_v1.7.2.html */
-(function(){window.TDFigmaStyleReady=window.TDFigmaStyleReady||{};window.TDFigmaStyleReady.allPages="1.7.2";}());
+/* TD_Figma_All_Pages_Core_Style_GTM_v1.7.1.html */
+(function(){window.TDFigmaStyleReady=window.TDFigmaStyleReady||{};window.TDFigmaStyleReady.allPages="1.7.1";}());
 
 /* TD_Figma_All_Pages_ProductCard_Style_GTM_v1.0.1.html */
 (function () {
@@ -812,12 +812,12 @@
   flushJobs();
 }());
 
-/* TD_Figma_All_Pages_Navigation_GTM_v5.1.2.html */
+/* TD_Figma_All_Pages_Navigation_GTM_v5.1.1.html */
 (function () {
   'use strict';
 
   var job = {
-    key: 'td-figma-navigation-v512',
+    key: 'td-figma-navigation-v511',
     ready: function () {
       return !!(window.TDFigmaData && window.TDFigmaData.allPages && window.TDFigmaData.allPages.navigation && window.TDFigmaDesktopHeaderPortal);
     },
@@ -965,13 +965,13 @@ href: item.linkUrl || ''
 };
 var closest = Core.dom.closest;
 var escapeHtml = Core.text.escapeHtml;
-var VERSION = '5.1.2';
+var VERSION = '5.1.1';
 var LOAD_ATTR = 'data-tdfn-v1-loaded';
 if (document.documentElement.getAttribute(LOAD_ATTR) === VERSION) {
 return;
 }
 document.documentElement.setAttribute(LOAD_ATTR, VERSION);
-var STYLE_ID = 'tdfn-v1-style-v172';
+var STYLE_ID = 'tdfn-v1-style-v171';
 var PORTAL_ID = 'tdfn-v1-desktop-portal';
 var MOBILE_PORTAL_ID = 'tdfn-v1-mobile-portal';
 var MOBILE_LOGO_URL = 'https://i.imgur.com/URvr7w5.png';
@@ -2228,124 +2228,7 @@ items.push(item);
 
 return items;
 }
-function clearNativeAppCloseTimer(item) {
-if (
-item &&
-item.__tdfhV1AppCloseTimer
-) {
-window.clearTimeout(
-item.__tdfhV1AppCloseTimer
-);
-item.__tdfhV1AppCloseTimer = null;
-}
-}
-function setNativeAppMenuClosed(
-item,
-closed
-) {
-var panels;
-var panel;
-var i;
-
-if (!item) {
-return;
-}
-
-clearNativeAppCloseTimer(item);
-
-panels = item.querySelectorAll(
-'.nav-download-app-menu'
-);
-
-if (closed) {
-item.classList.add(
-'tdfh-v1-app-force-close'
-);
-} else {
-item.classList.remove(
-'tdfh-v1-app-force-close'
-);
-}
-
-for (i = 0; i < panels.length; i += 1) {
-panel = panels[i];
-
-if (closed) {
-panel.setAttribute(
-'data-tdfh-v1-app-closed',
-'true'
-);
-panel.setAttribute(
-'aria-hidden',
-'true'
-);
-panel.style.setProperty(
-'display',
-'none',
-'important'
-);
-panel.style.setProperty(
-'visibility',
-'hidden',
-'important'
-);
-panel.style.setProperty(
-'opacity',
-'0',
-'important'
-);
-panel.style.setProperty(
-'pointer-events',
-'none',
-'important'
-);
-} else {
-panel.removeAttribute(
-'data-tdfh-v1-app-closed'
-);
-panel.removeAttribute(
-'aria-hidden'
-);
-panel.style.removeProperty(
-'display'
-);
-panel.style.removeProperty(
-'visibility'
-);
-panel.style.removeProperty(
-'opacity'
-);
-panel.style.removeProperty(
-'pointer-events'
-);
-}
-}
-}
-function scheduleNativeAppMenuClose(item) {
-clearNativeAppCloseTimer(item);
-
-item.__tdfhV1AppCloseTimer =
-window.setTimeout(
-function () {
-item.__tdfhV1AppCloseTimer = null;
-
-if (
-!document.documentElement.contains(item) ||
-!item.matches ||
-!item.matches(':hover')
-) {
-setNativeAppMenuClosed(
-item,
-true
-);
-}
-},
-80
-);
-}
-function closeNativeAppMenus(
-exceptItem
-) {
+function closeNativeAppMenus(activeItem) {
 var items = getNativeAppMenuItems();
 var item;
 var i;
@@ -2353,98 +2236,32 @@ var i;
 for (i = 0; i < items.length; i += 1) {
 item = items[i];
 
-if (item === exceptItem) {
-continue;
-}
-
-setNativeAppMenuClosed(
-item,
-true
+if (item === activeItem) {
+item.classList.remove(
+'tdfh-v1-app-force-close'
+);
+} else {
+item.classList.add(
+'tdfh-v1-app-force-close'
 );
 }
 }
-function bindNativeAppMenuItem(item) {
-if (
-!item ||
-item.getAttribute(
-'data-tdfh-v1-app-hover-bound'
-) === 'true'
-) {
-return;
 }
-
-item.setAttribute(
-'data-tdfh-v1-app-hover-bound',
-'true'
-);
-
-item.addEventListener(
-'mouseenter',
-function () {
-setNativeAppMenuClosed(
-item,
-false
-);
-closeNativeAppMenus(item);
-},
-false
-);
-
-item.addEventListener(
-'mouseleave',
-function () {
-scheduleNativeAppMenuClose(item);
-},
-false
-);
-
-item.addEventListener(
-'focusin',
-function () {
-setNativeAppMenuClosed(
-item,
-false
-);
-closeNativeAppMenus(item);
-},
-false
-);
-
-item.addEventListener(
-'focusout',
-function () {
-scheduleNativeAppMenuClose(item);
-},
-false
-);
-}
-function handleNativeAppDocumentMouseover(
-event
-) {
+function handleNativeAppHover(event) {
 var items = getNativeAppMenuItems();
 var activeItem = null;
 var i;
 
 for (i = 0; i < items.length; i += 1) {
-bindNativeAppMenuItem(items[i]);
-
 if (items[i].contains(event.target)) {
 activeItem = items[i];
+break;
 }
 }
 
-if (!activeItem) {
-closeNativeAppMenus(null);
-}
+closeNativeAppMenus(activeItem);
 }
 function bindNativeAppHoverGuard() {
-var items = getNativeAppMenuItems();
-var i;
-
-for (i = 0; i < items.length; i += 1) {
-bindNativeAppMenuItem(items[i]);
-}
-
 if (state.nativeAppHoverBound) {
 return;
 }
@@ -2453,22 +2270,13 @@ state.nativeAppHoverBound = true;
 
 document.addEventListener(
 'mouseover',
-handleNativeAppDocumentMouseover,
+handleNativeAppHover,
 true
 );
 
 document.addEventListener(
-'mousedown',
-function (event) {
-var items = getNativeAppMenuItems();
-var i;
-
-for (i = 0; i < items.length; i += 1) {
-if (items[i].contains(event.target)) {
-return;
-}
-}
-
+'mouseleave',
+function () {
 closeNativeAppMenus(null);
 },
 true
@@ -2634,7 +2442,7 @@ ensureDesktopHeaderLayers();
 ensureDesktopLogoPortal();
 }
 function syncHeaderTopSpacing() {
-return;
+syncReactHeaderSpacing();
 }
 function syncDesktopGeometry() {
 if (DesktopPortal) {
@@ -3083,12 +2891,12 @@ init();
   }
 }());
 
-/* TD_Figma_All_Pages_Search_GTM_v3.0.3.html */
+/* TD_Figma_All_Pages_Search_GTM_v3.0.2.html */
 (function () {
   'use strict';
 
   var job = {
-    key: 'td-figma-search-v303',
+    key: 'td-figma-search-v302',
     ready: function () {
       return !!(
         window.TDFigmaData &&
@@ -3106,12 +2914,12 @@ init();
         var SOURCE_DATA = window.TDFigmaData.allPages.search;
         var closest = Core.dom.closest;
         var escapeHtml = Core.text.escapeHtml;
-        var VERSION = '3.0.3';
+        var VERSION = '3.0.2';
         var SLOT_NAME = 'search';
         var BREAKPOINT = 992;
         var SEARCH_PATH = '/v2/Search';
         var SEARCH_ROW_HEIGHT = 32;
-        var SEARCH_ROW_TOP = 12;
+        var SEARCH_NAV_GAP = 12;
         var MOBILE_EXCLUDE_SELECTOR =
           '.nav-slide-push-container,' +
           '.aside-section-container,' +
@@ -3415,7 +3223,14 @@ init();
                 navigationAnchor
               ).getBoundingClientRect();
 
-            top = SEARCH_ROW_TOP;
+            top = Math.max(
+              0,
+              Math.round(
+                navigationRect.top -
+                SEARCH_NAV_GAP -
+                SEARCH_ROW_HEIGHT
+              )
+            );
             left = navigationRect.left;
             width = navigationRect.width;
 
@@ -3430,14 +3245,18 @@ init();
           }
 
           return {
-            top: SEARCH_ROW_TOP,
+            top: anchorRect.top,
             left: anchorRect.left,
             width: anchorRect.width,
-            height: SEARCH_ROW_HEIGHT,
+            height: Math.max(
+              SEARCH_ROW_HEIGHT,
+              anchorRect.height
+            ),
             right: anchorRect.right,
-            bottom:
-              SEARCH_ROW_TOP +
-              SEARCH_ROW_HEIGHT
+            bottom: Math.max(
+              anchorRect.bottom,
+              anchorRect.top + SEARCH_ROW_HEIGHT
+            )
           };
         }
 
