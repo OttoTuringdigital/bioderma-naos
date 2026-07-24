@@ -1,8 +1,6 @@
-/* TD Figma home JavaScript Bundle v1.3.1 */
+/* TD Figma home JavaScript Bundle v1.4.0 */
 
-/* ===============================================
- * TD_Figma_Home_Style_GTM_v1.1.1.html
- * =============================================== */
+/* TD_Figma_Home_Style_GTM_v1.1.1.html */
 (function () {
   'use strict';
 
@@ -225,9 +223,7 @@
   );
 }());
 
-/* ===============================================
- * TD_Figma_Home_Slider_GTM_v2.1.0.html
- * =============================================== */
+/* TD_Figma_Home_Slider_GTM_v2.1.0.html */
 (function () {
   'use strict';
 
@@ -827,9 +823,7 @@ init();
   }
 }());
 
-/* ===============================================
- * TD_Figma_Home_Trust_Bar_GTM_v2.1.0.html
- * =============================================== */
+/* TD_Figma_Home_Trust_Bar_GTM_v2.1.0.html */
 (function () {
   'use strict';
 
@@ -995,9 +989,7 @@ init();
   }
 }());
 
-/* ===============================================
- * TD_Figma_Home_Skin_Carousel_GTM_v2.1.0.html
- * =============================================== */
+/* TD_Figma_Home_Skin_Carousel_GTM_v2.1.0.html */
 (function () {
   'use strict';
 
@@ -1516,9 +1508,7 @@ init();
   }
 }());
 
-/* ===============================================
- * TD_Figma_Home_Hot_Keywords_GTM_v2.1.0.html
- * =============================================== */
+/* TD_Figma_Home_Hot_Keywords_GTM_v2.1.0.html */
 (function () {
   'use strict';
 
@@ -1681,9 +1671,7 @@ init();
   }
 }());
 
-/* ===============================================
- * TD_Figma_Home_Exclusive_Offer_GTM_v2.1.0.html
- * =============================================== */
+/* TD_Figma_Home_Exclusive_Offer_GTM_v2.1.0.html */
 (function () {
   'use strict';
 
@@ -1867,9 +1855,7 @@ init();
   }
 }());
 
-/* ===============================================
- * TD_Figma_Home_Product_Tabs_GTM_v2.1.0.html
- * =============================================== */
+/* TD_Figma_Home_Product_Tabs_GTM_v2.1.0.html */
 (function () {
   'use strict';
 
@@ -2357,9 +2343,7 @@ init();
   }
 }());
 
-/* ===============================================
- * TD_Figma_Home_User_Reviews_GTM_v2.1.0.html
- * =============================================== */
+/* TD_Figma_Home_User_Reviews_GTM_v2.1.0.html */
 (function () {
   'use strict';
 
@@ -3124,9 +3108,7 @@ init();
   }
 }());
 
-/* ===============================================
- * TD_Figma_Home_Product_Series_GTM_v2.1.0.html
- * =============================================== */
+/* TD_Figma_Home_Product_Series_GTM_v2.1.0.html */
 (function () {
   'use strict';
 
@@ -3327,9 +3309,7 @@ init();
   }
 }());
 
-/* ===============================================
- * TD_Figma_Home_Member_Assurance_GTM_v2.1.0.html
- * =============================================== */
+/* TD_Figma_Home_Member_Assurance_GTM_v2.1.0.html */
 (function () {
   'use strict';
 
