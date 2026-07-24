@@ -1,5 +1,5 @@
-/* TD_Figma_All_Pages_Core_Style_GTM_v1.7.0.html */
-(function(){window.TDFigmaStyleReady=window.TDFigmaStyleReady||{};window.TDFigmaStyleReady.allPages="1.7.0";}());
+/* TD_Figma_All_Pages_Core_Style_GTM_v1.7.1.html */
+(function(){window.TDFigmaStyleReady=window.TDFigmaStyleReady||{};window.TDFigmaStyleReady.allPages="1.7.1";}());
 
 /* TD_Figma_All_Pages_ProductCard_Style_GTM_v1.0.1.html */
 (function () {
@@ -812,12 +812,12 @@
   flushJobs();
 }());
 
-/* TD_Figma_All_Pages_Navigation_GTM_v5.1.0.html */
+/* TD_Figma_All_Pages_Navigation_GTM_v5.1.1.html */
 (function () {
   'use strict';
 
   var job = {
-    key: 'td-figma-navigation-v510',
+    key: 'td-figma-navigation-v511',
     ready: function () {
       return !!(window.TDFigmaData && window.TDFigmaData.allPages && window.TDFigmaData.allPages.navigation && window.TDFigmaDesktopHeaderPortal);
     },
@@ -965,13 +965,13 @@ href: item.linkUrl || ''
 };
 var closest = Core.dom.closest;
 var escapeHtml = Core.text.escapeHtml;
-var VERSION = '5.1.0';
+var VERSION = '5.1.1';
 var LOAD_ATTR = 'data-tdfn-v1-loaded';
 if (document.documentElement.getAttribute(LOAD_ATTR) === VERSION) {
 return;
 }
 document.documentElement.setAttribute(LOAD_ATTR, VERSION);
-var STYLE_ID = 'tdfn-v1-style-v170';
+var STYLE_ID = 'tdfn-v1-style-v171';
 var PORTAL_ID = 'tdfn-v1-desktop-portal';
 var MOBILE_PORTAL_ID = 'tdfn-v1-mobile-portal';
 var MOBILE_LOGO_URL = 'https://i.imgur.com/URvr7w5.png';
@@ -997,6 +997,7 @@ desktopSource: null,
 desktopLogoRoot: null,
 desktopLogoAnchor: null,
 desktopHeaderAnchor: null,
+nativeAppHoverBound: false,
 mobileRoot: null,
 mobilePortal: null,
 mobileTrigger: null,
@@ -2202,6 +2203,101 @@ swapHeaderIconClass(
 'ico-shopping-fill'
 );
 }
+function getNativeAppMenuItems() {
+var panels = document.querySelectorAll(
+'.nav-download-app-menu'
+);
+var items = [];
+var item;
+var i;
+
+for (i = 0; i < panels.length; i += 1) {
+item = closest(
+panels[i],
+'.sub-nav-li,.nav-menu-li',
+null
+);
+
+if (
+item &&
+items.indexOf(item) < 0
+) {
+items.push(item);
+}
+}
+
+return items;
+}
+function closeNativeAppMenus(activeItem) {
+var items = getNativeAppMenuItems();
+var item;
+var i;
+
+for (i = 0; i < items.length; i += 1) {
+item = items[i];
+
+if (item === activeItem) {
+item.classList.remove(
+'tdfh-v1-app-force-close'
+);
+} else {
+item.classList.add(
+'tdfh-v1-app-force-close'
+);
+}
+}
+}
+function handleNativeAppHover(event) {
+var items = getNativeAppMenuItems();
+var activeItem = null;
+var i;
+
+for (i = 0; i < items.length; i += 1) {
+if (items[i].contains(event.target)) {
+activeItem = items[i];
+break;
+}
+}
+
+closeNativeAppMenus(activeItem);
+}
+function bindNativeAppHoverGuard() {
+if (state.nativeAppHoverBound) {
+return;
+}
+
+state.nativeAppHoverBound = true;
+
+document.addEventListener(
+'mouseover',
+handleNativeAppHover,
+true
+);
+
+document.addEventListener(
+'mouseleave',
+function () {
+closeNativeAppMenus(null);
+},
+true
+);
+
+window.addEventListener(
+'blur',
+function () {
+closeNativeAppMenus(null);
+},
+false
+);
+
+window.addEventListener(
+'scroll',
+function () {
+closeNativeAppMenus(null);
+},
+true
+);
+}
 function findDesktopLogoAnchor() {
 var candidates = document.querySelectorAll('.logo-container');
 var candidate;
@@ -2341,11 +2437,12 @@ return true;
 }
 function syncHeaderVisuals() {
 syncHeaderIcons();
+bindNativeAppHoverGuard();
 ensureDesktopHeaderLayers();
 ensureDesktopLogoPortal();
 }
 function syncHeaderTopSpacing() {
-syncAngularHeaderSpacing();
+syncReactHeaderSpacing();
 }
 function syncDesktopGeometry() {
 if (DesktopPortal) {
@@ -2794,12 +2891,12 @@ init();
   }
 }());
 
-/* TD_Figma_All_Pages_Search_GTM_v3.0.1.html */
+/* TD_Figma_All_Pages_Search_GTM_v3.0.2.html */
 (function () {
   'use strict';
 
   var job = {
-    key: 'td-figma-search-v301',
+    key: 'td-figma-search-v302',
     ready: function () {
       return !!(
         window.TDFigmaData &&
@@ -2817,7 +2914,7 @@ init();
         var SOURCE_DATA = window.TDFigmaData.allPages.search;
         var closest = Core.dom.closest;
         var escapeHtml = Core.text.escapeHtml;
-        var VERSION = '3.0.1';
+        var VERSION = '3.0.2';
         var SLOT_NAME = 'search';
         var BREAKPOINT = 992;
         var SEARCH_PATH = '/v2/Search';
@@ -2925,6 +3022,30 @@ init();
           }
 
           return null;
+        }
+
+        function findDesktopNavigationPortal() {
+          var slot = document.querySelector(
+            '#tdfh-v1-desktop-portal-root ' +
+            '[data-tdfh-v1-slot="navigation"]'
+          );
+          var rect;
+
+          if (!slot) {
+            return null;
+          }
+
+          rect = slot.getBoundingClientRect();
+
+          if (
+            rect.width < 1 ||
+            rect.height < 1 ||
+            window.getComputedStyle(slot).display === 'none'
+          ) {
+            return null;
+          }
+
+          return slot;
         }
 
         function findNativeHotkeys(anchor) {
@@ -3069,6 +3190,8 @@ init();
 
         function resolveSearchRect(anchor, root) {
           var anchorRect = anchor.getBoundingClientRect();
+          var navigationPortal =
+            findDesktopNavigationPortal();
           var navigationAnchor =
             findDesktopNavigationAnchor();
           var navigationRect;
@@ -3090,9 +3213,15 @@ init();
             );
           }
 
-          if (navigationAnchor) {
+          if (
+            navigationPortal ||
+            navigationAnchor
+          ) {
             navigationRect =
-              navigationAnchor.getBoundingClientRect();
+              (
+                navigationPortal ||
+                navigationAnchor
+              ).getBoundingClientRect();
 
             top = Math.max(
               0,
