@@ -1,7 +1,5 @@
-/* TD Figma global JavaScript Bundle v1.4.0 */
-
-/* TD_Figma_All_Pages_Core_Style_GTM_v1.6.0.html */
-(function(){window.TDFigmaStyleReady=window.TDFigmaStyleReady||{};window.TDFigmaStyleReady.allPages="1.6.0";}());
+/* TD_Figma_All_Pages_Core_Style_GTM_v1.6.1.html */
+(function(){window.TDFigmaStyleReady=window.TDFigmaStyleReady||{};window.TDFigmaStyleReady.allPages="1.6.1";}());
 
 /* TD_Figma_All_Pages_ProductCard_Style_GTM_v1.0.1.html */
 (function () {
@@ -9,18 +7,18 @@
   window.TDFigmaStyleReady.allPagesProductCard = '1.0.1';
 }());
 
-/* TD_Figma_All_Pages_Core_Utility_GTM_v1.1.0.html */
+/* TD_Figma_All_Pages_Core_Utility_GTM_v1.1.1.html */
 (function () {
   'use strict';
 
-  if (window.TDFigmaCore && window.TDFigmaCore.version === '1.1.0') {
+  if (window.TDFigmaCore && window.TDFigmaCore.version === '1.1.1') {
     if (window.TDFigmaCore.jobs) {
       window.TDFigmaCore.jobs.flush();
     }
     return;
   }
 
-  var VERSION = '1.1.0';
+  var VERSION = '1.1.1';
   var startedJobs = {};
 
   function createElement(tagName, className) {
@@ -236,10 +234,6 @@
       if (!host) {
         return;
       }
-      if (window.innerWidth < BREAKPOINT) {
-        host.style.display = 'none';
-        return;
-      }
       host.style.display = 'block';
       for (name in entries) {
         if (!Object.prototype.hasOwnProperty.call(entries, name)) {
@@ -339,7 +333,7 @@
     }
 
     return {
-      version: '1.0.0',
+      version: '1.1.1',
       breakpoint: BREAKPOINT,
       mount: mount,
       unmount: unmount,
@@ -351,8 +345,15 @@
     };
   }
 
+  if (
+    window.TDFigmaDesktopHeaderPortal &&
+    window.TDFigmaDesktopHeaderPortal.version !== '1.1.1' &&
+    typeof window.TDFigmaDesktopHeaderPortal.destroy === 'function'
+  ) {
+    window.TDFigmaDesktopHeaderPortal.destroy();
+  }
+
   window.TDFigmaDesktopHeaderPortal =
-    window.TDFigmaDesktopHeaderPortal ||
     createDesktopHeaderPortal();
 
   window.TDFigmaCore = {
@@ -389,12 +390,12 @@
   flushJobs();
 }());
 
-/* TD_Figma_All_Pages_Navigation_GTM_v5.0.0.html */
+/* TD_Figma_All_Pages_Navigation_GTM_v5.0.1.html */
 (function () {
   'use strict';
 
   var job = {
-    key: 'td-figma-navigation-v500',
+    key: 'td-figma-navigation-v501',
     ready: function () {
       return !!(window.TDFigmaData && window.TDFigmaData.allPages && window.TDFigmaData.allPages.navigation && window.TDFigmaDesktopHeaderPortal);
     },
@@ -542,13 +543,13 @@ href: item.linkUrl || ''
 };
 var closest = Core.dom.closest;
 var escapeHtml = Core.text.escapeHtml;
-var VERSION = '5.0.0';
+var VERSION = '5.0.1';
 var LOAD_ATTR = 'data-tdfn-v1-loaded';
 if (document.documentElement.getAttribute(LOAD_ATTR) === VERSION) {
 return;
 }
 document.documentElement.setAttribute(LOAD_ATTR, VERSION);
-var STYLE_ID = 'tdfn-v1-style-v160';
+var STYLE_ID = 'tdfn-v1-style-v161';
 var PORTAL_ID = 'tdfn-v1-desktop-portal';
 var MOBILE_PORTAL_ID = 'tdfn-v1-mobile-portal';
 var MOBILE_LOGO_URL = 'https://i.imgur.com/URvr7w5.png';
@@ -557,6 +558,7 @@ var DESKTOP_SELECTOR = '.nav-menu-ul';
 var DESKTOP_NAV_SLOT = 'navigation';
 var DESKTOP_LOGO_SLOT = 'logo';
 var BREAKPOINT = 992;
+var DESKTOP_LOGO_WIDTH = 135;
 var HEADER_TOP_EXTRA_SPACE = 20;
 var HEADER_BOTTOM_EXTRA_SPACE = 0;
 var HEADER_TOTAL_EXTRA_SPACE =
@@ -1821,7 +1823,24 @@ if (image && image.getAttribute('src') !== CONFIG.logo) {
 image.setAttribute('src', CONFIG.logo);
 }
 state.desktopLogoAnchor = anchor;
-DesktopPortal.mount(DESKTOP_LOGO_SLOT, root, anchor);
+DesktopPortal.mount(
+DESKTOP_LOGO_SLOT,
+root,
+anchor,
+{
+resolveRect: function (nativeAnchor) {
+var rect = nativeAnchor.getBoundingClientRect();
+return {
+top: rect.top,
+left: rect.left,
+width: DESKTOP_LOGO_WIDTH,
+height: rect.height,
+right: rect.left + DESKTOP_LOGO_WIDTH,
+bottom: rect.bottom
+};
+}
+}
+);
 return true;
 }
 function syncHeaderVisuals() {
@@ -2262,12 +2281,12 @@ init();
   }
 }());
 
-/* TD_Figma_All_Pages_Search_GTM_v3.0.0.html */
+/* TD_Figma_All_Pages_Search_GTM_v3.0.1.html */
 (function () {
   'use strict';
 
   var job = {
-    key: 'td-figma-search-v300',
+    key: 'td-figma-search-v301',
     ready: function () {
       return !!(
         window.TDFigmaData &&
@@ -2285,10 +2304,12 @@ init();
         var SOURCE_DATA = window.TDFigmaData.allPages.search;
         var closest = Core.dom.closest;
         var escapeHtml = Core.text.escapeHtml;
-        var VERSION = '3.0.0';
+        var VERSION = '3.0.1';
         var SLOT_NAME = 'search';
         var BREAKPOINT = 992;
         var SEARCH_PATH = '/v2/Search';
+        var SEARCH_ROW_HEIGHT = 32;
+        var SEARCH_NAV_GAP = 12;
         var MOBILE_EXCLUDE_SELECTOR =
           '.nav-slide-push-container,' +
           '.aside-section-container,' +
@@ -2311,7 +2332,8 @@ init();
           retryTimer: null,
           retryCount: 0,
           resizeTimer: null,
-          mobileCloseTimer: null
+          mobileCloseTimer: null,
+          nativeHotkeys: null
         };
 
         function injectStyle() {}
@@ -2345,6 +2367,91 @@ init();
             }
           }
           return null;
+        }
+
+        function findDesktopNavigationAnchor() {
+          var selectors = [
+            '.headerA__nav-menu-main > .nav-menu-ul',
+            '.layout-nav-menu.nav-main-menu > .nav-menu-ul'
+          ];
+          var candidates;
+          var candidate;
+          var rect;
+          var i;
+
+          for (i = 0; i < selectors.length; i += 1) {
+            candidate = document.querySelector(selectors[i]);
+            if (candidate) {
+              rect = candidate.getBoundingClientRect();
+              if (rect.width > 0 && rect.height > 0) {
+                return candidate;
+              }
+            }
+          }
+
+          candidates = document.querySelectorAll('.nav-menu-ul');
+
+          for (i = 0; i < candidates.length; i += 1) {
+            candidate = candidates[i];
+
+            if (
+              closest(
+                candidate,
+                '#tdfn-v1-mobile-portal,.slide-push-menu,.aside-section-container',
+                null
+              )
+            ) {
+              continue;
+            }
+
+            rect = candidate.getBoundingClientRect();
+
+            if (rect.width >= 400 && rect.height > 0) {
+              return candidate;
+            }
+          }
+
+          return null;
+        }
+
+        function findNativeHotkeys(anchor) {
+          var container;
+
+          if (!anchor) {
+            return null;
+          }
+
+          container = anchor.parentNode;
+
+          if (!container || !container.querySelector) {
+            return null;
+          }
+
+          return container.querySelector(
+            '#tdfs-v1-search-hotkeys,[data-tdfs-v1-hotkeys="desktop"]'
+          );
+        }
+
+        function syncNativeHotkeys(anchor) {
+          var hotkeys = findNativeHotkeys(anchor);
+
+          if (
+            state.nativeHotkeys &&
+            state.nativeHotkeys !== hotkeys
+          ) {
+            state.nativeHotkeys.removeAttribute(
+              'data-tdfs-v3-native-hotkeys'
+            );
+          }
+
+          state.nativeHotkeys = hotkeys;
+
+          if (hotkeys) {
+            hotkeys.setAttribute(
+              'data-tdfs-v3-native-hotkeys',
+              'hidden'
+            );
+          }
         }
 
         function searchUrl(keyword) {
@@ -2448,34 +2555,66 @@ init();
         }
 
         function resolveSearchRect(anchor, root) {
-          var rect = anchor.getBoundingClientRect();
-          var host;
-          var hostRect;
-          var width = rect.width;
+          var anchorRect = anchor.getBoundingClientRect();
+          var navigationAnchor =
+            findDesktopNavigationAnchor();
+          var navigationRect;
+          var inputWidth = Math.max(
+            220,
+            Math.min(
+              300,
+              Math.round(anchorRect.width || 280)
+            )
+          );
+          var top;
+          var left;
+          var width;
+
           if (root) {
             root.style.setProperty(
               '--tdfs-v3-input-width',
-              Math.round(rect.width) + 'px'
+              inputWidth + 'px'
             );
           }
-          if (state.variant === 'product') {
-            host = closest(
-              anchor,
-              '.layout-nav-menu.nav-main-menu',
-              null
+
+          if (navigationAnchor) {
+            navigationRect =
+              navigationAnchor.getBoundingClientRect();
+
+            top = Math.max(
+              0,
+              Math.round(
+                navigationRect.top -
+                SEARCH_NAV_GAP -
+                SEARCH_ROW_HEIGHT
+              )
             );
-            if (host) {
-              hostRect = host.getBoundingClientRect();
-              width = Math.max(rect.width, hostRect.right - rect.left);
-            }
+            left = navigationRect.left;
+            width = navigationRect.width;
+
+            return {
+              top: top,
+              left: left,
+              width: width,
+              height: SEARCH_ROW_HEIGHT,
+              right: left + width,
+              bottom: top + SEARCH_ROW_HEIGHT
+            };
           }
+
           return {
-            top: rect.top,
-            left: rect.left,
-            width: width,
-            height: rect.height,
-            right: rect.left + width,
-            bottom: rect.bottom
+            top: anchorRect.top,
+            left: anchorRect.left,
+            width: anchorRect.width,
+            height: Math.max(
+              SEARCH_ROW_HEIGHT,
+              anchorRect.height
+            ),
+            right: anchorRect.right,
+            bottom: Math.max(
+              anchorRect.bottom,
+              anchorRect.top + SEARCH_ROW_HEIGHT
+            )
           };
         }
 
@@ -2489,7 +2628,11 @@ init();
           }
           state.anchor = found.anchor;
           state.variant = found.variant;
-          state.root.setAttribute('data-tdfs-v3-variant', state.variant);
+          state.root.setAttribute(
+            'data-tdfs-v3-variant',
+            state.variant
+          );
+          syncNativeHotkeys(state.anchor);
           DesktopPortal.mount(
             SLOT_NAME,
             state.root,

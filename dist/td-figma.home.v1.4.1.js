@@ -1,5 +1,3 @@
-/* TD Figma home JavaScript Bundle v1.4.0 */
-
 /* TD_Figma_Home_Style_GTM_v1.1.1.html */
 (function () {
   'use strict';
