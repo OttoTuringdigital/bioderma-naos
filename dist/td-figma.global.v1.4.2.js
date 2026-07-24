@@ -1,5 +1,5 @@
-/* TD_Figma_All_Pages_Core_Style_GTM_v1.6.1.html */
-(function(){window.TDFigmaStyleReady=window.TDFigmaStyleReady||{};window.TDFigmaStyleReady.allPages="1.6.1";}());
+/* TD_Figma_All_Pages_Core_Style_GTM_v1.6.2.html */
+(function(){window.TDFigmaStyleReady=window.TDFigmaStyleReady||{};window.TDFigmaStyleReady.allPages="1.6.2";}());
 
 /* TD_Figma_All_Pages_ProductCard_Style_GTM_v1.0.1.html */
 (function () {
@@ -390,12 +390,12 @@
   flushJobs();
 }());
 
-/* TD_Figma_All_Pages_Navigation_GTM_v5.0.1.html */
+/* TD_Figma_All_Pages_Navigation_GTM_v5.0.2.html */
 (function () {
   'use strict';
 
   var job = {
-    key: 'td-figma-navigation-v501',
+    key: 'td-figma-navigation-v502',
     ready: function () {
       return !!(window.TDFigmaData && window.TDFigmaData.allPages && window.TDFigmaData.allPages.navigation && window.TDFigmaDesktopHeaderPortal);
     },
@@ -543,13 +543,13 @@ href: item.linkUrl || ''
 };
 var closest = Core.dom.closest;
 var escapeHtml = Core.text.escapeHtml;
-var VERSION = '5.0.1';
+var VERSION = '5.0.2';
 var LOAD_ATTR = 'data-tdfn-v1-loaded';
 if (document.documentElement.getAttribute(LOAD_ATTR) === VERSION) {
 return;
 }
 document.documentElement.setAttribute(LOAD_ATTR, VERSION);
-var STYLE_ID = 'tdfn-v1-style-v161';
+var STYLE_ID = 'tdfn-v1-style-v162';
 var PORTAL_ID = 'tdfn-v1-desktop-portal';
 var MOBILE_PORTAL_ID = 'tdfn-v1-mobile-portal';
 var MOBILE_LOGO_URL = 'https://i.imgur.com/URvr7w5.png';
@@ -559,6 +559,7 @@ var DESKTOP_NAV_SLOT = 'navigation';
 var DESKTOP_LOGO_SLOT = 'logo';
 var BREAKPOINT = 992;
 var DESKTOP_LOGO_WIDTH = 135;
+var DESKTOP_NAV_WIDTH = 800;
 var HEADER_TOP_EXTRA_SPACE = 20;
 var HEADER_BOTTOM_EXTRA_SPACE = 0;
 var HEADER_TOTAL_EXTRA_SPACE =
@@ -1848,7 +1849,6 @@ syncHeaderIcons();
 ensureDesktopLogoPortal();
 }
 function syncHeaderTopSpacing() {
-syncReactHeaderSpacing();
 syncAngularHeaderSpacing();
 }
 function syncDesktopGeometry() {
@@ -1872,7 +1872,24 @@ bindDesktop(root);
 state.desktopRoot = root;
 }
 state.desktopSource = source;
-DesktopPortal.mount(DESKTOP_NAV_SLOT, root, source);
+DesktopPortal.mount(
+DESKTOP_NAV_SLOT,
+root,
+source,
+{
+resolveRect: function (nativeAnchor) {
+var rect = nativeAnchor.getBoundingClientRect();
+return {
+top: rect.top,
+left: rect.left,
+width: DESKTOP_NAV_WIDTH,
+height: rect.height,
+right: rect.left + DESKTOP_NAV_WIDTH,
+bottom: rect.bottom
+};
+}
+}
+);
 syncDesktopGeometry();
 return true;
 }
