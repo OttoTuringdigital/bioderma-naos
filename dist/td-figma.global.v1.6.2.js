@@ -1,10 +1,10 @@
 /* TD_Figma_All_Pages_Core_Style_GTM_v1.8.1.html */
 (function(){window.TDFigmaStyleReady=window.TDFigmaStyleReady||{};window.TDFigmaStyleReady.allPages="1.8.0";}());
 
-/* TD_Figma_All_Pages_ProductCard_Style_GTM_v1.0.1.html */
+/* TD_Figma_All_Pages_ProductCard_Style_GTM_v1.0.2.html */
 (function () {
   window.TDFigmaStyleReady = window.TDFigmaStyleReady || {};
-  window.TDFigmaStyleReady.allPagesProductCard = '1.0.1';
+  window.TDFigmaStyleReady.allPagesProductCard = '1.0.2';
 }());
 
 /* TD_Figma_All_Pages_Core_Utility_GTM_v1.3.0.html */
@@ -3626,11 +3626,11 @@ init();
   }
 }());
 
-/* TD_Figma_All_Pages_ProductCard_GTM_v1.0.1.html */
+/* TD_Figma_All_Pages_ProductCard_GTM_v1.0.2.html */
 (function () {
   'use strict';
 
-  var VERSION = '1.0.1';
+  var VERSION = '1.0.2';
   var ROLE_ATTRIBUTE = 'data-tdpc-v1-role';
   var INJECTED_ATTRIBUTE = 'data-tdpc-v1-injected';
   var DATA_KEY = 'allPagesProductCard';
@@ -4172,6 +4172,40 @@ init();
     );
   }
 
+  function ensureLegacyCartButton(card, priceBlock, dataset) {
+    var selector =
+      '[' + ROLE_ATTRIBUTE + '="cart-button"]' +
+      '[' + INJECTED_ATTRIBUTE + '="true"]';
+    var cartButton = card ? card.querySelector(selector) : null;
+    var parent = priceBlock ? priceBlock.parentNode : null;
+    var label = (
+      dataset.text &&
+      dataset.text.purchaseButtonText
+    ) || '立即購買';
+
+    if (!card || !priceBlock || !parent) {
+      return null;
+    }
+
+    if (!cartButton) {
+      cartButton = document.createElement('span');
+      cartButton.setAttribute(INJECTED_ATTRIBUTE, 'true');
+      setRole(cartButton, 'cart-button');
+    }
+
+    cartButton.setAttribute(
+      'data-tdpc-v1-cart-label',
+      label
+    );
+    cartButton.textContent = label;
+
+    if (priceBlock.nextElementSibling !== cartButton) {
+      parent.insertBefore(cartButton, priceBlock.nextSibling);
+    }
+
+    return cartButton;
+  }
+
   function processModernCard(card, dataset) {
     var selectors = dataset.selectors.modern || {};
     var wrapper;
@@ -4310,6 +4344,7 @@ init();
     var salePrice;
     var salePriceContainer;
     var originalPrice;
+    var cartButton;
     var productName;
 
     media = card.querySelector(selectors.mediaContainer);
@@ -4363,6 +4398,13 @@ init();
     );
     setRole(salePrice, 'legacy-sale-price');
     setRole(originalPrice, 'legacy-original-price');
+
+    cartButton = ensureLegacyCartButton(
+      card,
+      priceBlock,
+      dataset
+    );
+    setRole(cartButton, 'cart-button');
 
     productName = trimText(
       title.textContent ||

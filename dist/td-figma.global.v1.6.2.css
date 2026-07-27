@@ -707,7 +707,7 @@ body.tdfn-v1-mobile-layout
   }
 }
 
-/* TD_Figma_All_Pages_ProductCard_Style_GTM_v1.0.1.html */
+/* TD_Figma_All_Pages_ProductCard_Style_GTM_v1.0.2.html */
 [data-tdpc-v1-role="card"],
   [data-tdpc-v1-role="card"] * {
     box-sizing: border-box !important;
@@ -1125,6 +1125,45 @@ body.tdfn-v1-mobile-layout
     text-decoration: line-through !important;
   }
 
+  /*
+   * 商品內頁舊版推薦商品卡沒有原生購買按鈕。
+   * 插入純視覺 CTA；點擊仍由外層商品連結處理。
+   */
+  [data-tdpc-v1-card-type="legacy"] [data-tdpc-v1-role="cart-button"] {
+    position: relative !important;
+    inset: auto !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    width: auto !important;
+    min-width: 0 !important;
+    height: 28px !important;
+    min-height: 28px !important;
+    margin: 9px var(--tdpc-v1-legacy-side-padding, 4px) 0 !important;
+    padding: 3px 10px !important;
+    border: 0 !important;
+    border-radius: 999px !important;
+    background: var(--tdpc-v1-navy) !important;
+    color: #FFFFFF !important;
+    font-size: 11px !important;
+    font-weight: 700 !important;
+    line-height: 16px !important;
+    letter-spacing: 1.25px !important;
+    text-align: center !important;
+    text-decoration: none !important;
+    white-space: nowrap !important;
+    cursor: pointer !important;
+    transform: none !important;
+    transition: background-color 300ms ease-out !important;
+  }
+
+  [data-tdpc-v1-card-type="legacy"] [data-tdpc-v1-role="cart-button"]:hover,
+  [data-tdpc-v1-card-type="legacy"] [data-tdpc-v1-role="cart-button"]:focus-visible {
+    background: var(--tdpc-v1-pink) !important;
+    outline: 2px solid var(--tdpc-v1-pink) !important;
+    outline-offset: 2px !important;
+  }
+
   @media (max-width: 991px) {
     [data-tdpc-v1-role="corner-label"] {
       top: 4px !important;
@@ -1221,7 +1260,8 @@ body.tdfn-v1-mobile-layout
       outline: none !important;
     }
 
-    [data-tdpc-v1-card-type="modern"] [data-tdpc-v1-role="cart-button"]:hover {
+    [data-tdpc-v1-card-type="modern"] [data-tdpc-v1-role="cart-button"]:hover,
+    [data-tdpc-v1-card-type="legacy"] [data-tdpc-v1-role="cart-button"]:hover {
       background: var(--tdpc-v1-navy) !important;
       outline: none !important;
     }
@@ -1754,5 +1794,16 @@ body.tdfn-v1-mobile-layout
     [data-tdpc-v1-card-type="legacy"] [data-tdpc-v1-role="legacy-sale-price"] {
       font-size: 12px !important;
       line-height: 17px !important;
+    }
+
+
+    [data-tdpc-v1-card-type="legacy"] [data-tdpc-v1-role="cart-button"] {
+      height: 25px !important;
+      min-height: 25px !important;
+      margin-top: 8px !important;
+      padding: 2px 8px !important;
+      font-size: 9px !important;
+      line-height: 13px !important;
+      letter-spacing: 1px !important;
     }
   }
