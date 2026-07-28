@@ -1,8 +1,8 @@
-/* TD_Figma_Category_Sidebar_GTM_v1.0.3.html */
+/* TD_Figma_Category_Sidebar_GTM_v1.0.4.html */
 (function () {
   'use strict';
 
-  var VERSION = '1.0.3';
+  var VERSION = '1.0.4';
   var DATA_KEY = 'categorySidebar';
   var ROOT_ID = 'tdsb-v1-root';
   var ROLE = 'data-tdsb-v1-role';
@@ -444,8 +444,8 @@
       topPadding = 10;
       bottomPadding = 10;
       top = rect.top + window.pageYOffset - topPadding;
-      height = rect.height + topPadding + bottomPadding;
-      target.setAttribute('data-tdsb-v1-background-source', 'native-control');
+      height = null;
+      target.setAttribute('data-tdsb-v1-background-source', 'content-auto');
     } else {
       backgroundAnchor = anchor.parentElement && document.documentElement.contains(anchor.parentElement) ? anchor.parentElement : anchor;
       backgroundRect = backgroundAnchor.getBoundingClientRect();
@@ -463,7 +463,8 @@
     target.style.left = Math.round(window.pageXOffset) + 'px';
     target.style.top = Math.round(top) + 'px';
     target.style.width = Math.round(viewportWidth) + 'px';
-    target.style.height = Math.round(height) + 'px';
+    if (height == null) { target.style.height = 'auto'; }
+    else { target.style.height = Math.round(height) + 'px'; }
     target.style.padding = topPadding + 'px ' + rightPadding + 'px ' + bottomPadding + 'px ' + leftPadding + 'px';
     target.style.backgroundColor = '#ffffff';
   }
