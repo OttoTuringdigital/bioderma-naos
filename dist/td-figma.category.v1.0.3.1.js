@@ -1,8 +1,8 @@
-/* TD_Figma_Category_Sidebar_GTM_v1.0.2.html */
+/* TD_Figma_Category_Sidebar_GTM_v1.0.3.html */
 (function () {
   'use strict';
 
-  var VERSION = '1.0.2';
+  var VERSION = '1.0.3';
   var DATA_KEY = 'categorySidebar';
   var ROOT_ID = 'tdsb-v1-root';
   var ROLE = 'data-tdsb-v1-role';
@@ -417,11 +417,14 @@
   function syncMobileControls() {
     var target = state.portals['mobile-controls'];
     var anchor = state.native.mobileControls;
+    var backgroundAnchor;
     var rect;
+    var backgroundRect;
     var viewportWidth;
     var leftPadding;
     var rightPadding;
-    var verticalPadding;
+    var topPadding;
+    var bottomPadding;
     var top;
     var height;
     if (!target || !anchor || !document.documentElement.contains(anchor)) {
@@ -435,18 +438,33 @@
       target.removeAttribute('data-tdsb-v1-positioned');
       return;
     }
-    verticalPadding = state.variant === 'search' ? 10 : 0;
-    leftPadding = state.variant === 'search' ? 10 : Math.max(0, Math.round(rect.left));
-    rightPadding = state.variant === 'search' ? 10 : Math.max(0, Math.round(viewportWidth - rect.right));
-    top = rect.top + window.pageYOffset - verticalPadding;
-    height = rect.height + verticalPadding * 2;
+    if (state.variant === 'search') {
+      leftPadding = 10;
+      rightPadding = 10;
+      topPadding = 10;
+      bottomPadding = 10;
+      top = rect.top + window.pageYOffset - topPadding;
+      height = rect.height + topPadding + bottomPadding;
+      target.setAttribute('data-tdsb-v1-background-source', 'native-control');
+    } else {
+      backgroundAnchor = anchor.parentElement && document.documentElement.contains(anchor.parentElement) ? anchor.parentElement : anchor;
+      backgroundRect = backgroundAnchor.getBoundingClientRect();
+      if (backgroundRect.width < 1 || backgroundRect.height < 1) { backgroundRect = rect; }
+      leftPadding = Math.max(0, Math.round(rect.left));
+      rightPadding = Math.max(0, Math.round(viewportWidth - rect.right));
+      topPadding = Math.max(0, Math.round(rect.top - backgroundRect.top));
+      bottomPadding = Math.max(0, Math.round(backgroundRect.bottom - rect.bottom));
+      top = backgroundRect.top + window.pageYOffset;
+      height = backgroundRect.height;
+      target.setAttribute('data-tdsb-v1-background-source', backgroundAnchor === anchor ? 'native-control' : 'native-parent');
+    }
     target.style.display = 'block';
     target.setAttribute('data-tdsb-v1-positioned', 'true');
     target.style.left = Math.round(window.pageXOffset) + 'px';
     target.style.top = Math.round(top) + 'px';
     target.style.width = Math.round(viewportWidth) + 'px';
     target.style.height = Math.round(height) + 'px';
-    target.style.padding = verticalPadding + 'px ' + rightPadding + 'px ' + verticalPadding + 'px ' + leftPadding + 'px';
+    target.style.padding = topPadding + 'px ' + rightPadding + 'px ' + bottomPadding + 'px ' + leftPadding + 'px';
     target.style.backgroundColor = '#ffffff';
   }
 
@@ -1012,7 +1030,10 @@
       state.resizeObserver = new ResizeObserver(scheduleSync);
       if (state.native.sidebar) { state.resizeObserver.observe(state.native.sidebar); }
       if (state.native.sort) { state.resizeObserver.observe(state.native.sort); }
-      if (state.native.mobileControls) { state.resizeObserver.observe(state.native.mobileControls); }
+      if (state.native.mobileControls) {
+        state.resizeObserver.observe(state.native.mobileControls);
+        if (state.native.mobileControls.parentElement) { state.resizeObserver.observe(state.native.mobileControls.parentElement); }
+      }
       if (state.native.selected) { state.resizeObserver.observe(state.native.selected); }
       if (state.native.productCountRow) { state.resizeObserver.observe(state.native.productCountRow); }
     }
