@@ -1,4 +1,4 @@
-/* TD_Figma_Category_Sidebar_Style_GTM_v1.0.2.html */
+/* TD_Figma_Category_Sidebar_Style_GTM_v1.0.3.html */
 /* Namespace: tdsb-v1. Category Bundle only. */
 :root {
   --tdsb-v1-navy: #0b3d70;
@@ -52,6 +52,7 @@ html[data-tdsb-v1-mode="desktop"] ol[data-tdsb-v1-breadcrumb="true"] a:focus-vis
 #tdsb-v1-root, #tdsb-v1-root * { box-sizing: border-box; }
 #tdsb-v1-root { position: absolute !important; top: 0 !important; right: auto !important; bottom: auto !important; left: 0 !important; width: 0; height: 0; z-index: 2147481200; transform: none !important; pointer-events: none; font-family: Arial,"Noto Sans TC","PingFang TC",sans-serif; color: var(--tdsb-v1-text); }
 [data-tdsb-v1-portal] { position: absolute !important; pointer-events: auto; }
+[data-tdsb-v1-portal="mobile-controls"] { background-color: #ffffff; }
 [data-tdsb-v1-portal="sidebar"] { background: var(--tdsb-v1-white); overflow: visible; }
 .tdsb-v1-sidebar { width: 100%; background: #fff; padding: 0 20px 24px 0; }
 .tdsb-v1-group { border-bottom: 1px solid var(--tdsb-v1-line); }
