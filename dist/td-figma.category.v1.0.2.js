@@ -1,8 +1,8 @@
-/* TD_Figma_Category_Sidebar_GTM_v1.0.1.html */
+/* TD_Figma_Category_Sidebar_GTM_v1.0.2.html */
 (function () {
   'use strict';
 
-  var VERSION = '1.0.1';
+  var VERSION = '1.0.2';
   var DATA_KEY = 'categorySidebar';
   var ROOT_ID = 'tdsb-v1-root';
   var ROLE = 'data-tdsb-v1-role';
@@ -332,7 +332,9 @@
     var rect;
     var width;
     var height;
-    var documentTop;
+    var left;
+    var top;
+    var rawTop;
     if (!target || !anchor || !document.documentElement.contains(anchor)) {
       if (target) { target.style.display = 'none'; }
       return;
@@ -342,19 +344,62 @@
     options = options || {};
     width = options.width || rect.width;
     height = options.height || rect.height;
-    documentTop = Math.round(rect.top + window.pageYOffset + (options.offsetY || 0));
-    if (options.freezeDocumentTop) {
-      if (typeof state.portalDocumentTops[name] !== 'number' || options.refreshFrozenTop) {
-        state.portalDocumentTops[name] = documentTop;
+    if (options.coordinateSpace === 'viewport') {
+      left = Math.round(rect.left + (options.offsetX || 0));
+      rawTop = rect.top + (options.offsetY || 0);
+      top = Math.round(Math.max(rawTop, Number(options.minimumViewportTop || 0)));
+      if (rawTop < Number(options.minimumViewportTop || 0) - 0.5) {
+        target.setAttribute('data-tdsb-v1-sticky', 'true');
+      } else {
+        target.removeAttribute('data-tdsb-v1-sticky');
       }
-      documentTop = state.portalDocumentTops[name];
+    } else {
+      left = Math.round(rect.left + window.pageXOffset + (options.offsetX || 0));
+      top = Math.round(rect.top + window.pageYOffset + (options.offsetY || 0));
+      target.removeAttribute('data-tdsb-v1-sticky');
     }
     target.style.display = 'block';
-    target.style.left = Math.round(rect.left + window.pageXOffset + (options.offsetX || 0)) + 'px';
-    target.style.top = documentTop + 'px';
+    target.style.position = 'absolute';
+    target.style.left = left + 'px';
+    target.style.top = top + 'px';
     target.style.width = Math.round(width) + 'px';
     if (options.autoHeight) { target.style.height = 'auto'; }
     else { target.style.height = Math.round(height) + 'px'; }
+  }
+
+  function getMobileHeaderBottom() {
+    var selectors = [
+      '#layout-header-fix',
+      'header.headerA .headerA__top',
+      'header.headerA',
+      '#officialHeader .layout-header',
+      '#officialHeader',
+      '[data-tdfh-v1-native-header="interactive"]',
+      'header'
+    ];
+    var seen = [];
+    var bottom = 0;
+    var elements;
+    var element;
+    var rect;
+    var style;
+    var i;
+    var j;
+    for (i = 0; i < selectors.length; i += 1) {
+      try { elements = toArray(document.querySelectorAll(selectors[i])); } catch (error) { elements = []; }
+      for (j = 0; j < elements.length; j += 1) {
+        element = elements[j];
+        if (!element || seen.indexOf(element) !== -1 || (state.root && state.root.contains(element))) { continue; }
+        seen.push(element);
+        rect = element.getBoundingClientRect();
+        style = window.getComputedStyle ? window.getComputedStyle(element) : null;
+        if (!style || style.display === 'none' || style.visibility === 'hidden' || Number(style.opacity || 1) === 0) { continue; }
+        if (rect.width < window.innerWidth * 0.45 || rect.height < 1 || rect.height > 180) { continue; }
+        if (rect.bottom <= 0 || rect.top > 8) { continue; }
+        bottom = Math.max(bottom, Math.min(rect.bottom, 180));
+      }
+    }
+    return Math.max(0, Math.round(bottom));
   }
 
   function clearLayoutTimers() {
@@ -409,7 +454,7 @@
   function syncPortals() {
     var sortWidth;
     var countRect;
-    var refreshFrozenTop = Math.abs(window.pageYOffset - state.initialScrollY) <= 4;
+    var headerBottom;
     if (state.mode === 'desktop') {
       setPortalRect('sidebar', state.native.sidebar, { autoHeight: true });
       sortWidth = state.native.sort ? Math.min(180, Math.max(135, state.native.sort.getBoundingClientRect().width)) : 160;
@@ -417,10 +462,11 @@
       setPortalRect('selected', state.native.selected, { autoHeight: true });
       reserveDesktopSidebarHeight();
     } else {
+      headerBottom = getMobileHeaderBottom();
       setPortalRect('mobile-controls', state.native.mobileControls, {
         autoHeight: true,
-        freezeDocumentTop: true,
-        refreshFrozenTop: refreshFrozenTop
+        coordinateSpace: 'viewport',
+        minimumViewportTop: headerBottom
       });
       sortWidth = state.native.sort ? Math.min(160, Math.max(135, state.native.sort.getBoundingClientRect().width)) : 150;
       if (state.native.count) {
@@ -430,15 +476,13 @@
           offsetX: Math.max(0, countRect.width - Math.min(sortWidth, countRect.width)),
           offsetY: Math.round((countRect.height - 38) / 2),
           autoHeight: true,
-          freezeDocumentTop: true,
-          refreshFrozenTop: refreshFrozenTop
+          coordinateSpace: 'viewport'
         });
       } else if (state.native.sort) {
         setPortalRect('sort', state.native.sort, {
           width: sortWidth,
           autoHeight: true,
-          freezeDocumentTop: true,
-          refreshFrozenTop: refreshFrozenTop
+          coordinateSpace: 'viewport'
         });
       }
     }
@@ -990,8 +1034,13 @@
     scheduleSettledSync();
   }
 
+  function onScroll() {
+    if (state.mode === 'mobile') { scheduleSync(); }
+  }
+
   function bind() {
     window.addEventListener('resize', onResize, { passive: true });
+    window.addEventListener('scroll', onScroll, { passive: true });
     window.addEventListener('orientationchange', refresh);
     window.addEventListener('load', onWindowLoad);
     document.addEventListener('td-sidebar-dataset-ready', refresh);
@@ -1021,6 +1070,7 @@
     document.documentElement.removeAttribute('data-tdsb-v1-scroll-lock');
     if (state.root && state.root.parentNode) { state.root.parentNode.removeChild(state.root); }
     window.removeEventListener('resize', onResize);
+    window.removeEventListener('scroll', onScroll);
     window.removeEventListener('orientationchange', refresh);
     window.removeEventListener('load', onWindowLoad);
     document.removeEventListener('td-sidebar-dataset-ready', refresh);

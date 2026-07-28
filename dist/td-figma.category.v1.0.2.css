@@ -1,4 +1,4 @@
-/* TD_Figma_Category_Sidebar_Style_GTM_v1.0.1.html */
+/* TD_Figma_Category_Sidebar_Style_GTM_v1.0.2.html */
 /* Namespace: tdsb-v1. Category Bundle only. */
 :root {
   --tdsb-v1-navy: #0b3d70;
@@ -109,8 +109,17 @@ html[data-tdsb-v1-mode="desktop"] ol[data-tdsb-v1-breadcrumb="true"] a:focus-vis
 .tdsb-v1-action--confirm { background:var(--tdsb-v1-navy); color:#fff; }
 html[data-tdsb-v1-scroll-lock="true"],html[data-tdsb-v1-scroll-lock="true"] body { overflow:hidden !important; }
 @media (max-width:991px) {
-  #tdsb-v1-root, [data-tdsb-v1-portal="mobile-controls"], [data-tdsb-v1-portal="sort"] { position:absolute !important; }
-  #tdsb-v1-root { font-size:13px; }
+  #tdsb-v1-root {
+    position:fixed !important;
+    top:0 !important;
+    right:auto !important;
+    bottom:auto !important;
+    left:0 !important;
+    width:100% !important;
+    height:0 !important;
+    font-size:13px;
+  }
+  [data-tdsb-v1-portal="mobile-controls"], [data-tdsb-v1-portal="sort"] { position:absolute !important; }
   [data-tdsb-v1-portal="sidebar"], [data-tdsb-v1-portal="selected"] { display:none !important; }
   .tdsb-v1-sort-button { height:38px; }
   .tdsb-v1-sort-list { z-index:7; }
