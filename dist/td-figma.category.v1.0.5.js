@@ -1,8 +1,8 @@
-/* TD_Figma_Category_Sidebar_GTM_v1.0.4.html */
+/* TD_Figma_Category_Sidebar_GTM_v1.0.5.html */
 (function () {
   'use strict';
 
-  var VERSION = '1.0.4';
+  var VERSION = '1.0.5';
   var DATA_KEY = 'categorySidebar';
   var ROOT_ID = 'tdsb-v1-root';
   var ROLE = 'data-tdsb-v1-role';
@@ -441,9 +441,9 @@
     if (state.variant === 'search') {
       leftPadding = 10;
       rightPadding = 10;
-      topPadding = 10;
-      bottomPadding = 10;
-      top = rect.top + window.pageYOffset - topPadding;
+      topPadding = 0;
+      bottomPadding = 0;
+      top = rect.top + window.pageYOffset;
       height = null;
       target.setAttribute('data-tdsb-v1-background-source', 'content-auto');
     } else {
