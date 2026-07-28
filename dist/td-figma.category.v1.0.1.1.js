@@ -1,8 +1,8 @@
-/* TD_Figma_Category_Sidebar_GTM_v1.0.3.html */
+/* TD_Figma_Category_Sidebar_GTM_v1.0.1.html */
 (function () {
   'use strict';
 
-  var VERSION = '1.0.3';
+  var VERSION = '1.0.1';
   var DATA_KEY = 'categorySidebar';
   var ROOT_ID = 'tdsb-v1-root';
   var ROLE = 'data-tdsb-v1-role';
@@ -17,14 +17,8 @@
     retryCount: 0,
     syncFrame: null,
     resizeObserver: null,
-    layoutTimers: [],
-    portalDocumentTops: {},
-    initialScrollY: 0,
-    lastScrollY: 0,
-    mobileScrollDirection: 'none',
-    mobileControlsSticky: false,
-    nativeSidebarInlineMinHeight: null,
-    nativeSidebarBaseHeight: 0,
+    stabilizeTimers: [],
+    nativeSidebarMinHeight: null,
     cleanup: [],
     popup: null,
     popupTrigger: null,
@@ -271,23 +265,34 @@
   }
 
   function findProductCount() {
-    var nodes = toArray(document.querySelectorAll('div,span,p'));
-    var best = null;
-    var bestWidth = 0;
-    var value;
+    var nodes = toArray(document.querySelectorAll('body div,body span,body p'));
+    var text;
     var rect;
     var i;
     for (i = 0; i < nodes.length; i += 1) {
-      value = normalizeText(nodes[i].textContent);
-      if (!/^共\d+[項件]商品$/.test(value)) { continue; }
+      if (nodes[i].children.length) { continue; }
+      text = normalizeText(nodes[i].textContent);
+      if (!/^共\d+(項|件)商品$/.test(text)) { continue; }
       rect = nodes[i].getBoundingClientRect();
-      if (rect.width < 40 || rect.height < 12 || rect.height > 120) { continue; }
-      if (rect.width > bestWidth) {
-        best = nodes[i];
-        bestWidth = rect.width;
-      }
+      if (rect.width > 0 && rect.height > 0) { return nodes[i]; }
     }
-    return best;
+    return null;
+  }
+
+  function findProductCountRow(count) {
+    var current = count;
+    var rect;
+    var countRect = count && count.getBoundingClientRect();
+    var level = 0;
+    while (current && current !== document.body && level < 4) {
+      rect = current.getBoundingClientRect();
+      if (countRect && rect.width >= countRect.width + 80 && rect.height >= countRect.height && rect.height <= 100) {
+        return current;
+      }
+      current = current.parentElement;
+      level += 1;
+    }
+    return count && count.parentElement ? count.parentElement : count;
   }
 
   function findNativeSelected() {
@@ -335,133 +340,22 @@
     var rect;
     var width;
     var height;
-    var left;
-    var top;
-    var rawTop;
-    var documentTop;
-    var minimumTop;
-    var allowSticky;
     if (!target || !anchor || !document.documentElement.contains(anchor)) {
-      if (target) { target.style.display = 'none'; }
+      if (target) { target.style.display = 'none'; target.removeAttribute('data-tdsb-v1-positioned'); }
       return;
     }
     rect = anchor.getBoundingClientRect();
-    if (rect.width < 1 || rect.height < 1) { target.style.display = 'none'; return; }
+    if (rect.width < 1 || rect.height < 1) { target.style.display = 'none'; target.removeAttribute('data-tdsb-v1-positioned'); return; }
     options = options || {};
     width = options.width || rect.width;
     height = options.height || rect.height;
-    minimumTop = Number(options.minimumViewportTop || 0);
-    allowSticky = options.allowSticky !== false;
-
-    if (options.freezeDocumentTop) {
-      documentTop = Math.round(rect.top + window.pageYOffset + (options.offsetY || 0));
-      if (typeof state.portalDocumentTops[name] !== 'number' || options.refreshFrozenTop) {
-        state.portalDocumentTops[name] = documentTop;
-      }
-      documentTop = state.portalDocumentTops[name];
-      left = Math.round(rect.left + (options.offsetX || 0));
-      rawTop = documentTop - window.pageYOffset;
-      top = rawTop;
-    } else if (options.coordinateSpace === 'viewport') {
-      left = Math.round(rect.left + (options.offsetX || 0));
-      rawTop = rect.top + (options.offsetY || 0);
-      top = rawTop;
-    } else {
-      left = Math.round(rect.left + window.pageXOffset + (options.offsetX || 0));
-      top = Math.round(rect.top + window.pageYOffset + (options.offsetY || 0));
-      rawTop = top;
-    }
-
-    if ((options.coordinateSpace === 'viewport' || options.freezeDocumentTop) && allowSticky && rawTop < minimumTop - 0.5) {
-      top = minimumTop;
-      target.setAttribute('data-tdsb-v1-sticky', 'true');
-    } else {
-      target.removeAttribute('data-tdsb-v1-sticky');
-    }
-
     target.style.display = 'block';
-    target.style.position = 'absolute';
-    target.style.left = left + 'px';
-    target.style.top = Math.round(top) + 'px';
+    target.setAttribute('data-tdsb-v1-positioned', 'true');
+    target.style.left = Math.round(rect.left + window.pageXOffset + (options.offsetX || 0)) + 'px';
+    target.style.top = Math.round(rect.top + window.pageYOffset + (options.offsetY || 0)) + 'px';
     target.style.width = Math.round(width) + 'px';
     if (options.autoHeight) { target.style.height = 'auto'; }
     else { target.style.height = Math.round(height) + 'px'; }
-  }
-
-  function getMobileHeaderBottom() {
-    var selectors = [
-      '#layout-header-fix',
-      'header.headerA .headerA__top',
-      'header.headerA',
-      '#officialHeader .layout-header',
-      '#officialHeader',
-      '[data-tdfh-v1-native-header="interactive"]',
-      'header'
-    ];
-    var seen = [];
-    var bottom = 0;
-    var elements;
-    var element;
-    var rect;
-    var style;
-    var i;
-    var j;
-    for (i = 0; i < selectors.length; i += 1) {
-      try { elements = toArray(document.querySelectorAll(selectors[i])); } catch (error) { elements = []; }
-      for (j = 0; j < elements.length; j += 1) {
-        element = elements[j];
-        if (!element || seen.indexOf(element) !== -1 || (state.root && state.root.contains(element))) { continue; }
-        seen.push(element);
-        rect = element.getBoundingClientRect();
-        style = window.getComputedStyle ? window.getComputedStyle(element) : null;
-        if (!style || style.display === 'none' || style.visibility === 'hidden' || Number(style.opacity || 1) === 0) { continue; }
-        if (rect.width < window.innerWidth * 0.45 || rect.height < 1 || rect.height > 180) { continue; }
-        if (rect.bottom <= 0 || rect.top > 8) { continue; }
-        bottom = Math.max(bottom, Math.min(rect.bottom, 180));
-      }
-    }
-    return Math.max(0, Math.round(bottom));
-  }
-
-  function clearLayoutTimers() {
-    var i;
-    for (i = 0; i < state.layoutTimers.length; i += 1) {
-      window.clearTimeout(state.layoutTimers[i]);
-    }
-    state.layoutTimers = [];
-  }
-
-  function scheduleSettledSync() {
-    var delays = [0, 60, 180, 400, 800, 1400, 2400];
-    var i;
-    clearLayoutTimers();
-    for (i = 0; i < delays.length; i += 1) {
-      (function (delay) {
-        state.layoutTimers.push(window.setTimeout(function () {
-          if (state.destroyed) { return; }
-          scheduleSync();
-        }, delay));
-      }(delays[i]));
-    }
-  }
-
-  function restoreNativeSidebarHeight() {
-    if (!state.native.sidebar || state.nativeSidebarInlineMinHeight === null) { return; }
-    state.native.sidebar.style.minHeight = state.nativeSidebarInlineMinHeight;
-    state.nativeSidebarInlineMinHeight = null;
-    state.nativeSidebarBaseHeight = 0;
-  }
-
-  function reserveDesktopSidebarHeight() {
-    var sidebar;
-    var requiredHeight;
-    if (state.mode !== 'desktop' || !state.native.sidebar || !state.portals.sidebar) { return; }
-    sidebar = state.portals.sidebar.querySelector('.tdsb-v1-sidebar');
-    if (!sidebar) { return; }
-    requiredHeight = Math.max(state.nativeSidebarBaseHeight || 0, Math.ceil(sidebar.getBoundingClientRect().height));
-    if (requiredHeight > 0 && state.native.sidebar.style.minHeight !== requiredHeight + 'px') {
-      state.native.sidebar.style.minHeight = requiredHeight + 'px';
-    }
   }
 
   function scheduleSync() {
@@ -472,52 +366,87 @@
     });
   }
 
+  function syncDesktopLayoutHeight() {
+    var anchor = state.native.sidebar;
+    var sidebar = state.portals.sidebar && state.portals.sidebar.querySelector('.tdsb-v1-sidebar');
+    var height;
+    if (!anchor || !sidebar) { return; }
+    height = Math.ceil(Math.max(sidebar.scrollHeight || 0, sidebar.getBoundingClientRect().height || 0));
+    if (height < 1) { return; }
+    if (!state.nativeSidebarMinHeight || state.nativeSidebarMinHeight.element !== anchor) {
+      state.nativeSidebarMinHeight = {
+        element: anchor,
+        value: anchor.style.getPropertyValue('min-height'),
+        priority: anchor.style.getPropertyPriority('min-height')
+      };
+    }
+    anchor.style.setProperty('min-height', height + 'px', 'important');
+  }
+
+  function restoreDesktopLayoutHeight() {
+    var original = state.nativeSidebarMinHeight;
+    if (!original || !original.element) { return; }
+    if (original.value) { original.element.style.setProperty('min-height', original.value, original.priority || ''); }
+    else { original.element.style.removeProperty('min-height'); }
+    state.nativeSidebarMinHeight = null;
+  }
+
+  function syncMobileSort() {
+    var target = state.portals.sort;
+    var count = state.native.productCount;
+    var row = state.native.productCountRow;
+    var rowRect;
+    var countRect;
+    var width;
+    var top;
+    if (!target || !count || !row || !document.documentElement.contains(count) || !document.documentElement.contains(row)) {
+      if (target) { target.style.display = 'none'; target.removeAttribute('data-tdsb-v1-positioned'); }
+      return;
+    }
+    rowRect = row.getBoundingClientRect();
+    countRect = count.getBoundingClientRect();
+    if (rowRect.width < 1 || countRect.height < 1) {
+      target.style.display = 'none';
+      target.removeAttribute('data-tdsb-v1-positioned');
+      return;
+    }
+    width = Math.min(160, Math.max(135, Math.round(rowRect.width * 0.46)));
+    top = countRect.top + Math.round((countRect.height - 38) / 2);
+    if (top < rowRect.top) { top = rowRect.top; }
+    target.style.display = 'block';
+    target.setAttribute('data-tdsb-v1-positioned', 'true');
+    target.style.left = Math.round(rowRect.right + window.pageXOffset - width) + 'px';
+    target.style.top = Math.round(top + window.pageYOffset) + 'px';
+    target.style.width = Math.round(width) + 'px';
+    target.style.height = 'auto';
+  }
+
+  function clearStabilizeTimers() {
+    var i;
+    for (i = 0; i < state.stabilizeTimers.length; i += 1) { window.clearTimeout(state.stabilizeTimers[i]); }
+    state.stabilizeTimers = [];
+  }
+
+  function scheduleStabilizedSync() {
+    var delays = [0, 60, 180, 360, 700, 1200, 2000];
+    var i;
+    clearStabilizeTimers();
+    for (i = 0; i < delays.length; i += 1) {
+      state.stabilizeTimers.push(window.setTimeout(scheduleSync, delays[i]));
+    }
+  }
+
   function syncPortals() {
     var sortWidth;
-    var countRect;
-    var headerBottom;
-    var refreshFrozenTop = Math.abs(window.pageYOffset - state.initialScrollY) <= 4;
-    var searchControlsOffset = state.variant === 'search' ? 28 : 0;
     if (state.mode === 'desktop') {
       setPortalRect('sidebar', state.native.sidebar, { autoHeight: true });
+      syncDesktopLayoutHeight();
       sortWidth = state.native.sort ? Math.min(180, Math.max(135, state.native.sort.getBoundingClientRect().width)) : 160;
       setPortalRect('sort', state.native.sort, { width: sortWidth, autoHeight: true });
       setPortalRect('selected', state.native.selected, { autoHeight: true });
-      reserveDesktopSidebarHeight();
     } else {
-      headerBottom = getMobileHeaderBottom();
-      setPortalRect('mobile-controls', state.native.mobileControls, {
-        autoHeight: true,
-        coordinateSpace: 'viewport',
-        freezeDocumentTop: true,
-        refreshFrozenTop: refreshFrozenTop,
-        offsetY: searchControlsOffset,
-        minimumViewportTop: headerBottom,
-        allowSticky: state.mobileControlsSticky
-      });
-      sortWidth = state.native.sort ? Math.min(160, Math.max(135, state.native.sort.getBoundingClientRect().width)) : 150;
-      if (state.native.count) {
-        countRect = state.native.count.getBoundingClientRect();
-        setPortalRect('sort', state.native.count, {
-          width: Math.min(sortWidth, countRect.width),
-          offsetX: Math.max(0, countRect.width - Math.min(sortWidth, countRect.width)),
-          offsetY: Math.round((countRect.height - 38) / 2),
-          autoHeight: true,
-          coordinateSpace: 'viewport',
-          freezeDocumentTop: true,
-          refreshFrozenTop: refreshFrozenTop,
-          allowSticky: false
-        });
-      } else if (state.native.sort) {
-        setPortalRect('sort', state.native.sort, {
-          width: sortWidth,
-          autoHeight: true,
-          coordinateSpace: 'viewport',
-          freezeDocumentTop: true,
-          refreshFrozenTop: refreshFrozenTop,
-          allowSticky: false
-        });
-      }
+      setPortalRect('mobile-controls', state.native.mobileControls, { autoHeight: true });
+      syncMobileSort();
     }
   }
 
@@ -680,7 +609,8 @@
       section.setAttribute('data-open', next ? 'true' : 'false');
       button.setAttribute('aria-expanded', next ? 'true' : 'false');
       icon.className = 'tdsb-v1-group-icon ico ' + (next ? 'ico-subtract' : 'ico-add');
-      scheduleSettledSync();
+      scheduleSync();
+      window.setTimeout(scheduleSync, 320);
     });
     return section;
   }
@@ -791,16 +721,16 @@
     var url = currentUrl();
     var selected = selectedItems(url);
     var wrap = create('div', 'tdsb-v1-selected');
+    var chips = create('div', 'tdsb-v1-selected-chips');
     var chip;
+    var icon;
     var i;
     host.innerHTML = '';
     for (i = 0; i < selected.length; i += 1) {
       chip = create('button', 'tdsb-v1-chip', { type: 'button' });
-      var chipLabel = create('span', 'tdsb-v1-chip-label');
-      var chipIcon = create('i', 'tdsb-v1-chip-icon ico ico-subtract', { 'aria-hidden': 'true' });
-      chipLabel.textContent = selected[i].item.label || '';
-      chip.appendChild(chipLabel);
-      chip.appendChild(chipIcon);
+      chip.appendChild(document.createTextNode(selected[i].item.label || ''));
+      icon = create('i', 'tdsb-v1-chip-icon ico ico-subtract', { 'aria-hidden': 'true' });
+      chip.appendChild(icon);
       (function (item) {
         chip.addEventListener('click', function () {
           var next = currentUrl();
@@ -808,12 +738,13 @@
           applyUrl(next, 'chip-remove');
         });
       }(selected[i].item));
-      wrap.appendChild(chip);
+      chips.appendChild(chip);
     }
     if (selected.length) {
       var clear = create('button', 'tdsb-v1-clear-all', { type: 'button' });
       clear.textContent = state.dataset.text.clearAll || '清除所有篩選';
       clear.addEventListener('click', function () { clearManagedFilters(currentUrl(), true); });
+      wrap.appendChild(chips);
       wrap.appendChild(clear);
     }
     host.appendChild(wrap);
@@ -966,29 +897,29 @@
 
   function clearNativeMarks() {
     var key;
-    restoreNativeSidebarHeight();
+    restoreDesktopLayoutHeight();
     if (state.native.sidebar) { state.native.sidebar.removeAttribute('data-tdsb-v1-native-sidebar'); }
     if (state.native.sort) { state.native.sort.removeAttribute('data-tdsb-v1-native-sort'); }
     if (state.native.selected) { state.native.selected.removeAttribute('data-tdsb-v1-native-selected'); }
     if (state.native.mobileControls) { state.native.mobileControls.removeAttribute('data-tdsb-v1-native-mobile-controls'); }
     if (state.native.breadcrumb) { state.native.breadcrumb.removeAttribute('data-tdsb-v1-breadcrumb'); }
     state.native = {};
-    state.portalDocumentTops = {};
     for (key in state.portals) {
-      if (Object.prototype.hasOwnProperty.call(state.portals, key) && state.portals[key]) { state.portals[key].innerHTML = ''; state.portals[key].style.display = 'none'; }
+      if (Object.prototype.hasOwnProperty.call(state.portals, key) && state.portals[key]) { state.portals[key].innerHTML = ''; state.portals[key].style.display = 'none'; state.portals[key].removeAttribute('data-tdsb-v1-positioned'); }
     }
   }
 
   function locateNative() {
     state.native.sort = findNativeSort();
     state.native.selected = findNativeSelected();
-    state.native.count = findProductCount();
     if (state.mode === 'desktop') {
       state.native.sidebar = findDesktopSidebar();
       if (!state.native.sidebar || !state.native.sort) { return false; }
     } else {
       state.native.mobileControls = findMobileControls();
-      if (!state.native.mobileControls) { return false; }
+      state.native.productCount = findProductCount();
+      state.native.productCountRow = findProductCountRow(state.native.productCount);
+      if (!state.native.mobileControls || !state.native.productCount || !state.native.productCountRow) { return false; }
     }
     return true;
   }
@@ -1001,18 +932,8 @@
     state.variant = detectVariant();
     if (!locateNative()) { return false; }
     ensureRoot();
-    state.initialScrollY = window.pageYOffset;
-    state.lastScrollY = window.pageYOffset;
-    state.mobileScrollDirection = 'none';
-    state.mobileControlsSticky = false;
-    state.portalDocumentTops = {};
-    if (state.mode === 'desktop' && state.native.sidebar) {
-      state.nativeSidebarInlineMinHeight = state.native.sidebar.style.minHeight || '';
-      state.nativeSidebarBaseHeight = Math.ceil(state.native.sidebar.getBoundingClientRect().height);
-    }
     document.documentElement.setAttribute('data-tdsb-v1-active', 'true');
     document.documentElement.setAttribute('data-tdsb-v1-mode', state.mode);
-    document.documentElement.setAttribute('data-tdsb-v1-variant', state.variant);
     if (state.mode === 'desktop') {
       buildSidebar(); buildSort(); buildSelected(); markBreadcrumb();
       state.native.sidebar.setAttribute('data-tdsb-v1-native-sidebar', 'hidden');
@@ -1023,17 +944,16 @@
       state.native.mobileControls.setAttribute('data-tdsb-v1-native-mobile-controls', 'hidden');
       if (state.native.sort) { state.native.sort.setAttribute('data-tdsb-v1-native-sort', 'hidden'); }
     }
-    syncPortals();
-    scheduleSettledSync();
+    scheduleSync();
+    scheduleStabilizedSync();
     if (window.ResizeObserver) {
       if (state.resizeObserver) { state.resizeObserver.disconnect(); }
       state.resizeObserver = new ResizeObserver(scheduleSync);
       if (state.native.sidebar) { state.resizeObserver.observe(state.native.sidebar); }
       if (state.native.sort) { state.resizeObserver.observe(state.native.sort); }
       if (state.native.mobileControls) { state.resizeObserver.observe(state.native.mobileControls); }
-      if (state.native.count) { state.resizeObserver.observe(state.native.count); }
       if (state.native.selected) { state.resizeObserver.observe(state.native.selected); }
-      if (state.portals.sidebar) { state.resizeObserver.observe(state.portals.sidebar); }
+      if (state.native.productCountRow) { state.resizeObserver.observe(state.native.productCountRow); }
     }
     pushEvent('td_sidebar_ready', { td_sidebar_mode: state.mode, td_sidebar_variant: state.variant });
     return true;
@@ -1053,6 +973,7 @@
   }
 
   function refresh() {
+    clearStabilizeTimers();
     state.retryCount = 0;
     window.clearTimeout(state.retryTimer);
     retryMount();
@@ -1061,49 +982,26 @@
   function onResize() {
     var nextMode = window.innerWidth >= Number(getSettings().desktopMinWidth || 992) ? 'desktop' : 'mobile';
     if (nextMode !== state.mode) { refresh(); }
-    else {
-      if (Math.abs(window.pageYOffset - state.initialScrollY) <= 4) { state.portalDocumentTops = {}; }
-      scheduleSettledSync();
-    }
+    else { scheduleSync(); }
   }
 
   function onWindowLoad() {
-    scheduleSettledSync();
+    scheduleStabilizedSync();
   }
 
-  function onScroll() {
-    var currentY;
-    var delta;
-    if (state.mode !== 'mobile') { return; }
-    currentY = Math.max(0, window.pageYOffset || document.documentElement.scrollTop || 0);
-    delta = currentY - state.lastScrollY;
-    if (Math.abs(delta) >= 2) {
-      if (delta < 0) {
-        state.mobileScrollDirection = 'up';
-        state.mobileControlsSticky = currentY > 2;
-      } else {
-        state.mobileScrollDirection = 'down';
-        state.mobileControlsSticky = false;
-      }
-      state.lastScrollY = currentY;
-    }
-    if (currentY <= 2) {
-      state.mobileScrollDirection = 'none';
-      state.mobileControlsSticky = false;
-      state.lastScrollY = currentY;
-    }
-    scheduleSync();
+  function onResourceLoad(event) {
+    var target = event && event.target;
+    if (target && target.tagName && String(target.tagName).toLowerCase() === 'img') { scheduleStabilizedSync(); }
   }
 
   function bind() {
     window.addEventListener('resize', onResize, { passive: true });
-    window.addEventListener('scroll', onScroll, { passive: true });
+    window.addEventListener('scroll', scheduleSync, { passive: true });
     window.addEventListener('orientationchange', refresh);
     window.addEventListener('load', onWindowLoad);
+    window.addEventListener('pageshow', onWindowLoad);
+    document.addEventListener('load', onResourceLoad, true);
     document.addEventListener('td-sidebar-dataset-ready', refresh);
-    if (document.fonts && document.fonts.ready && typeof document.fonts.ready.then === 'function') {
-      document.fonts.ready.then(scheduleSettledSync);
-    }
     document.addEventListener('click', function (event) {
       var sort = safeQuery('#' + ROOT_ID + ' .tdsb-v1-sort[data-open="true"]');
       if (sort && !sort.contains(event.target)) {
@@ -1117,20 +1015,21 @@
   function destroy() {
     state.destroyed = true;
     window.clearTimeout(state.retryTimer);
-    clearLayoutTimers();
+    clearStabilizeTimers();
     if (state.syncFrame) { window.cancelAnimationFrame(state.syncFrame); }
     if (state.resizeObserver) { state.resizeObserver.disconnect(); }
     if (state.popup) { closePopup(false); }
     clearNativeMarks();
     document.documentElement.removeAttribute('data-tdsb-v1-active');
     document.documentElement.removeAttribute('data-tdsb-v1-mode');
-    document.documentElement.removeAttribute('data-tdsb-v1-variant');
     document.documentElement.removeAttribute('data-tdsb-v1-scroll-lock');
     if (state.root && state.root.parentNode) { state.root.parentNode.removeChild(state.root); }
     window.removeEventListener('resize', onResize);
-    window.removeEventListener('scroll', onScroll);
+    window.removeEventListener('scroll', scheduleSync);
     window.removeEventListener('orientationchange', refresh);
     window.removeEventListener('load', onWindowLoad);
+    window.removeEventListener('pageshow', onWindowLoad);
+    document.removeEventListener('load', onResourceLoad, true);
     document.removeEventListener('td-sidebar-dataset-ready', refresh);
   }
 
