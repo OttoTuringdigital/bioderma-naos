@@ -1,8 +1,8 @@
-/* TD_Figma_Category_Sidebar_GTM_v1.0.0.html */
+/* TD_Figma_Category_Sidebar_GTM_v1.0.1.html */
 (function () {
   'use strict';
 
-  var VERSION = '1.0.0';
+  var VERSION = '1.0.1';
   var DATA_KEY = 'categorySidebar';
   var ROOT_ID = 'tdsb-v1-root';
   var ROLE = 'data-tdsb-v1-role';
@@ -17,6 +17,11 @@
     retryCount: 0,
     syncFrame: null,
     resizeObserver: null,
+    layoutTimers: [],
+    portalDocumentTops: {},
+    initialScrollY: 0,
+    nativeSidebarInlineMinHeight: null,
+    nativeSidebarBaseHeight: 0,
     cleanup: [],
     popup: null,
     popupTrigger: null,
@@ -262,6 +267,26 @@
     return exact && exact.parentElement ? exact.parentElement : exact;
   }
 
+  function findProductCount() {
+    var nodes = toArray(document.querySelectorAll('div,span,p'));
+    var best = null;
+    var bestWidth = 0;
+    var value;
+    var rect;
+    var i;
+    for (i = 0; i < nodes.length; i += 1) {
+      value = normalizeText(nodes[i].textContent);
+      if (!/^共\d+[項件]商品$/.test(value)) { continue; }
+      rect = nodes[i].getBoundingClientRect();
+      if (rect.width < 40 || rect.height < 12 || rect.height > 120) { continue; }
+      if (rect.width > bestWidth) {
+        best = nodes[i];
+        bestWidth = rect.width;
+      }
+    }
+    return best;
+  }
+
   function findNativeSelected() {
     var heading = findExactText('已選擇篩選條件', 'div,span,strong');
     var current = heading;
@@ -307,6 +332,7 @@
     var rect;
     var width;
     var height;
+    var documentTop;
     if (!target || !anchor || !document.documentElement.contains(anchor)) {
       if (target) { target.style.display = 'none'; }
       return;
@@ -316,12 +342,60 @@
     options = options || {};
     width = options.width || rect.width;
     height = options.height || rect.height;
+    documentTop = Math.round(rect.top + window.pageYOffset + (options.offsetY || 0));
+    if (options.freezeDocumentTop) {
+      if (typeof state.portalDocumentTops[name] !== 'number' || options.refreshFrozenTop) {
+        state.portalDocumentTops[name] = documentTop;
+      }
+      documentTop = state.portalDocumentTops[name];
+    }
     target.style.display = 'block';
     target.style.left = Math.round(rect.left + window.pageXOffset + (options.offsetX || 0)) + 'px';
-    target.style.top = Math.round(rect.top + window.pageYOffset + (options.offsetY || 0)) + 'px';
+    target.style.top = documentTop + 'px';
     target.style.width = Math.round(width) + 'px';
     if (options.autoHeight) { target.style.height = 'auto'; }
     else { target.style.height = Math.round(height) + 'px'; }
+  }
+
+  function clearLayoutTimers() {
+    var i;
+    for (i = 0; i < state.layoutTimers.length; i += 1) {
+      window.clearTimeout(state.layoutTimers[i]);
+    }
+    state.layoutTimers = [];
+  }
+
+  function scheduleSettledSync() {
+    var delays = [0, 60, 180, 400, 800, 1400, 2400];
+    var i;
+    clearLayoutTimers();
+    for (i = 0; i < delays.length; i += 1) {
+      (function (delay) {
+        state.layoutTimers.push(window.setTimeout(function () {
+          if (state.destroyed) { return; }
+          scheduleSync();
+        }, delay));
+      }(delays[i]));
+    }
+  }
+
+  function restoreNativeSidebarHeight() {
+    if (!state.native.sidebar || state.nativeSidebarInlineMinHeight === null) { return; }
+    state.native.sidebar.style.minHeight = state.nativeSidebarInlineMinHeight;
+    state.nativeSidebarInlineMinHeight = null;
+    state.nativeSidebarBaseHeight = 0;
+  }
+
+  function reserveDesktopSidebarHeight() {
+    var sidebar;
+    var requiredHeight;
+    if (state.mode !== 'desktop' || !state.native.sidebar || !state.portals.sidebar) { return; }
+    sidebar = state.portals.sidebar.querySelector('.tdsb-v1-sidebar');
+    if (!sidebar) { return; }
+    requiredHeight = Math.max(state.nativeSidebarBaseHeight || 0, Math.ceil(sidebar.getBoundingClientRect().height));
+    if (requiredHeight > 0 && state.native.sidebar.style.minHeight !== requiredHeight + 'px') {
+      state.native.sidebar.style.minHeight = requiredHeight + 'px';
+    }
   }
 
   function scheduleSync() {
@@ -334,21 +408,37 @@
 
   function syncPortals() {
     var sortWidth;
+    var countRect;
+    var refreshFrozenTop = Math.abs(window.pageYOffset - state.initialScrollY) <= 4;
     if (state.mode === 'desktop') {
       setPortalRect('sidebar', state.native.sidebar, { autoHeight: true });
       sortWidth = state.native.sort ? Math.min(180, Math.max(135, state.native.sort.getBoundingClientRect().width)) : 160;
       setPortalRect('sort', state.native.sort, { width: sortWidth, autoHeight: true });
       setPortalRect('selected', state.native.selected, { autoHeight: true });
+      reserveDesktopSidebarHeight();
     } else {
-      setPortalRect('mobile-controls', state.native.mobileControls, { autoHeight: true });
-      if (state.native.sort) {
-        setPortalRect('sort', state.native.sort, { autoHeight: true });
-      } else if (state.native.mobileControls) {
-        setPortalRect('sort', state.native.mobileControls, {
-          width: Math.max(135, Math.round(state.native.mobileControls.getBoundingClientRect().width * 0.46)),
-          offsetX: Math.round(state.native.mobileControls.getBoundingClientRect().width * 0.54),
-          offsetY: -48,
-          autoHeight: true
+      setPortalRect('mobile-controls', state.native.mobileControls, {
+        autoHeight: true,
+        freezeDocumentTop: true,
+        refreshFrozenTop: refreshFrozenTop
+      });
+      sortWidth = state.native.sort ? Math.min(160, Math.max(135, state.native.sort.getBoundingClientRect().width)) : 150;
+      if (state.native.count) {
+        countRect = state.native.count.getBoundingClientRect();
+        setPortalRect('sort', state.native.count, {
+          width: Math.min(sortWidth, countRect.width),
+          offsetX: Math.max(0, countRect.width - Math.min(sortWidth, countRect.width)),
+          offsetY: Math.round((countRect.height - 38) / 2),
+          autoHeight: true,
+          freezeDocumentTop: true,
+          refreshFrozenTop: refreshFrozenTop
+        });
+      } else if (state.native.sort) {
+        setPortalRect('sort', state.native.sort, {
+          width: sortWidth,
+          autoHeight: true,
+          freezeDocumentTop: true,
+          refreshFrozenTop: refreshFrozenTop
         });
       }
     }
@@ -492,7 +582,7 @@
     var open = typeof forceOpen === 'boolean' ? forceOpen : group.defaultOpen !== false;
     var button = create('button', 'tdsb-v1-group-button', { type: 'button', 'aria-expanded': open ? 'true' : 'false' });
     var title = create('span', 'tdsb-v1-group-title');
-    var icon = create('i', 'tdsb-v1-group-icon ico ' + (open ? 'ico-ico-subtract' : 'ico-add'), { 'aria-hidden': 'true' });
+    var icon = create('i', 'tdsb-v1-group-icon ico ' + (open ? 'ico-subtract' : 'ico-add'), { 'aria-hidden': 'true' });
     var panel = create('div', 'tdsb-v1-panel');
     var inner = create('div', 'tdsb-v1-panel-inner');
     var content = group.content || [];
@@ -512,7 +602,8 @@
       var next = section.getAttribute('data-open') !== 'true';
       section.setAttribute('data-open', next ? 'true' : 'false');
       button.setAttribute('aria-expanded', next ? 'true' : 'false');
-      icon.className = 'tdsb-v1-group-icon ico ' + (next ? 'ico-ico-subtract' : 'ico-add');
+      icon.className = 'tdsb-v1-group-icon ico ' + (next ? 'ico-subtract' : 'ico-add');
+      scheduleSettledSync();
     });
     return section;
   }
@@ -628,7 +719,11 @@
     host.innerHTML = '';
     for (i = 0; i < selected.length; i += 1) {
       chip = create('button', 'tdsb-v1-chip', { type: 'button' });
-      chip.textContent = selected[i].item.label || '';
+      var chipLabel = create('span', 'tdsb-v1-chip-label');
+      var chipIcon = create('i', 'tdsb-v1-chip-icon ico ico-subtract', { 'aria-hidden': 'true' });
+      chipLabel.textContent = selected[i].item.label || '';
+      chip.appendChild(chipLabel);
+      chip.appendChild(chipIcon);
       (function (item) {
         chip.addEventListener('click', function () {
           var next = currentUrl();
@@ -794,12 +889,14 @@
 
   function clearNativeMarks() {
     var key;
+    restoreNativeSidebarHeight();
     if (state.native.sidebar) { state.native.sidebar.removeAttribute('data-tdsb-v1-native-sidebar'); }
     if (state.native.sort) { state.native.sort.removeAttribute('data-tdsb-v1-native-sort'); }
     if (state.native.selected) { state.native.selected.removeAttribute('data-tdsb-v1-native-selected'); }
     if (state.native.mobileControls) { state.native.mobileControls.removeAttribute('data-tdsb-v1-native-mobile-controls'); }
     if (state.native.breadcrumb) { state.native.breadcrumb.removeAttribute('data-tdsb-v1-breadcrumb'); }
     state.native = {};
+    state.portalDocumentTops = {};
     for (key in state.portals) {
       if (Object.prototype.hasOwnProperty.call(state.portals, key) && state.portals[key]) { state.portals[key].innerHTML = ''; state.portals[key].style.display = 'none'; }
     }
@@ -808,6 +905,7 @@
   function locateNative() {
     state.native.sort = findNativeSort();
     state.native.selected = findNativeSelected();
+    state.native.count = findProductCount();
     if (state.mode === 'desktop') {
       state.native.sidebar = findDesktopSidebar();
       if (!state.native.sidebar || !state.native.sort) { return false; }
@@ -826,6 +924,12 @@
     state.variant = detectVariant();
     if (!locateNative()) { return false; }
     ensureRoot();
+    state.initialScrollY = window.pageYOffset;
+    state.portalDocumentTops = {};
+    if (state.mode === 'desktop' && state.native.sidebar) {
+      state.nativeSidebarInlineMinHeight = state.native.sidebar.style.minHeight || '';
+      state.nativeSidebarBaseHeight = Math.ceil(state.native.sidebar.getBoundingClientRect().height);
+    }
     document.documentElement.setAttribute('data-tdsb-v1-active', 'true');
     document.documentElement.setAttribute('data-tdsb-v1-mode', state.mode);
     if (state.mode === 'desktop') {
@@ -838,14 +942,17 @@
       state.native.mobileControls.setAttribute('data-tdsb-v1-native-mobile-controls', 'hidden');
       if (state.native.sort) { state.native.sort.setAttribute('data-tdsb-v1-native-sort', 'hidden'); }
     }
-    scheduleSync();
+    syncPortals();
+    scheduleSettledSync();
     if (window.ResizeObserver) {
       if (state.resizeObserver) { state.resizeObserver.disconnect(); }
       state.resizeObserver = new ResizeObserver(scheduleSync);
       if (state.native.sidebar) { state.resizeObserver.observe(state.native.sidebar); }
       if (state.native.sort) { state.resizeObserver.observe(state.native.sort); }
       if (state.native.mobileControls) { state.resizeObserver.observe(state.native.mobileControls); }
+      if (state.native.count) { state.resizeObserver.observe(state.native.count); }
       if (state.native.selected) { state.resizeObserver.observe(state.native.selected); }
+      if (state.portals.sidebar) { state.resizeObserver.observe(state.portals.sidebar); }
     }
     pushEvent('td_sidebar_ready', { td_sidebar_mode: state.mode, td_sidebar_variant: state.variant });
     return true;
@@ -873,14 +980,24 @@
   function onResize() {
     var nextMode = window.innerWidth >= Number(getSettings().desktopMinWidth || 992) ? 'desktop' : 'mobile';
     if (nextMode !== state.mode) { refresh(); }
-    else { scheduleSync(); }
+    else {
+      if (Math.abs(window.pageYOffset - state.initialScrollY) <= 4) { state.portalDocumentTops = {}; }
+      scheduleSettledSync();
+    }
+  }
+
+  function onWindowLoad() {
+    scheduleSettledSync();
   }
 
   function bind() {
     window.addEventListener('resize', onResize, { passive: true });
-    window.addEventListener('scroll', scheduleSync, { passive: true });
     window.addEventListener('orientationchange', refresh);
+    window.addEventListener('load', onWindowLoad);
     document.addEventListener('td-sidebar-dataset-ready', refresh);
+    if (document.fonts && document.fonts.ready && typeof document.fonts.ready.then === 'function') {
+      document.fonts.ready.then(scheduleSettledSync);
+    }
     document.addEventListener('click', function (event) {
       var sort = safeQuery('#' + ROOT_ID + ' .tdsb-v1-sort[data-open="true"]');
       if (sort && !sort.contains(event.target)) {
@@ -894,6 +1011,7 @@
   function destroy() {
     state.destroyed = true;
     window.clearTimeout(state.retryTimer);
+    clearLayoutTimers();
     if (state.syncFrame) { window.cancelAnimationFrame(state.syncFrame); }
     if (state.resizeObserver) { state.resizeObserver.disconnect(); }
     if (state.popup) { closePopup(false); }
@@ -903,8 +1021,8 @@
     document.documentElement.removeAttribute('data-tdsb-v1-scroll-lock');
     if (state.root && state.root.parentNode) { state.root.parentNode.removeChild(state.root); }
     window.removeEventListener('resize', onResize);
-    window.removeEventListener('scroll', scheduleSync);
     window.removeEventListener('orientationchange', refresh);
+    window.removeEventListener('load', onWindowLoad);
     document.removeEventListener('td-sidebar-dataset-ready', refresh);
   }
 
