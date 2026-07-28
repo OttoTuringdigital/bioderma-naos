@@ -1,14 +1,15 @@
-/* TD_Figma_Category_Sidebar_GTM_v1.0.1.html */
+/* TD_Figma_Category_Sidebar_GTM_v1.0.2.html */
 (function () {
   'use strict';
 
-  var VERSION = '1.0.1';
+  var VERSION = '1.0.2';
   var DATA_KEY = 'categorySidebar';
   var ROOT_ID = 'tdsb-v1-root';
   var ROLE = 'data-tdsb-v1-role';
   var state = {
     dataset: null,
     mode: '',
+    modeLocked: false,
     variant: 'category',
     root: null,
     portals: {},
@@ -295,6 +296,28 @@
     return count && count.parentElement ? count.parentElement : count;
   }
 
+  function isRendered(element) {
+    var rect;
+    var style;
+    if (!element || !document.documentElement.contains(element)) { return false; }
+    rect = element.getBoundingClientRect();
+    if (rect.width < 1 || rect.height < 1) { return false; }
+    style = window.getComputedStyle ? window.getComputedStyle(element) : null;
+    return !style || (style.display !== 'none' && style.visibility !== 'hidden');
+  }
+
+  function detectLayoutMode() {
+    var desktopSidebar = findDesktopSidebar();
+    var mobileControls = findMobileControls();
+    var productCount = findProductCount();
+    var desktopVisible = isRendered(desktopSidebar);
+    var mobileVisible = isRendered(mobileControls) && isRendered(productCount);
+    if (state.modeLocked && (state.mode === 'desktop' || state.mode === 'mobile')) { return state.mode; }
+    if (desktopVisible) { return 'desktop'; }
+    if (mobileVisible) { return 'mobile'; }
+    return window.innerWidth >= Number(getSettings().desktopMinWidth || 992) ? 'desktop' : 'mobile';
+  }
+
   function findNativeSelected() {
     var heading = findExactText('已選擇篩選條件', 'div,span,strong');
     var current = heading;
@@ -391,6 +414,42 @@
     state.nativeSidebarMinHeight = null;
   }
 
+  function syncMobileControls() {
+    var target = state.portals['mobile-controls'];
+    var anchor = state.native.mobileControls;
+    var rect;
+    var viewportWidth;
+    var leftPadding;
+    var rightPadding;
+    var verticalPadding;
+    var top;
+    var height;
+    if (!target || !anchor || !document.documentElement.contains(anchor)) {
+      if (target) { target.style.display = 'none'; target.removeAttribute('data-tdsb-v1-positioned'); }
+      return;
+    }
+    rect = anchor.getBoundingClientRect();
+    viewportWidth = Math.max(document.documentElement.clientWidth || 0, window.innerWidth || 0);
+    if (rect.width < 1 || rect.height < 1 || viewportWidth < 1) {
+      target.style.display = 'none';
+      target.removeAttribute('data-tdsb-v1-positioned');
+      return;
+    }
+    verticalPadding = state.variant === 'search' ? 10 : 0;
+    leftPadding = state.variant === 'search' ? 10 : Math.max(0, Math.round(rect.left));
+    rightPadding = state.variant === 'search' ? 10 : Math.max(0, Math.round(viewportWidth - rect.right));
+    top = rect.top + window.pageYOffset - verticalPadding;
+    height = rect.height + verticalPadding * 2;
+    target.style.display = 'block';
+    target.setAttribute('data-tdsb-v1-positioned', 'true');
+    target.style.left = Math.round(window.pageXOffset) + 'px';
+    target.style.top = Math.round(top) + 'px';
+    target.style.width = Math.round(viewportWidth) + 'px';
+    target.style.height = Math.round(height) + 'px';
+    target.style.padding = verticalPadding + 'px ' + rightPadding + 'px ' + verticalPadding + 'px ' + leftPadding + 'px';
+    target.style.backgroundColor = '#ffffff';
+  }
+
   function syncMobileSort() {
     var target = state.portals.sort;
     var count = state.native.productCount;
@@ -413,6 +472,7 @@
     width = Math.min(160, Math.max(135, Math.round(rowRect.width * 0.46)));
     top = countRect.top + Math.round((countRect.height - 38) / 2);
     if (top < rowRect.top) { top = rowRect.top; }
+    if (state.variant === 'search') { top -= 8; }
     target.style.display = 'block';
     target.setAttribute('data-tdsb-v1-positioned', 'true');
     target.style.left = Math.round(rowRect.right + window.pageXOffset - width) + 'px';
@@ -445,7 +505,7 @@
       setPortalRect('sort', state.native.sort, { width: sortWidth, autoHeight: true });
       setPortalRect('selected', state.native.selected, { autoHeight: true });
     } else {
-      setPortalRect('mobile-controls', state.native.mobileControls, { autoHeight: true });
+      syncMobileControls();
       syncMobileSort();
     }
   }
@@ -928,9 +988,10 @@
     clearNativeMarks();
     state.dataset = getDataset();
     if (!state.dataset || !document.body) { return false; }
-    state.mode = window.innerWidth >= Number(getSettings().desktopMinWidth || 992) ? 'desktop' : 'mobile';
+    state.mode = detectLayoutMode();
     state.variant = detectVariant();
     if (!locateNative()) { return false; }
+    state.modeLocked = true;
     ensureRoot();
     document.documentElement.setAttribute('data-tdsb-v1-active', 'true');
     document.documentElement.setAttribute('data-tdsb-v1-mode', state.mode);
@@ -980,7 +1041,7 @@
   }
 
   function onResize() {
-    var nextMode = window.innerWidth >= Number(getSettings().desktopMinWidth || 992) ? 'desktop' : 'mobile';
+    var nextMode = detectLayoutMode();
     if (nextMode !== state.mode) { refresh(); }
     else { scheduleSync(); }
   }
@@ -1014,6 +1075,7 @@
 
   function destroy() {
     state.destroyed = true;
+    state.modeLocked = false;
     window.clearTimeout(state.retryTimer);
     clearStabilizeTimers();
     if (state.syncFrame) { window.cancelAnimationFrame(state.syncFrame); }
