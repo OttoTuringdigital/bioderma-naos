@@ -1,4 +1,4 @@
-/* TD_Figma_Product_Page_Style_GTM_v1.0.2.html */
+/* TD_Figma_Product_Page_Style_GTM_v1.0.3.html */
 /* Namespace: tdpp-v1. Product Bundle only. */
 :root {
   --tdpp-v1-navy: #0b3d70;
@@ -126,6 +126,10 @@ html[data-tdpp-v1-active="true"] .tdpp-v1-fav-proxy[data-tdpp-v1-fav-active="tru
   border-color: var(--tdpp-v1-navy) !important;
   background: var(--tdpp-v1-navy) !important;
   color: var(--tdpp-v1-pink) !important;
+}
+html[data-tdpp-v1-active="true"] .tdpp-v1-fav-proxy[data-tdpp-v1-fav-active="true"] i {
+  color: var(--tdpp-v1-pink) !important;
+  background-color: transparent !important;
 }
 
 /* Generated collapse stack. */
@@ -569,4 +573,94 @@ html[data-tdpp-v1-mode="mobile"] .salepage-fix-bottom .tdpp-v1-fav-proxy { width
 @media (prefers-reduced-motion: reduce) {
   html[data-tdpp-v1-active="true"] .tdpp-v1-fav-proxy,
   html[data-tdpp-v1-active="true"] .tdpp-v1-clone-icon { transition: none !important; }
+}
+
+/* v1.0.3 refinement: cloned panel content and payment campaign layout. */
+html[data-tdpp-v1-active="true"] #tdpp-v1-panel-payment .payment-campaign-tag__content {
+  width: 100% !important;
+  margin-top: 8px !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: 6px !important;
+  min-width: 0 !important;
+}
+html[data-tdpp-v1-active="true"] #tdpp-v1-panel-payment .payment-campaign-tag__title {
+  flex: 0 0 auto !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  width: auto !important;
+  min-width: 0 !important;
+  height: auto !important;
+  min-height: 20px !important;
+  margin: 0 !important;
+  padding: 0 4px !important;
+  box-sizing: border-box !important;
+  font-size: 12px !important;
+  line-height: 18px !important;
+  white-space: nowrap !important;
+  word-break: keep-all !important;
+}
+html[data-tdpp-v1-active="true"] #tdpp-v1-panel-payment .payment-campaign-tag__content > a {
+  flex: 1 1 auto !important;
+  min-width: 0 !important;
+  color: inherit !important;
+  text-decoration: none !important;
+}
+html[data-tdpp-v1-active="true"] #tdpp-v1-panel-payment .payment-campaign-tag__desc {
+  width: 100% !important;
+  min-width: 0 !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: flex-start !important;
+  gap: 4px !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  line-height: 20px !important;
+  text-align: left !important;
+}
+html[data-tdpp-v1-active="true"] #tdpp-v1-panel-payment .payment-campaign-tag__desc--linked {
+  flex: 0 0 auto !important;
+  margin: 0 !important;
+}
+html[data-tdpp-v1-active="true"] #tdpp-v1-panel-feature .tdpp-v1-clone-body,
+html[data-tdpp-v1-active="true"] #tdpp-v1-panel-feature .tdpp-v1-clone-body *,
+html[data-tdpp-v1-active="true"] #tdpp-v1-panel-related .tdpp-v1-clone-body,
+html[data-tdpp-v1-active="true"] #tdpp-v1-panel-related .tdpp-v1-clone-body * {
+  color: var(--tdpp-v1-navy) !important;
+}
+html[data-tdpp-v1-active="true"] #tdpp-v1-panel-feature .tdpp-v1-clone-body li::marker,
+html[data-tdpp-v1-active="true"] #tdpp-v1-panel-related .tdpp-v1-clone-body li::marker {
+  color: var(--tdpp-v1-navy) !important;
+}
+
+html[data-tdpp-v1-mode="desktop"] .tdpp-v1-collapse-stack .salepage-promotion-li {
+  white-space: nowrap !important;
+}
+html[data-tdpp-v1-mode="desktop"] #tdpp-v1-panel-payment .payment-campaign-tag__content,
+html[data-tdpp-v1-mode="desktop"] #tdpp-v1-panel-payment .payment-campaign-tag__desc {
+  flex-wrap: nowrap !important;
+  white-space: nowrap !important;
+}
+html[data-tdpp-v1-mode="desktop"] .salepage-product-list .panel-heading-li {
+  box-shadow: none !important;
+}
+
+html[data-tdpp-v1-mode="mobile"] #tdpp-v1-panel-payment .payment-campaign-tag__content {
+  align-items: flex-start !important;
+}
+html[data-tdpp-v1-mode="mobile"] #tdpp-v1-panel-payment .payment-campaign-tag__desc {
+  align-items: flex-start !important;
+  flex-wrap: wrap !important;
+  white-space: normal !important;
+  overflow-wrap: anywhere !important;
+}
+html[data-tdpp-v1-mode="mobile"] #tdpp-v1-panel-related .related-category-list {
+  margin: 0 !important;
+}
+html[data-tdpp-v1-mode="mobile"] #tdpp-v1-panel-related .related-category-list__more {
+  display: none !important;
+}
+html[data-tdpp-v1-mode="mobile"] .nav-tab .nav-tab-ul {
+  border-bottom: 0 !important;
 }
