@@ -1,8 +1,8 @@
-/* TD_Figma_Category_Sidebar_GTM_v1.0.5.html */
+/* TD_Figma_Category_Sidebar_GTM_v1.0.6.html */
 (function () {
   'use strict';
 
-  var VERSION = '1.0.5';
+  var VERSION = '1.0.6';
   var DATA_KEY = 'categorySidebar';
   var ROOT_ID = 'tdsb-v1-root';
   var ROLE = 'data-tdsb-v1-role';
@@ -533,6 +533,48 @@
     return state.mode === 'mobile' && state.draftUrl ? state.draftUrl : currentUrl();
   }
 
+  function selectedToggleCount(url, panelName) {
+    var groups = state.dataset && state.dataset.menuItems || [];
+    var group;
+    var item;
+    var count = 0;
+    var i;
+    var j;
+    if (!url) { return 0; }
+    for (i = 0; i < groups.length; i += 1) {
+      group = groups[i];
+      if (group.mobilePanel !== panelName || group.itemType !== 'toggleGroup') { continue; }
+      for (j = 0; j < (group.content || []).length; j += 1) {
+        item = group.content[j];
+        if (hasAllValues(url, item)) { count += 1; }
+      }
+    }
+    return count;
+  }
+
+  function updateMobileControlCounts() {
+    var host = state.portals['mobile-controls'];
+    var url;
+    var panels = ['category', 'filter'];
+    var button;
+    var label;
+    var base;
+    var count;
+    var i;
+    if (state.mode !== 'mobile' || !host) { return; }
+    url = currentWorkingUrl();
+    for (i = 0; i < panels.length; i += 1) {
+      button = safeQuery('[data-tdsb-v1-mobile-panel="' + panels[i] + '"]', host);
+      if (!button) { continue; }
+      label = safeQuery('.tdsb-v1-mobile-control-label', button);
+      base = panels[i] === 'category' ? (state.dataset.text.categoryButton || '分類') : (state.dataset.text.filterButton || '篩選');
+      count = selectedToggleCount(url, panels[i]);
+      if (label) { label.textContent = base + (count > 0 ? '(' + count + ')' : ''); }
+      button.setAttribute('data-active', count > 0 ? 'true' : 'false');
+      button.setAttribute('aria-label', base + (count > 0 ? '，已選 ' + count + ' 項' : ''));
+    }
+  }
+
   function updateAllCheckedStates() {
     var url = currentWorkingUrl();
     var buttons = toArray(document.querySelectorAll('[data-tdsb-v1-keyword]'));
@@ -545,6 +587,7 @@
       };
       buttons[i].setAttribute('aria-checked', hasAllValues(url, item) ? 'true' : 'false');
     }
+    updateMobileControlCounts();
     updatePriceDisplays();
   }
 
@@ -855,14 +898,23 @@
   function buildMobileControls() {
     var host = portal('mobile-controls');
     var wrap = create('div', 'tdsb-v1-mobile-controls');
-    var category = create('button', 'tdsb-v1-mobile-control', { type: 'button' });
-    var filter = create('button', 'tdsb-v1-mobile-control', { type: 'button' });
+    var category = create('button', 'tdsb-v1-mobile-control', { type: 'button', 'data-tdsb-v1-mobile-panel': 'category', 'data-active': 'false' });
+    var filter = create('button', 'tdsb-v1-mobile-control', { type: 'button', 'data-tdsb-v1-mobile-panel': 'filter', 'data-active': 'false' });
+    var categoryLabel = create('span', 'tdsb-v1-mobile-control-label');
+    var filterLabel = create('span', 'tdsb-v1-mobile-control-label');
+    var categoryIcon = create('span', 'tdsb-v1-mobile-control-icon', { 'aria-hidden': 'true' });
+    var filterIcon = create('span', 'tdsb-v1-mobile-control-icon', { 'aria-hidden': 'true' });
     host.innerHTML = '';
-    category.innerHTML = '<span>' + (state.dataset.text.categoryButton || '分類') + '</span>' + filterSvg();
-    filter.innerHTML = '<span>' + (state.dataset.text.filterButton || '篩選') + '</span>' + filterSvg();
+    categoryLabel.textContent = state.dataset.text.categoryButton || '分類';
+    filterLabel.textContent = state.dataset.text.filterButton || '篩選';
+    categoryIcon.innerHTML = filterSvg();
+    filterIcon.innerHTML = filterSvg();
+    category.appendChild(categoryLabel); category.appendChild(categoryIcon);
+    filter.appendChild(filterLabel); filter.appendChild(filterIcon);
     category.addEventListener('click', function () { openPopup('category', category); });
     filter.addEventListener('click', function () { openPopup('filter', filter); });
     wrap.appendChild(category); wrap.appendChild(filter); host.appendChild(wrap);
+    updateMobileControlCounts();
   }
 
   function focusable(container) {
@@ -880,6 +932,7 @@
       if (popup.parentNode) { popup.parentNode.removeChild(popup); }
       state.popup = null;
       state.draftUrl = null;
+      updateMobileControlCounts();
       if (state.popupTrigger && state.popupTrigger.focus) { state.popupTrigger.focus(); }
       state.popupTrigger = null;
     }, delay);
