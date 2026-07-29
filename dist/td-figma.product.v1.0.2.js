@@ -1,8 +1,8 @@
-/* TD_Figma_Product_Page_GTM_v1.0.1.html */
+/* TD_Figma_Product_Page_GTM_v1.0.2.html */
 (function () {
   'use strict';
 
-  var VERSION = '1.0.1';
+  var VERSION = '1.0.2';
   var RETRY_LIMIT = 28;
   var state = {
     mode: '',
@@ -110,8 +110,13 @@
     group.setAttribute('data-tdpp-v1-expanded', expanded ? 'true' : 'false');
     if (header) { header.setAttribute('aria-expanded', expanded ? 'true' : 'false'); }
     if (panel) {
-      if (expanded) { panel.removeAttribute('hidden'); }
-      else { panel.setAttribute('hidden', 'hidden'); }
+      if (expanded) {
+        panel.removeAttribute('hidden');
+        panel.style.display = 'block';
+      } else {
+        panel.setAttribute('hidden', 'hidden');
+        panel.style.display = 'none';
+      }
     }
     if (icon) {
       icon.classList.toggle('rotate-to-top', expanded);
