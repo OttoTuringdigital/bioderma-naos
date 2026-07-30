@@ -1,4 +1,4 @@
-/* TD_Figma_Product_Page_Style_GTM_v1.0.4.html */
+/* TD_Figma_Product_Page_Style_GTM_v1.0.5.html */
 /* Namespace: tdpp-v1. Product Bundle only. */
 :root {
   --tdpp-v1-navy: #0b3d70;
@@ -801,4 +801,83 @@ html[data-tdpp-v1-mode="mobile"] .nav-tab .nav-tab-ul {
 .tdpp-v1-collapse-stack #tdpp-v1-panel-related .tdpp-v1-clone-body,
 .tdpp-v1-collapse-stack #tdpp-v1-panel-related .tdpp-v1-clone-body * {
   color: var(--tdpp-v1-navy) !important;
+}
+
+
+/* v1.0.5 refinement: one-time normalized Collapse DOM without source-node nesting. */
+html[data-tdpp-v1-active="true"] .tdpp-v1-collapse-stack[data-tdpp-v1-version="1.0.5"] {
+  contain: layout style !important;
+}
+html[data-tdpp-v1-active="true"] .tdpp-v1-collapse-stack .tdpp-v1-payment-main-row,
+html[data-tdpp-v1-active="true"] .tdpp-v1-collapse-stack .tdpp-v1-shipping-main-row {
+  width: 100% !important;
+  display: flex !important;
+  align-items: flex-start !important;
+  justify-content: space-between !important;
+  gap: 12px !important;
+}
+html[data-tdpp-v1-active="true"] .tdpp-v1-collapse-stack .tdpp-v1-payment-main-row > .payment-shipping-subtitle,
+html[data-tdpp-v1-active="true"] .tdpp-v1-collapse-stack .tdpp-v1-shipping-main-row > .payment-shipping-subtitle {
+  min-width: 0 !important;
+  flex: 1 1 auto !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  color: var(--tdpp-v1-navy) !important;
+  white-space: normal !important;
+}
+html[data-tdpp-v1-active="true"] .tdpp-v1-collapse-stack .tdpp-v1-payment-main-row > .pull-right,
+html[data-tdpp-v1-active="true"] .tdpp-v1-collapse-stack .tdpp-v1-shipping-main-row > .pull-right {
+  position: static !important;
+  float: none !important;
+  flex: 0 0 auto !important;
+  margin: 0 !important;
+}
+html[data-tdpp-v1-active="true"] .tdpp-v1-collapse-stack .tdpp-v1-payment-campaign {
+  width: 100% !important;
+  margin: 8px 0 0 !important;
+}
+html[data-tdpp-v1-active="true"] .tdpp-v1-collapse-stack .tdpp-v1-payment-detail-toggle {
+  box-sizing: border-box !important;
+  font: inherit !important;
+}
+html[data-tdpp-v1-active="true"] .tdpp-v1-collapse-stack .tdpp-v1-payment-detail {
+  box-sizing: border-box !important;
+  overflow: visible !important;
+  opacity: 1 !important;
+  visibility: visible !important;
+}
+html[data-tdpp-v1-active="true"] .tdpp-v1-collapse-stack .tdpp-v1-payment-detail[hidden] {
+  display: none !important;
+}
+html[data-tdpp-v1-active="true"] .tdpp-v1-collapse-stack .tdpp-v1-shipping-main-row {
+  flex-direction: column !important;
+  align-items: stretch !important;
+  gap: 6px !important;
+}
+html[data-tdpp-v1-active="true"] .tdpp-v1-collapse-stack .tdpp-v1-shipping-main-row > * {
+  width: 100% !important;
+  margin-left: 0 !important;
+  margin-right: 0 !important;
+}
+html[data-tdpp-v1-active="true"] .tdpp-v1-collapse-stack .tdpp-v1-feature-list,
+html[data-tdpp-v1-active="true"] .tdpp-v1-collapse-stack .tdpp-v1-related-list {
+  width: 100% !important;
+  margin: 0 !important;
+  padding: 0 !important;
+}
+html[data-tdpp-v1-active="true"] .tdpp-v1-collapse-stack .tdpp-v1-feature-list {
+  padding-left: 22px !important;
+}
+html[data-tdpp-v1-active="true"] .tdpp-v1-collapse-stack .tdpp-v1-related-item {
+  margin: 0 !important;
+}
+html[data-tdpp-v1-active="true"] .tdpp-v1-collapse-stack .tdpp-v1-promotion-row {
+  box-sizing: border-box !important;
+}
+html[data-tdpp-v1-mode="desktop"] .tdpp-v1-collapse-stack .tdpp-v1-promotion-row {
+  flex-wrap: nowrap !important;
+  white-space: nowrap !important;
+}
+html[data-tdpp-v1-mode="mobile"] .tdpp-v1-collapse-stack .tdpp-v1-promotion-row {
+  flex-wrap: nowrap !important;
 }
