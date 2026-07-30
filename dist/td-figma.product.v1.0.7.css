@@ -1,4 +1,4 @@
-/* TD_Figma_Product_Page_Style_GTM_v1.0.6.html */
+/* TD_Figma_Product_Page_Style_GTM_v1.0.7.html */
 /* Namespace: tdpp-v1. Product Bundle only. */
 :root {
   --tdpp-v1-navy: #0b3d70;
@@ -994,12 +994,6 @@ html[data-tdpp-v1-active="true"] .tdpp-v1-collapse-stack .tdpp-v1-related-item >
   line-height: 22px !important;
   text-decoration: none !important;
 }
-html[data-tdpp-v1-active="true"] .tdpp-v1-collapse-stack .tdpp-v1-related-item > .related-category-list__category-item + .related-category-list__category-item::before {
-  content: "/" !important;
-  flex: 0 0 auto !important;
-  margin-right: 8px !important;
-  color: #9aa7b4 !important;
-}
 html[data-tdpp-v1-mode="mobile"] .tdpp-v1-collapse-stack .tdpp-v1-related-list {
   gap: 6px !important;
   padding-bottom: 10px !important;
@@ -1007,4 +1001,10 @@ html[data-tdpp-v1-mode="mobile"] .tdpp-v1-collapse-stack .tdpp-v1-related-list {
 html[data-tdpp-v1-mode="mobile"] .tdpp-v1-collapse-stack .tdpp-v1-related-item {
   font-size: 13px !important;
   line-height: 20px !important;
+}
+
+/* v1.0.7 refinement: preserve only separators already present in the original website content. */
+html[data-tdpp-v1-active="true"] .tdpp-v1-collapse-stack .tdpp-v1-related-item > .related-category-list__category-item::before {
+  content: none !important;
+  display: none !important;
 }
