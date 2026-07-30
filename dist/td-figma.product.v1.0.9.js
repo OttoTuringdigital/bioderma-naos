@@ -1,8 +1,8 @@
-/* TD_Figma_Product_Page_GTM_v1.0.8.html */
+/* TD_Figma_Product_Page_GTM_v1.0.9.html */
 (function () {
   'use strict';
 
-  var VERSION = '1.0.8';
+  var VERSION = '1.0.9';
   var INIT_RETRY_LIMIT = 240;
   var SOURCE_RETRY_LIMIT = 100;
   var SOURCE_STABLE_REQUIRED = 4;
@@ -21,6 +21,9 @@
     favObserver: null,
     originalFav: null,
     proxyFav: null,
+    reviewTimer: null,
+    reviewRetryCount: 0,
+    reviewMoved: false,
     collapseStack: null,
     collapseBuilt: false,
     readyEventSent: false
@@ -660,6 +663,42 @@
     }
   }
 
+  function findRelocatableReviewWrapper() {
+    var selector = state.mode === 'desktop'
+      ? '#SalePageIndexController .salepage-middle-section .star-rate-wrapper'
+      : '#SalePageIndexController .star-rate-wrapper';
+    var wrappers = toArray(safeQueryAll(selector));
+    var fallback = null;
+    var i;
+    for (i = 0; i < wrappers.length; i += 1) {
+      if (closestBySelector(wrappers[i], '.salepage-info')) { continue; }
+      if (closestBySelector(wrappers[i], '[data-tdpp-v1-generated="true"]')) { continue; }
+      if (!fallback) { fallback = wrappers[i]; }
+      if (safeQuery('.comment-block, .comment-block-title, .comment-block-heading', wrappers[i])) { return wrappers[i]; }
+    }
+    return fallback;
+  }
+
+  function moveReviewWrapper() {
+    var anchor = safeQuery('#salepage-detail-info');
+    var review = findRelocatableReviewWrapper();
+    if (!anchor || !anchor.parentNode || !review || review === anchor) { return false; }
+    if (review.parentNode !== anchor.parentNode || review.nextElementSibling !== anchor) {
+      anchor.parentNode.insertBefore(review, anchor);
+    }
+    review.setAttribute('data-tdpp-v1-review', 'true');
+    review.setAttribute('data-tdpp-v1-review-relocated', 'true');
+    state.reviewMoved = true;
+    return true;
+  }
+
+  function moveReviewWrapperWithRetry() {
+    if (moveReviewWrapper() || state.reviewRetryCount >= 80) { return; }
+    state.reviewRetryCount += 1;
+    window.clearTimeout(state.reviewTimer);
+    state.reviewTimer = window.setTimeout(moveReviewWrapperWithRetry, 250);
+  }
+
   function isFavActive(original) {
     var icon = safeQuery('i', original);
     return !!(icon && (icon.classList.contains('ico-heart-fill') || icon.classList.contains('cms-primaryHeartBtnBgColor')));
@@ -751,6 +790,7 @@
     var mode;
     if (state.initialized) {
       ensureStackAttached();
+      moveReviewWrapperWithRetry();
       buildFavProxyWithRetry();
       return;
     }
@@ -766,6 +806,7 @@
     setMode(mode);
     state.initialized = true;
     markReviewWrappers();
+    moveReviewWrapperWithRetry();
     buildFavProxyWithRetry();
     pollStableSources();
   }

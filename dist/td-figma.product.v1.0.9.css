@@ -1,4 +1,4 @@
-/* TD_Figma_Product_Page_Style_GTM_v1.0.8.html */
+/* TD_Figma_Product_Page_Style_GTM_v1.0.9.html */
 /* Namespace: tdpp-v1. Product Bundle only. */
 :root {
   --tdpp-v1-navy: #0b3d70;
@@ -1023,4 +1023,15 @@ html[data-tdpp-v1-active="true"][data-tdpp-v1-mode="mobile"] .tdpp-v1-collapse-s
 }
 html[data-tdpp-v1-active="true"] .payment-campaign-tag__desc--linked.ico-chevron-right {
   display: none !important;
+}
+
+
+/* v1.0.9 refinement: remove feature-list indentation and relocate the review block above product details. */
+html[data-tdpp-v1-active="true"] .tdpp-v1-collapse-stack .salepage-feature.tdpp-v1-feature-list,
+html[data-tdpp-v1-active="true"] .tdpp-v1-collapse-stack .tdpp-v1-feature-list {
+  padding-left: 0 !important;
+}
+html[data-tdpp-v1-active="true"][data-tdpp-v1-mode="mobile"] [data-tdpp-v1-review="true"] .comment-block-title,
+html[data-tdpp-v1-active="true"][data-tdpp-v1-mode="mobile"] [data-tdpp-v1-review="true"] .comment-block-title * {
+  font-size: 14px !important;
 }
