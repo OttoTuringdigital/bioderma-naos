@@ -1,4 +1,4 @@
-/* TD_Figma_Product_Page_Style_GTM_v1.0.9.html */
+/* TD_Figma_Product_Page_Style_GTM_v1.0.10.html */
 /* Namespace: tdpp-v1. Product Bundle only. */
 :root {
   --tdpp-v1-navy: #0b3d70;
@@ -1026,7 +1026,7 @@ html[data-tdpp-v1-active="true"] .payment-campaign-tag__desc--linked.ico-chevron
 }
 
 
-/* v1.0.9 refinement: remove feature-list indentation and relocate the review block above product details. */
+/* v1.0.10 refinement: remove feature-list indentation and relocate the review block above product details. */
 html[data-tdpp-v1-active="true"] .tdpp-v1-collapse-stack .salepage-feature.tdpp-v1-feature-list,
 html[data-tdpp-v1-active="true"] .tdpp-v1-collapse-stack .tdpp-v1-feature-list {
   padding-left: 0 !important;
@@ -1034,4 +1034,10 @@ html[data-tdpp-v1-active="true"] .tdpp-v1-collapse-stack .tdpp-v1-feature-list {
 html[data-tdpp-v1-active="true"][data-tdpp-v1-mode="mobile"] [data-tdpp-v1-review="true"] .comment-block-title,
 html[data-tdpp-v1-active="true"][data-tdpp-v1-mode="mobile"] [data-tdpp-v1-review="true"] .comment-block-title * {
   font-size: 14px !important;
+}
+
+
+/* v1.0.10 refinement: hide the combined metafield presentation in product information. */
+html[data-tdpp-v1-active="true"] .salepage-info span[ng-style="SalePageIndexCtrl.GetMetafieldStyle(combinedMetafield)"] {
+  display: none !important;
 }
