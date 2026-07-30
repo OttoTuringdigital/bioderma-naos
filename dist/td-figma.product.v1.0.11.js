@@ -1,8 +1,8 @@
-/* TD_Figma_Product_Page_GTM_v1.0.10.html */
+/* TD_Figma_Product_Page_GTM_v1.0.11.html */
 (function () {
   'use strict';
 
-  var VERSION = '1.0.10';
+  var VERSION = '1.0.11';
   var INIT_RETRY_LIMIT = 240;
   var SOURCE_RETRY_LIMIT = 100;
   var SOURCE_STABLE_REQUIRED = 4;
@@ -24,6 +24,8 @@
     reviewTimer: null,
     reviewRetryCount: 0,
     reviewMoved: false,
+    ratingTimer: null,
+    ratingRetryCount: 0,
     collapseStack: null,
     collapseBuilt: false,
     readyEventSent: false
@@ -699,6 +701,98 @@
     state.reviewTimer = window.setTimeout(moveReviewWrapperWithRetry, 250);
   }
 
+
+  function extractRatingScore(target) {
+    var scoreNode = null;
+    var text = '';
+    var match;
+    var score;
+    if (!target) { return null; }
+    scoreNode = safeQuery('.avrage', target);
+    if (!scoreNode && target.classList && target.classList.contains('star-rate')) {
+      scoreNode = safeQuery('.star-rate-summary-content .avrage', target) ||
+        safeQuery('.star-rate-summary-content > span', target);
+    }
+    if (!scoreNode && target.classList && target.classList.contains('star-rate-summary-content')) {
+      scoreNode = safeQuery(':scope > span.avrage', target) || safeQuery(':scope > span', target);
+    }
+    text = normalizeText((scoreNode || target).textContent).replace(/,/g, '.');
+    match = text.match(/(?:^|[^0-9])([0-5](?:\.[0-9]+)?)(?=[^0-9]|$)/);
+    if (!match) { return null; }
+    score = Number(match[1]);
+    if (!isFinite(score) || score < 0 || score > 5) { return null; }
+    return score;
+  }
+
+  function ensureFiveStarDisplay(target) {
+    var score = extractRatingScore(target);
+    var filledCount;
+    var group;
+    var directChildren;
+    var icon;
+    var i;
+    if (score === null) { return false; }
+    filledCount = Math.max(1, Math.min(5, Math.ceil(score)));
+    group = safeQuery(':scope > [data-tdpp-v1-rating-stars="true"]', target);
+    directChildren = toArray(target.children);
+    for (i = 0; i < directChildren.length; i += 1) {
+      if (directChildren[i] !== group && directChildren[i].tagName === 'I' &&
+          (directChildren[i].classList.contains('ico-star') || directChildren[i].classList.contains('ico-star-fill'))) {
+        target.removeChild(directChildren[i]);
+      }
+    }
+    if (!group) {
+      group = document.createElement('span');
+      group.className = 'tdpp-v1-rating-stars';
+      group.setAttribute('data-tdpp-v1-rating-stars', 'true');
+      group.setAttribute('aria-label', '評分 ' + score + '，滿分 5 分');
+      target.insertBefore(group, target.firstChild);
+    } else {
+      group.setAttribute('aria-label', '評分 ' + score + '，滿分 5 分');
+    }
+    while (group.firstChild) { group.removeChild(group.firstChild); }
+    for (i = 0; i < 5; i += 1) {
+      icon = document.createElement('i');
+      icon.className = 'ico ' + (i < filledCount ? 'ico-star-fill' : 'ico-star') + ' star-color';
+      icon.setAttribute('aria-hidden', 'true');
+      group.appendChild(icon);
+    }
+    target.setAttribute('data-tdpp-v1-rating-normalized', 'true');
+    target.setAttribute('data-tdpp-v1-rating-score', String(score));
+    target.setAttribute('data-tdpp-v1-rating-filled', String(filledCount));
+    return true;
+  }
+
+  function normalizeProductRatings() {
+    var starRates = toArray(safeQueryAll('#SalePageIndexController .star-rate-wrapper .star-rate'));
+    var summaries;
+    var topCount = 0;
+    var summaryCount = 0;
+    var i;
+    for (i = 0; i < starRates.length; i += 1) {
+      if (closestBySelector(starRates[i], '[data-tdpp-v1-generated="true"]')) { continue; }
+      if (ensureFiveStarDisplay(starRates[i])) { topCount += 1; }
+    }
+    if (state.mode === 'desktop') {
+      summaries = toArray(safeQueryAll('#SalePageIndexController .star-rate-wrapper .star-rate-summary-content'));
+      for (i = 0; i < summaries.length; i += 1) {
+        if (closestBySelector(summaries[i], '.star-rate')) { continue; }
+        if (closestBySelector(summaries[i], '[data-tdpp-v1-generated="true"]')) { continue; }
+        if (ensureFiveStarDisplay(summaries[i])) { summaryCount += 1; }
+      }
+    }
+    return { top: topCount, summary: summaryCount };
+  }
+
+  function normalizeProductRatingsWithRetry() {
+    var result = normalizeProductRatings();
+    var complete = result.top > 0 && (state.mode !== 'desktop' || result.summary > 0);
+    if (complete || state.ratingRetryCount >= 80) { return; }
+    state.ratingRetryCount += 1;
+    window.clearTimeout(state.ratingTimer);
+    state.ratingTimer = window.setTimeout(normalizeProductRatingsWithRetry, 250);
+  }
+
   function isFavActive(original) {
     var icon = safeQuery('i', original);
     return !!(icon && (icon.classList.contains('ico-heart-fill') || icon.classList.contains('cms-primaryHeartBtnBgColor')));
@@ -791,6 +885,7 @@
     if (state.initialized) {
       ensureStackAttached();
       moveReviewWrapperWithRetry();
+      normalizeProductRatingsWithRetry();
       buildFavProxyWithRetry();
       return;
     }
@@ -807,6 +902,7 @@
     state.initialized = true;
     markReviewWrappers();
     moveReviewWrapperWithRetry();
+    normalizeProductRatingsWithRetry();
     buildFavProxyWithRetry();
     pollStableSources();
   }
