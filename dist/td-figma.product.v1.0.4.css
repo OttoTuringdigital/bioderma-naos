@@ -1,4 +1,4 @@
-/* TD_Figma_Product_Page_Style_GTM_v1.0.3.html */
+/* TD_Figma_Product_Page_Style_GTM_v1.0.4.html */
 /* Namespace: tdpp-v1. Product Bundle only. */
 :root {
   --tdpp-v1-navy: #0b3d70;
@@ -663,4 +663,142 @@ html[data-tdpp-v1-mode="mobile"] #tdpp-v1-panel-related .related-category-list__
 }
 html[data-tdpp-v1-mode="mobile"] .nav-tab .nav-tab-ul {
   border-bottom: 0 !important;
+}
+
+
+
+/* v1.0.4 refinement: deterministic generated stack and normalized copied content. */
+.tdpp-v1-collapse-stack {
+  width: 100% !important;
+  display: flex !important;
+  flex-direction: column !important;
+  margin-left: 0 !important;
+  margin-right: 0 !important;
+  padding: 0 !important;
+}
+.tdpp-v1-collapse-stack .tdpp-v1-clone-collapse {
+  width: 100% !important;
+  display: block !important;
+  margin-left: 0 !important;
+  margin-right: 0 !important;
+  border-left: 0 !important;
+  border-right: 0 !important;
+  background: var(--tdpp-v1-white) !important;
+}
+.tdpp-v1-collapse-stack .tdpp-v1-clone-header {
+  width: 100% !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  background: var(--tdpp-v1-white) !important;
+  color: var(--tdpp-v1-navy) !important;
+}
+.tdpp-v1-collapse-stack .tdpp-v1-clone-panel {
+  width: 100% !important;
+  height: auto !important;
+  max-height: none !important;
+  overflow: visible !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+}
+.tdpp-v1-collapse-stack .tdpp-v1-clone-panel[hidden] {
+  display: none !important;
+}
+.tdpp-v1-collapse-stack .tdpp-v1-clone-body {
+  width: 100% !important;
+  display: block !important;
+  color: var(--tdpp-v1-navy) !important;
+}
+.tdpp-v1-collapse-stack .tdpp-v1-clone-body > ul,
+.tdpp-v1-collapse-stack .tdpp-v1-payment-list,
+.tdpp-v1-collapse-stack .tdpp-v1-shipping-list,
+.tdpp-v1-collapse-stack .tdpp-v1-promotion-list {
+  width: 100% !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  list-style: none !important;
+}
+.tdpp-v1-collapse-stack .tdpp-v1-payment-item {
+  position: relative !important;
+  width: 100% !important;
+  display: flow-root !important;
+  margin: 0 !important;
+  padding: 10px 0 !important;
+  border-bottom: 1px solid #edf1f4 !important;
+  background: transparent !important;
+}
+.tdpp-v1-collapse-stack .tdpp-v1-payment-item:last-child {
+  border-bottom: 0 !important;
+}
+.tdpp-v1-collapse-stack .tdpp-v1-payment-item > .payment-shipping-subtitle:first-child {
+  display: inline-block !important;
+  width: auto !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  color: var(--tdpp-v1-navy) !important;
+  line-height: 24px !important;
+}
+.tdpp-v1-collapse-stack .tdpp-v1-payment-detail-toggle {
+  width: auto !important;
+  min-height: 24px !important;
+  margin: 4px 0 0 !important;
+  padding: 0 !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: flex-start !important;
+  gap: 8px !important;
+  color: var(--tdpp-v1-navy) !important;
+  background: transparent !important;
+  border: 0 !important;
+  text-decoration: none !important;
+  cursor: pointer !important;
+}
+.tdpp-v1-collapse-stack .tdpp-v1-payment-detail-toggle i {
+  position: static !important;
+  display: inline-block !important;
+  width: auto !important;
+  height: auto !important;
+  margin: 0 !important;
+  color: currentColor !important;
+  line-height: 1 !important;
+  transform-origin: center !important;
+  transition: transform .2s ease !important;
+}
+.tdpp-v1-collapse-stack .tdpp-v1-payment-detail-toggle i.rotate-to-top {
+  transform: rotate(180deg) !important;
+}
+.tdpp-v1-collapse-stack .tdpp-v1-payment-detail-toggle i.rotate-to-bottom {
+  transform: rotate(0deg) !important;
+}
+.tdpp-v1-collapse-stack .tdpp-v1-payment-detail {
+  width: 100% !important;
+  margin: 8px 0 0 !important;
+  padding: 12px !important;
+  list-style: none !important;
+  border: 0 !important;
+  background: var(--tdpp-v1-soft) !important;
+  color: var(--tdpp-v1-text) !important;
+  font-size: 12px !important;
+  line-height: 20px !important;
+  white-space: normal !important;
+  word-break: break-word !important;
+}
+.tdpp-v1-collapse-stack .tdpp-v1-payment-detail[hidden] {
+  display: none !important;
+}
+.tdpp-v1-collapse-stack .tdpp-v1-payment-detail > * {
+  color: inherit !important;
+}
+.tdpp-v1-collapse-stack #tdpp-v1-panel-payment .payment-campaign-tag__content {
+  clear: both !important;
+}
+.tdpp-v1-collapse-stack #tdpp-v1-panel-payment .payment-campaign-tag__title {
+  writing-mode: horizontal-tb !important;
+  text-orientation: mixed !important;
+}
+.tdpp-v1-collapse-stack #tdpp-v1-panel-feature .tdpp-v1-clone-body,
+.tdpp-v1-collapse-stack #tdpp-v1-panel-feature .tdpp-v1-clone-body *,
+.tdpp-v1-collapse-stack #tdpp-v1-panel-related .tdpp-v1-clone-body,
+.tdpp-v1-collapse-stack #tdpp-v1-panel-related .tdpp-v1-clone-body * {
+  color: var(--tdpp-v1-navy) !important;
 }
