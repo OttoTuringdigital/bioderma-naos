@@ -1,8 +1,8 @@
-/* TD_Figma_Product_Page_GTM_v1.0.7.html */
+/* TD_Figma_Product_Page_GTM_v1.0.8.html */
 (function () {
   'use strict';
 
-  var VERSION = '1.0.7';
+  var VERSION = '1.0.8';
   var INIT_RETRY_LIMIT = 240;
   var SOURCE_RETRY_LIMIT = 100;
   var SOURCE_STABLE_REQUIRED = 4;

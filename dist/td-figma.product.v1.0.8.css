@@ -1,4 +1,4 @@
-/* TD_Figma_Product_Page_Style_GTM_v1.0.7.html */
+/* TD_Figma_Product_Page_Style_GTM_v1.0.8.html */
 /* Namespace: tdpp-v1. Product Bundle only. */
 :root {
   --tdpp-v1-navy: #0b3d70;
@@ -1006,5 +1006,21 @@ html[data-tdpp-v1-mode="mobile"] .tdpp-v1-collapse-stack .tdpp-v1-related-item {
 /* v1.0.7 refinement: preserve only separators already present in the original website content. */
 html[data-tdpp-v1-active="true"] .tdpp-v1-collapse-stack .tdpp-v1-related-item > .related-category-list__category-item::before {
   content: none !important;
+  display: none !important;
+}
+
+
+
+/* v1.0.8 refinement: product carousel, tab alignment, mobile feature list, and linked campaign chevron. */
+html[data-tdpp-v1-mode="desktop"] .klee-slider-li:first-child {
+  padding-left: 8px !important;
+}
+html[data-tdpp-v1-mode="desktop"] .nav-tab {
+  width: min(1200px,calc(100% - 40px)) !important;
+}
+html[data-tdpp-v1-active="true"][data-tdpp-v1-mode="mobile"] .tdpp-v1-collapse-stack .tdpp-v1-feature-list {
+  padding-left: 0 !important;
+}
+html[data-tdpp-v1-active="true"] .payment-campaign-tag__desc--linked.ico-chevron-right {
   display: none !important;
 }
