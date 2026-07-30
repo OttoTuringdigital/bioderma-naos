@@ -1,8 +1,8 @@
-/* TD_Figma_Product_Page_GTM_v1.0.5.html */
+/* TD_Figma_Product_Page_GTM_v1.0.6.html */
 (function () {
   'use strict';
 
-  var VERSION = '1.0.5';
+  var VERSION = '1.0.6';
   var INIT_RETRY_LIMIT = 240;
   var SOURCE_RETRY_LIMIT = 100;
   var SOURCE_STABLE_REQUIRED = 4;
@@ -184,7 +184,10 @@
     if (type === 'promotion') { return getTopLevelItems(source, 'li'); }
     if (type === 'payment') { return getTopLevelItems(source, 'li'); }
     if (type === 'shipping') { return getTopLevelItems(source, 'li'); }
-    if (type === 'feature') { return toArray(safeQueryAll('.salepage-feature li', source)); }
+    if (type === 'feature') {
+      var featureList = safeQuery('.salepage-feature', source);
+      return directChildrenBySelector(featureList, 'li');
+    }
     if (type === 'related') { return toArray(safeQueryAll('.related-category-list__category-item-wrapper', source)); }
     return [];
   }
@@ -416,33 +419,51 @@
     var items = getSourceItems('shipping', source);
     var list = document.createElement('ul');
     var li;
-    var row;
-    var nodes;
+    var head;
+    var title;
+    var tag;
+    var campaign;
+    var secondary;
     var clone;
     var i;
-    var j;
     list.className = 'tdpp-v1-shipping-list';
     for (i = 0; i < items.length; i += 1) {
       li = document.createElement('li');
       li.className = 'shipping-li tdpp-v1-shipping-item';
-      row = document.createElement('div');
-      row.className = 'tdpp-v1-shipping-main-row';
-      nodes = [
-        safeQuery('.payment-shipping-subtitle.payment-shipping-between', items[i]),
-        directChildrenBySelector(items[i], '.pull-right')[0] || safeQuery('.pull-right', items[i]),
-        safeQuery('.free-shipping-activity', items[i]),
-        safeQuery('.payment-shipping-subtitle.payment-shipping-subtitle-secondary', items[i])
-      ];
-      for (j = 0; j < nodes.length; j += 1) {
-        if (nodes[j]) {
-          clone = cloneElement(nodes[j]);
-          if (clone) { row.appendChild(clone); }
+
+      head = document.createElement('div');
+      head.className = 'tdpp-v1-shipping-head';
+      title = safeQuery('.payment-shipping-subtitle.payment-shipping-between', items[i]);
+      tag = directChildrenBySelector(items[i], '.pull-right')[0] || safeQuery('.pull-right', items[i]);
+      if (title) {
+        clone = cloneElement(title);
+        if (clone) { head.appendChild(clone); }
+      }
+      if (tag) {
+        clone = cloneElement(tag);
+        if (clone) { head.appendChild(clone); }
+      }
+      if (hasMeaningfulContent(head)) { li.appendChild(head); }
+
+      campaign = safeQuery('.free-shipping-activity', items[i]);
+      if (campaign) {
+        clone = cloneElement(campaign);
+        if (clone) {
+          clone.classList.add('tdpp-v1-shipping-campaign');
+          li.appendChild(clone);
         }
       }
-      if (hasMeaningfulContent(row)) {
-        li.appendChild(row);
-        list.appendChild(li);
+
+      secondary = safeQuery('.payment-shipping-subtitle.payment-shipping-subtitle-secondary', items[i]);
+      if (secondary) {
+        clone = cloneElement(secondary);
+        if (clone) {
+          clone.classList.add('tdpp-v1-shipping-secondary');
+          li.appendChild(clone);
+        }
       }
+
+      if (hasMeaningfulContent(li)) { list.appendChild(li); }
     }
     body.appendChild(list);
     return hasMeaningfulContent(list);
@@ -495,17 +516,26 @@
     return state.mode === 'desktop' ? safeQuery('.salepage-top-right .detail-info-wrapper') : safeQuery('.salepage-info');
   }
 
-  function markOriginalHidden(source) {
-    if (source) { source.setAttribute('data-tdpp-v1-original-block', 'hidden'); }
+  function getOriginalHideTarget(type, source) {
+    if (!source) { return null; }
+    if (type === 'payment' || type === 'shipping') {
+      return closestBySelector(source, '.collapse-group') || source;
+    }
+    return source;
+  }
+
+  function markOriginalHidden(type, source) {
+    var target = getOriginalHideTarget(type, source);
+    if (target) { target.setAttribute('data-tdpp-v1-original-block', 'hidden'); }
   }
 
   function hideCurrentOriginals() {
     var sources = findSources();
-    markOriginalHidden(sources.promotion);
-    markOriginalHidden(sources.payment);
-    markOriginalHidden(sources.shipping);
-    markOriginalHidden(sources.feature);
-    markOriginalHidden(sources.related);
+    markOriginalHidden('promotion', sources.promotion);
+    markOriginalHidden('payment', sources.payment);
+    markOriginalHidden('shipping', sources.shipping);
+    markOriginalHidden('feature', sources.feature);
+    markOriginalHidden('related', sources.related);
   }
 
   function removeLegacyGeneratedStack() {
@@ -551,7 +581,7 @@
       if (populateBody(specs[i].type, body, source)) {
         group.setAttribute('data-tdpp-v1-clone-ready', 'true');
         stack.appendChild(group);
-        markOriginalHidden(source);
+        markOriginalHidden(specs[i].type, source);
         readyCount += 1;
       }
     }
