@@ -3626,14 +3626,30 @@ init();
   }
 }());
 
-/* TD_Figma_All_Pages_ProductCard_GTM_v1.0.2.html */
+/* TD_Figma_All_Pages_ProductCard_GTM_v1.0.3.html */
 (function () {
   'use strict';
 
-  var VERSION = '1.0.2';
+  var VERSION = '1.0.3';
   var ROLE_ATTRIBUTE = 'data-tdpc-v1-role';
   var INJECTED_ATTRIBUTE = 'data-tdpc-v1-injected';
   var DATA_KEY = 'allPagesProductCard';
+  var LEGACY_PRODUCT_PAGE_CARD_SELECTOR =
+    '#SalePageIndexController ' +
+    'li.product-card.product-card-in-slider > ' +
+    'a.product-list-link';
+  var LEGACY_FALLBACK_SELECTORS = {
+    mediaContainer: '.product-card-img-container, figure.image-frame',
+    productImage: 'img.klee-slider-li-img, img.image-body',
+    productBadgeImage: 'img.product-card-badge-img',
+    productTitle: '.product-card-title',
+    featureTagGroup: '.product-card-tag-block',
+    featureTag: '.product-card-tag',
+    priceBlock: '.product-card-price-block',
+    salePriceContainer: '.product-card-price',
+    salePrice: '.product-card-price span',
+    originalPrice: '.product-card-suggest-price'
+  };
   var state = {
     observer: null,
     timer: null,
@@ -4332,6 +4348,47 @@ init();
     return true;
   }
 
+  function joinSelectors(primary, fallback) {
+    var first = trimText(primary);
+    var second = trimText(fallback);
+
+    if (!first) {
+      return second;
+    }
+
+    if (!second || first.indexOf(second) !== -1) {
+      return first;
+    }
+
+    return first + ', ' + second;
+  }
+
+  function queryLegacyElement(card, configured, fallback) {
+    var element = null;
+
+    if (!card) {
+      return null;
+    }
+
+    if (configured) {
+      try {
+        element = card.querySelector(configured);
+      } catch (error) {
+        element = null;
+      }
+    }
+
+    if (!element && fallback) {
+      try {
+        element = card.querySelector(fallback);
+      } catch (fallbackError) {
+        element = null;
+      }
+    }
+
+    return element;
+  }
+
   function processLegacyCard(card, dataset) {
     var selectors = dataset.selectors.legacy || {};
     var media;
@@ -4347,31 +4404,65 @@ init();
     var cartButton;
     var productName;
 
-    media = card.querySelector(selectors.mediaContainer);
-    title = card.querySelector(selectors.productTitle);
-    priceBlock = card.querySelector(selectors.priceBlock);
+    media = queryLegacyElement(
+      card,
+      selectors.mediaContainer,
+      LEGACY_FALLBACK_SELECTORS.mediaContainer
+    );
+    title = queryLegacyElement(
+      card,
+      selectors.productTitle,
+      LEGACY_FALLBACK_SELECTORS.productTitle
+    );
+    priceBlock = queryLegacyElement(
+      card,
+      selectors.priceBlock,
+      LEGACY_FALLBACK_SELECTORS.priceBlock
+    );
 
     if (!media || !title || !priceBlock) {
       return false;
     }
 
-    productImage = card.querySelector(selectors.productImage);
-    productBadge = card.querySelector(
-      selectors.productBadgeImage
+    productImage = queryLegacyElement(
+      card,
+      selectors.productImage,
+      LEGACY_FALLBACK_SELECTORS.productImage
     );
-    featureTagGroup = card.querySelector(
-      selectors.featureTagGroup
+    productBadge = queryLegacyElement(
+      card,
+      selectors.productBadgeImage,
+      LEGACY_FALLBACK_SELECTORS.productBadgeImage
     );
-    featureTag = card.querySelector(selectors.featureTag);
-    salePrice = card.querySelector(selectors.salePrice);
+    featureTagGroup = queryLegacyElement(
+      card,
+      selectors.featureTagGroup,
+      LEGACY_FALLBACK_SELECTORS.featureTagGroup
+    );
+    featureTag = queryLegacyElement(
+      card,
+      selectors.featureTag,
+      LEGACY_FALLBACK_SELECTORS.featureTag
+    );
+    salePrice = queryLegacyElement(
+      card,
+      selectors.salePrice,
+      LEGACY_FALLBACK_SELECTORS.salePrice
+    );
     salePriceContainer = selectors.salePriceContainer
-      ? card.querySelector(selectors.salePriceContainer)
+      ? queryLegacyElement(
+        card,
+        selectors.salePriceContainer,
+        LEGACY_FALLBACK_SELECTORS.salePriceContainer
+      )
       : null;
     if (!salePriceContainer && salePrice) {
       salePriceContainer = salePrice.parentElement;
     }
-    originalPrice = card.querySelector(
-      selectors.originalPrice
+    originalPrice = queryLegacyElement(
+      card,
+      selectors.originalPrice,
+      LEGACY_FALLBACK_SELECTORS.originalPrice
     );
 
     card.setAttribute(
@@ -4558,8 +4649,11 @@ init();
       }
 
       legacyCards = collectCards(
-        selectors.legacy &&
-        selectors.legacy.card
+        joinSelectors(
+          selectors.legacy &&
+          selectors.legacy.card,
+          LEGACY_PRODUCT_PAGE_CARD_SELECTOR
+        )
       );
 
       for (i = 0; i < legacyCards.length; i += 1) {
