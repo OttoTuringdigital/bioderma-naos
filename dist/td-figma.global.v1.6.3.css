@@ -707,7 +707,7 @@ body.tdfn-v1-mobile-layout
   }
 }
 
-/* TD_Figma_All_Pages_ProductCard_Style_GTM_v1.0.2.html */
+/* TD_Figma_All_Pages_ProductCard_Style_GTM_v1.0.3.html */
 [data-tdpc-v1-role="card"],
   [data-tdpc-v1-role="card"] * {
     box-sizing: border-box !important;
@@ -1167,6 +1167,7 @@ body.tdfn-v1-mobile-layout
   @media (max-width: 991px) {
     [data-tdpc-v1-role="corner-label"] {
       top: 4px !important;
+      z-index: 1 !important;
       left: 4px !important;
       min-height: 22px !important;
       padding: 3px 8px !important;

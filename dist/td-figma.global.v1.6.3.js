@@ -1,7 +1,7 @@
 /* TD_Figma_All_Pages_Core_Style_GTM_v1.8.1.html */
 (function(){window.TDFigmaStyleReady=window.TDFigmaStyleReady||{};window.TDFigmaStyleReady.allPages="1.8.0";}());
 
-/* TD_Figma_All_Pages_ProductCard_Style_GTM_v1.0.2.html */
+/* TD_Figma_All_Pages_ProductCard_Style_GTM_v1.0.3.html */
 (function () {
   window.TDFigmaStyleReady = window.TDFigmaStyleReady || {};
   window.TDFigmaStyleReady.allPagesProductCard = '1.0.2';
