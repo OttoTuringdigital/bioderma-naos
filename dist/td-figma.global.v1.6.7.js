@@ -1,7 +1,7 @@
 /* TD_Figma_All_Pages_Core_Style_GTM_v1.8.1.html */
 (function(){window.TDFigmaStyleReady=window.TDFigmaStyleReady||{};window.TDFigmaStyleReady.allPages="1.8.0";}());
 
-/* TD_Figma_All_Pages_ProductCard_Style_GTM_v1.0.3.html */
+/* TD_Figma_All_Pages_ProductCard_Style_GTM_v1.0.5.html */
 (function () {
   window.TDFigmaStyleReady = window.TDFigmaStyleReady || {};
   window.TDFigmaStyleReady.allPagesProductCard = '1.0.2';
@@ -3626,14 +3626,30 @@ init();
   }
 }());
 
-/* TD_Figma_All_Pages_ProductCard_GTM_v1.0.2.html */
+/* TD_Figma_All_Pages_ProductCard_GTM_v1.0.4.html */
 (function () {
   'use strict';
 
-  var VERSION = '1.0.2';
+  var VERSION = '1.0.4';
   var ROLE_ATTRIBUTE = 'data-tdpc-v1-role';
   var INJECTED_ATTRIBUTE = 'data-tdpc-v1-injected';
   var DATA_KEY = 'allPagesProductCard';
+  var LEGACY_PRODUCT_PAGE_CARD_SELECTOR =
+    '#SalePageIndexController ' +
+    'li.product-card.product-card-in-slider > ' +
+    'a.product-list-link';
+  var LEGACY_FALLBACK_SELECTORS = {
+    mediaContainer: '.product-card-img-container, figure.image-frame',
+    productImage: 'img.klee-slider-li-img, img.image-body',
+    productBadgeImage: 'img.product-card-badge-img',
+    productTitle: '.product-card-title',
+    featureTagGroup: '.product-card-tag-block',
+    featureTag: '.product-card-tag',
+    priceBlock: '.product-card-price-block',
+    salePriceContainer: '.product-card-price',
+    salePrice: '.product-card-price span',
+    originalPrice: '.product-card-suggest-price'
+  };
   var state = {
     observer: null,
     timer: null,
@@ -3748,7 +3764,36 @@ init();
     );
   }
 
-  function matchesCornerRule(productName, rule) {
+  function extractProductId(card) {
+    var directId;
+    var href;
+    var match;
+
+    if (!card) {
+      return '';
+    }
+
+    directId = trimText(
+      card.getAttribute('data-product-id') || ''
+    );
+
+    if (/^\d+$/.test(directId)) {
+      return directId;
+    }
+
+    href = card.getAttribute('href') ||
+      card.getAttribute('ng-href') ||
+      card.getAttribute('data-ng-href') ||
+      '';
+
+    match = String(href).match(
+      /\/SalePage\/Index\/(\d+)(?=[/?#]|$)/i
+    );
+
+    return match ? match[1] : '';
+  }
+
+  function matchesLegacyNameRule(productName, rule) {
     var name = trimText(productName).toLowerCase();
     var keywords = rule.productNameKeywords || [];
     var mode = rule.matchMode || 'containsAny';
@@ -3797,12 +3842,50 @@ init();
       matchedCount === keywords.length;
   }
 
-  function findCornerRule(productName, dataset) {
+  function matchesProductRule(productId, productName, rule) {
+    var pattern;
+
+    if (!rule) {
+      return false;
+    }
+
+    pattern = trimText(rule.productIdPattern || '');
+
+    if (pattern) {
+      if (!productId) {
+        return false;
+      }
+
+      try {
+        return new RegExp(
+          '^(?:' + pattern + ')$',
+          rule.regexFlags || ''
+        ).test(productId);
+      } catch (error) {
+        return false;
+      }
+    }
+
+    /*
+     * 舊版 Dataset 相容：只有尚未改成 productIdPattern 的舊規則
+     * 才會回退使用商品名稱，避免升級 Runtime 時既有 GTM Dataset
+     * 立即失效。新版 Dataset v1.0.3 起應使用商品編號規則。
+     */
+    return matchesLegacyNameRule(productName, rule);
+  }
+
+  function findCornerRule(productId, productName, dataset) {
     var rules = dataset.cornerLabelRules || [];
     var i;
 
     for (i = 0; i < rules.length; i += 1) {
-      if (matchesCornerRule(productName, rules[i])) {
+      if (
+        matchesProductRule(
+          productId,
+          productName,
+          rules[i]
+        )
+      ) {
         return rules[i];
       }
     }
@@ -3810,11 +3893,11 @@ init();
     return null;
   }
 
-  function updateCornerLabel(card, media, productName, dataset) {
+  function updateCornerLabel(card, media, productId, productName, dataset) {
     var existing = card.querySelector(
       '[' + ROLE_ATTRIBUTE + '="corner-label"]'
     );
-    var rule = findCornerRule(productName, dataset);
+    var rule = findCornerRule(productId, productName, dataset);
     var label;
 
     if (!rule || !media) {
@@ -3917,12 +4000,18 @@ init();
     }
   }
 
-  function findProductTagRule(productName, dataset) {
+  function findProductTagRule(productId, productName, dataset) {
     var rules = dataset.productTagRules || [];
     var i;
 
     for (i = 0; i < rules.length; i += 1) {
-      if (matchesCornerRule(productName, rules[i])) {
+      if (
+        matchesProductRule(
+          productId,
+          productName,
+          rules[i]
+        )
+      ) {
         return rules[i];
       }
     }
@@ -3962,14 +4051,14 @@ init();
     return parts.join('||');
   }
 
-  function updateProductTagRow(card, details, title, productName, dataset) {
+  function updateProductTagRow(card, details, title, productId, productName, dataset) {
     var behavior = dataset.behavior || {};
     var row = details
       ? details.querySelector(
           '[' + ROLE_ATTRIBUTE + '="product-tag-row"]'
         )
       : null;
-    var rule = findProductTagRule(productName, dataset);
+    var rule = findProductTagRule(productId, productName, dataset);
     var tags = rule && rule.tags ? rule.tags : [];
     var signature = buildProductTagSignature(rule);
     var normalized;
@@ -4226,6 +4315,7 @@ init();
     var favoriteWrapper;
     var cartWrapper;
     var productName;
+    var productId;
 
     title = card.querySelector(selectors.productTitle);
     favoriteButton = card.querySelector(
@@ -4305,6 +4395,12 @@ init();
       productName
     );
 
+    productId = extractProductId(card);
+    card.setAttribute(
+      'data-tdpc-v1-product-id',
+      productId
+    );
+
     cartButton.setAttribute(
       'data-tdpc-v1-cart-label',
       (
@@ -4318,18 +4414,61 @@ init();
       card,
       details,
       title,
+      productId,
       productName,
       dataset
     );
     updateCornerLabel(
       card,
       media,
+      productId,
       productName,
       dataset
     );
     updateFavoriteState(favoriteButton);
 
     return true;
+  }
+
+  function joinSelectors(primary, fallback) {
+    var first = trimText(primary);
+    var second = trimText(fallback);
+
+    if (!first) {
+      return second;
+    }
+
+    if (!second || first.indexOf(second) !== -1) {
+      return first;
+    }
+
+    return first + ', ' + second;
+  }
+
+  function queryLegacyElement(card, configured, fallback) {
+    var element = null;
+
+    if (!card) {
+      return null;
+    }
+
+    if (configured) {
+      try {
+        element = card.querySelector(configured);
+      } catch (error) {
+        element = null;
+      }
+    }
+
+    if (!element && fallback) {
+      try {
+        element = card.querySelector(fallback);
+      } catch (fallbackError) {
+        element = null;
+      }
+    }
+
+    return element;
   }
 
   function processLegacyCard(card, dataset) {
@@ -4346,32 +4485,67 @@ init();
     var originalPrice;
     var cartButton;
     var productName;
+    var productId;
 
-    media = card.querySelector(selectors.mediaContainer);
-    title = card.querySelector(selectors.productTitle);
-    priceBlock = card.querySelector(selectors.priceBlock);
+    media = queryLegacyElement(
+      card,
+      selectors.mediaContainer,
+      LEGACY_FALLBACK_SELECTORS.mediaContainer
+    );
+    title = queryLegacyElement(
+      card,
+      selectors.productTitle,
+      LEGACY_FALLBACK_SELECTORS.productTitle
+    );
+    priceBlock = queryLegacyElement(
+      card,
+      selectors.priceBlock,
+      LEGACY_FALLBACK_SELECTORS.priceBlock
+    );
 
     if (!media || !title || !priceBlock) {
       return false;
     }
 
-    productImage = card.querySelector(selectors.productImage);
-    productBadge = card.querySelector(
-      selectors.productBadgeImage
+    productImage = queryLegacyElement(
+      card,
+      selectors.productImage,
+      LEGACY_FALLBACK_SELECTORS.productImage
     );
-    featureTagGroup = card.querySelector(
-      selectors.featureTagGroup
+    productBadge = queryLegacyElement(
+      card,
+      selectors.productBadgeImage,
+      LEGACY_FALLBACK_SELECTORS.productBadgeImage
     );
-    featureTag = card.querySelector(selectors.featureTag);
-    salePrice = card.querySelector(selectors.salePrice);
+    featureTagGroup = queryLegacyElement(
+      card,
+      selectors.featureTagGroup,
+      LEGACY_FALLBACK_SELECTORS.featureTagGroup
+    );
+    featureTag = queryLegacyElement(
+      card,
+      selectors.featureTag,
+      LEGACY_FALLBACK_SELECTORS.featureTag
+    );
+    salePrice = queryLegacyElement(
+      card,
+      selectors.salePrice,
+      LEGACY_FALLBACK_SELECTORS.salePrice
+    );
     salePriceContainer = selectors.salePriceContainer
-      ? card.querySelector(selectors.salePriceContainer)
+      ? queryLegacyElement(
+        card,
+        selectors.salePriceContainer,
+        LEGACY_FALLBACK_SELECTORS.salePriceContainer
+      )
       : null;
     if (!salePriceContainer && salePrice) {
       salePriceContainer = salePrice.parentElement;
     }
-    originalPrice = card.querySelector(
-      selectors.originalPrice
+    originalPrice = queryLegacyElement(
+      card,
+      selectors.originalPrice,
+      LEGACY_FALLBACK_SELECTORS.originalPrice
     );
 
     card.setAttribute(
@@ -4421,10 +4595,17 @@ init();
       productName
     );
 
+    productId = extractProductId(card);
+    card.setAttribute(
+      'data-tdpc-v1-product-id',
+      productId
+    );
+
     updateProductTagRow(
       card,
       title.parentElement,
       title,
+      productId,
       productName,
       dataset
     );
@@ -4432,6 +4613,7 @@ init();
     updateCornerLabel(
       card,
       media,
+      productId,
       productName,
       dataset
     );
@@ -4558,8 +4740,11 @@ init();
       }
 
       legacyCards = collectCards(
-        selectors.legacy &&
-        selectors.legacy.card
+        joinSelectors(
+          selectors.legacy &&
+          selectors.legacy.card,
+          LEGACY_PRODUCT_PAGE_CARD_SELECTOR
+        )
       );
 
       for (i = 0; i < legacyCards.length; i += 1) {
