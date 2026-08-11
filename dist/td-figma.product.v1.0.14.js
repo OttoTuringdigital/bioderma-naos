@@ -1,8 +1,8 @@
-/* TD_Figma_Product_Page_GTM_v1.0.13.html */
+/* TD_Figma_Product_Page_GTM_v1.0.14.html */
 (function () {
   'use strict';
 
-  var VERSION = '1.0.13';
+  var VERSION = '1.0.14';
   var INIT_RETRY_LIMIT = 240;
   var SOURCE_RETRY_LIMIT = 100;
   var SOURCE_STABLE_REQUIRED = 4;
@@ -679,7 +679,13 @@
     var wrappers = toArray(safeQueryAll('#SalePageIndexController .star-rate-wrapper'));
     var i;
     for (i = 0; i < wrappers.length; i += 1) {
-      if (!closestBySelector(wrappers[i], '.salepage-info')) { wrappers[i].setAttribute('data-tdpp-v1-review', 'true'); }
+      if (closestBySelector(wrappers[i], '.salepage-info')) { continue; }
+      wrappers[i].setAttribute('data-tdpp-v1-review', 'true');
+      if (safeQuery('.no-comment', wrappers[i])) {
+        wrappers[i].setAttribute('data-tdpp-v1-no-comment', 'true');
+      } else {
+        wrappers[i].removeAttribute('data-tdpp-v1-no-comment');
+      }
     }
   }
 
@@ -708,6 +714,11 @@
     }
     review.setAttribute('data-tdpp-v1-review', 'true');
     review.setAttribute('data-tdpp-v1-review-relocated', 'true');
+    if (safeQuery('.no-comment', review)) {
+      review.setAttribute('data-tdpp-v1-no-comment', 'true');
+    } else {
+      review.removeAttribute('data-tdpp-v1-no-comment');
+    }
     state.reviewMoved = true;
     return true;
   }
@@ -852,8 +863,12 @@
   }
 
   function normalizeProductRatingsWithRetry() {
-    var result = normalizeProductRatings();
-    var complete = result.top > 0 && result.summary > 0;
+    var noCommentReview = safeQuery('#SalePageIndexController [data-tdpp-v1-review="true"] .no-comment');
+    var result;
+    var complete;
+    if (noCommentReview) { return; }
+    result = normalizeProductRatings();
+    complete = result.top > 0 && result.summary > 0;
     if (complete || state.ratingRetryCount >= 80) { return; }
     state.ratingRetryCount += 1;
     window.clearTimeout(state.ratingTimer);

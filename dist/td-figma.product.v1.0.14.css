@@ -1,4 +1,4 @@
-/* TD_Figma_Product_Page_Style_GTM_v1.0.13.html */
+/* TD_Figma_Product_Page_Style_GTM_v1.0.14.html */
 /* Namespace: tdpp-v1. Product Bundle only. */
 :root {
   --tdpp-v1-navy: #0b3d70;
@@ -1127,4 +1127,12 @@ html[data-tdpp-v1-mode="mobile"] [data-tdpp-v1-review="true"] .comment-block-tit
 html[data-tdpp-v1-mode="mobile"] [data-tdpp-v1-review="true"] .comment-card {
   margin-top: 6px !important;
   padding: 8px !important;
+}
+
+
+
+/* v1.0.14: 沒有任何評論時，整個評論區塊不顯示。 */
+html[data-tdpp-v1-active="true"] #SalePageIndexController [data-tdpp-v1-review="true"][data-tdpp-v1-no-comment="true"],
+html[data-tdpp-v1-active="true"] #SalePageIndexController .star-rate-wrapper:has(.no-comment) {
+  display: none !important;
 }

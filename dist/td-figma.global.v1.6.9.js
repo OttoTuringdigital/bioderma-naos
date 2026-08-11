@@ -1,10 +1,10 @@
-/* TD_Figma_All_Pages_Core_Style_GTM_v1.8.2.html */
+/* TD_Figma_All_Pages_Core_Style_GTM_v1.8.3.html */
 (function(){window.TDFigmaStyleReady=window.TDFigmaStyleReady||{};window.TDFigmaStyleReady.allPages="1.8.0";}());
 
-/* TD_Figma_All_Pages_ProductCard_Style_GTM_v1.0.6.html */
+/* TD_Figma_All_Pages_ProductCard_Style_GTM_v1.0.7.html */
 (function () {
   window.TDFigmaStyleReady = window.TDFigmaStyleReady || {};
-  window.TDFigmaStyleReady.allPagesProductCard = '1.0.2';
+  window.TDFigmaStyleReady.allPagesProductCard = '1.0.7';
 }());
 
 /* TD_Figma_All_Pages_Core_Utility_GTM_v1.3.0.html */
@@ -527,7 +527,7 @@
   flushJobs();
 }());
 
-/* TD_Figma_All_Pages_Navigation_GTM_v5.3.0.html */
+/* TD_Figma_All_Pages_Navigation_GTM_v5.3.1.html */
 (function () {
   'use strict';
 
@@ -680,7 +680,7 @@ href: item.linkUrl || ''
 };
 var closest = Core.dom.closest;
 var escapeHtml = Core.text.escapeHtml;
-var VERSION = '5.3.0';
+var VERSION = '5.3.1';
 var LOAD_ATTR = 'data-tdfn-v1-loaded';
 if (document.documentElement.getAttribute(LOAD_ATTR) === VERSION) {
 return;
@@ -1127,7 +1127,7 @@ portal.style.width = width + 'px';
 function openDesktop(menuId, trigger) {
 var portal;
 var menu;
-if (window.innerWidth < BREAKPOINT) {
+if (window.innerWidth < BREAKPOINT && !isSitePage()) {
 return;
 }
 menu = getMenu(menuId);
@@ -1992,11 +1992,12 @@ return buttons[i];
 return null;
 }
 function isMobileLayout() {
-if (window.innerWidth >= BREAKPOINT) {
+/* /site/ 活動頁本身為固定桌機版版型，即使 viewport < 992px 也維持桌機導覽。 */
+if (isSitePage()) {
 return false;
 }
-if (isSitePage()) {
-return true;
+if (window.innerWidth >= BREAKPOINT) {
+return false;
 }
 if (isVisibleElement(state.mobileTrigger)) {
 return true;
@@ -2010,6 +2011,10 @@ if (document.body) {
 document.body.classList.toggle(
 'tdfn-v1-mobile-layout',
 mobile
+);
+document.body.classList.toggle(
+'tdfn-v1-site-fixed-layout',
+isSitePage()
 );
 }
 if (
@@ -3666,11 +3671,11 @@ init();
   }
 }());
 
-/* TD_Figma_All_Pages_ProductCard_GTM_v1.0.5.html */
+/* TD_Figma_All_Pages_ProductCard_GTM_v1.0.6.html */
 (function () {
   'use strict';
 
-  var VERSION = '1.0.5';
+  var VERSION = '1.0.6';
   var ROLE_ATTRIBUTE = 'data-tdpc-v1-role';
   var INJECTED_ATTRIBUTE = 'data-tdpc-v1-injected';
   var DATA_KEY = 'allPagesProductCard';
@@ -3982,16 +3987,26 @@ init();
   function updateFavoriteState(favoriteButton) {
     var icon;
     var active = false;
+    var ownClass;
+    var dataElmId;
 
     if (!favoriteButton) {
       return;
     }
 
-    icon = favoriteButton.querySelector('i');
-    if (icon) {
-      active = String(icon.className || '')
-        .indexOf('heart-fill') !== -1;
-    }
+    /*
+     * 一般商品卡的收藏 icon 在 button 內；/site/ 活動頁本身就是 i.ico-heart(-fill)。
+     * 兩種 DOM 都必須能正確辨識已收藏狀態。
+     */
+    ownClass = String(favoriteButton.className || '');
+    dataElmId = String(favoriteButton.getAttribute('data-elm-id') || '');
+    icon = favoriteButton.tagName === 'I'
+      ? favoriteButton
+      : favoriteButton.querySelector('i');
+
+    active = dataElmId === 'collected' ||
+      ownClass.indexOf('heart-fill') !== -1 ||
+      !!(icon && String(icon.className || '').indexOf('heart-fill') !== -1);
 
     favoriteButton.setAttribute(
       'data-tdpc-v1-favorite-state',
