@@ -1,4 +1,4 @@
-/* TD_Figma_All_Pages_Core_Style_GTM_v1.8.3.html */
+/* TD_Figma_All_Pages_Core_Style_GTM_v1.8.4.html */
 (function(){window.TDFigmaStyleReady=window.TDFigmaStyleReady||{};window.TDFigmaStyleReady.allPages="1.8.0";}());
 
 /* TD_Figma_All_Pages_ProductCard_Style_GTM_v1.0.7.html */
@@ -527,12 +527,12 @@
   flushJobs();
 }());
 
-/* TD_Figma_All_Pages_Navigation_GTM_v5.3.1.html */
+/* TD_Figma_All_Pages_Navigation_GTM_v5.3.2.html */
 (function () {
   'use strict';
 
   var job = {
-    key: 'td-figma-navigation-v520',
+    key: 'td-figma-navigation-v532',
     ready: function () {
       return !!(window.TDFigmaData && window.TDFigmaData.allPages && window.TDFigmaData.allPages.navigation && window.TDFigmaDesktopHeaderPortal);
     },
@@ -680,7 +680,7 @@ href: item.linkUrl || ''
 };
 var closest = Core.dom.closest;
 var escapeHtml = Core.text.escapeHtml;
-var VERSION = '5.3.1';
+var VERSION = '5.3.2';
 var LOAD_ATTR = 'data-tdfn-v1-loaded';
 if (document.documentElement.getAttribute(LOAD_ATTR) === VERSION) {
 return;
@@ -1127,7 +1127,7 @@ portal.style.width = width + 'px';
 function openDesktop(menuId, trigger) {
 var portal;
 var menu;
-if (window.innerWidth < BREAKPOINT && !isSitePage()) {
+if (isSiteMobileDom() || (window.innerWidth < BREAKPOINT && !isSitePage())) {
 return;
 }
 menu = getMenu(menuId);
@@ -1763,6 +1763,16 @@ function isSitePage() {
 var path = window.location && window.location.pathname ? window.location.pathname : '';
 return /(^|\/)site(\/|$)/i.test(path);
 }
+function isSiteMobileDom() {
+var mobileMenu;
+var desktopRight;
+if (!isSitePage()) {
+return false;
+}
+mobileMenu = findSiteElement('[data-elm-id="menuButton"]');
+desktopRight = findSiteElement('[data-elm-id="rightArea"]');
+return !!(mobileMenu && !desktopRight);
+}
 function findSiteElement(selector) {
 var node = null;
 try { node = document.querySelector(selector); } catch (error) { node = null; }
@@ -1980,10 +1990,18 @@ return false;
 return true;
 }
 function findNativeMenuButton() {
-var buttons = document.querySelectorAll(
+var siteButton;
+var buttons;
+var i;
+if (isSiteMobileDom()) {
+siteButton = findSiteElement('[data-elm-id="menuButton"]');
+if (isVisibleElement(siteButton)) {
+return siteButton;
+}
+}
+buttons = document.querySelectorAll(
 '.main-menu-btn:not([data-tdfn-v1-menu-trigger])'
 );
-var i;
 for (i = 0; i < buttons.length; i += 1) {
 if (isVisibleElement(buttons[i])) {
 return buttons[i];
@@ -1992,9 +2010,9 @@ return buttons[i];
 return null;
 }
 function isMobileLayout() {
-/* /site/ 活動頁本身為固定桌機版版型，即使 viewport < 992px 也維持桌機導覽。 */
+/* /site/ 由伺服器輸出桌機與手機兩套 DOM，不能只用 viewport 判斷。 */
 if (isSitePage()) {
-return false;
+return isSiteMobileDom();
 }
 if (window.innerWidth >= BREAKPOINT) {
 return false;
@@ -2006,6 +2024,8 @@ return !!findNativeMenuButton();
 }
 function setLayoutMode(mode) {
 var mobile = mode === 'mobile';
+var site = isSitePage();
+var siteMobile = site && isSiteMobileDom();
 state.layoutMode = mode;
 if (document.body) {
 document.body.classList.toggle(
@@ -2014,7 +2034,11 @@ mobile
 );
 document.body.classList.toggle(
 'tdfn-v1-site-fixed-layout',
-isSitePage()
+site && !siteMobile
+);
+document.body.classList.toggle(
+'tdfn-v1-site-mobile-layout',
+siteMobile
 );
 }
 if (
