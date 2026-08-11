@@ -1,5 +1,5 @@
-/* TD_Figma_All_Pages_Core_Style_GTM_v1.8.4.html */
-(function(){window.TDFigmaStyleReady=window.TDFigmaStyleReady||{};window.TDFigmaStyleReady.allPages="1.8.0";}());
+/* TD_Figma_All_Pages_Core_Style_GTM_v1.8.5.html */
+(function(){window.TDFigmaStyleReady=window.TDFigmaStyleReady||{};window.TDFigmaStyleReady.allPages="1.8.5";}());
 
 /* TD_Figma_All_Pages_ProductCard_Style_GTM_v1.0.7.html */
 (function () {
