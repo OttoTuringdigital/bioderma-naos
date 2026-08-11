@@ -1,4 +1,4 @@
-/* TD_Figma_Category_Sidebar_Style_GTM_v1.0.6.html */
+/* TD_Figma_Category_Sidebar_Style_GTM_v1.0.7.html */
 /* Namespace: tdsb-v1. Category Bundle only. */
 :root {
   --tdsb-v1-navy: #0b3d70;
@@ -128,4 +128,16 @@ html[data-tdsb-v1-mode="mobile"] [data-tdsb-v1-portal="mobile-controls"] {
 html[data-tdsb-v1-mode="mobile"] [data-tdsb-v1-portal="sort"] { z-index:1; }
 @media (prefers-reduced-motion:reduce) {
   .tdsb-v1-panel,.tdsb-v1-sort-list,.tdsb-v1-overlay,.tdsb-v1-sheet { transition:none !important; }
+}
+
+/* v1.0.7 client refinement: English series names match Chinese size; descriptions removed. */
+.tdsb-v1-series-english {
+  margin-left: 4px !important;
+  font-size: 13px !important;
+  font-weight: 700 !important;
+  line-height: 20px !important;
+  letter-spacing: .04em !important;
+}
+.tdsb-v1-series-description {
+  display: none !important;
 }

@@ -1,8 +1,8 @@
-/* TD_Figma_Category_Sidebar_GTM_v1.0.6.html */
+/* TD_Figma_Category_Sidebar_GTM_v1.0.7.html */
 (function () {
   'use strict';
 
-  var VERSION = '1.0.6';
+  var VERSION = '1.0.7';
   var DATA_KEY = 'categorySidebar';
   var ROOT_ID = 'tdsb-v1-root';
   var ROLE = 'data-tdsb-v1-role';
@@ -617,11 +617,9 @@
       var copy = create('span', 'tdsb-v1-series-copy');
       var title = create('span', 'tdsb-v1-series-label');
       var english = create('span', 'tdsb-v1-series-english');
-      var description = create('span', 'tdsb-v1-series-description');
       title.textContent = item.label || '';
       english.textContent = item.englishName || '';
-      description.textContent = item.description || '';
-      copy.appendChild(title); title.appendChild(english); copy.appendChild(description); link.appendChild(copy);
+      copy.appendChild(title); title.appendChild(english); link.appendChild(copy);
       link.style.setProperty('--tdsb-v1-accent', item.accentColor || '#006aa6');
     } else { link.textContent = item.label || ''; }
     if (!item.linkUrl) {

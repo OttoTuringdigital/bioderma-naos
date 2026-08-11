@@ -1,8 +1,8 @@
-/* TD_Figma_Product_Page_GTM_v1.0.12.html */
+/* TD_Figma_Product_Page_GTM_v1.0.13.html */
 (function () {
   'use strict';
 
-  var VERSION = '1.0.12';
+  var VERSION = '1.0.13';
   var INIT_RETRY_LIMIT = 240;
   var SOURCE_RETRY_LIMIT = 100;
   var SOURCE_STABLE_REQUIRED = 4;
@@ -477,13 +477,29 @@
   function buildFeatureBody(body, source) {
     var items = getSourceItems('feature', source);
     var list = document.createElement('ul');
+    var sourceTitle;
     var clone;
+    var cloneTitle;
     var i;
     list.className = 'salepage-feature tdpp-v1-feature-list';
     for (i = 0; i < items.length; i += 1) {
+      sourceTitle = normalizeText(
+        (safeQuery('.salepage-feature-title', items[i]) || {}).textContent || ''
+      );
+
+      /* 客戶新版：原「商品特色」長列表不再顯示。 */
+      if (sourceTitle === '商品特色') { continue; }
+
       clone = cloneElement(items[i]);
       if (clone) {
         clone.classList.add('tdpp-v1-feature-item');
+
+        /* 原「銷售重點」改名為新版「商品特色」。 */
+        if (sourceTitle === '銷售重點') {
+          cloneTitle = safeQuery('.salepage-feature-title', clone);
+          if (cloneTitle) { cloneTitle.textContent = '商品特色'; }
+        }
+
         list.appendChild(clone);
       }
     }
@@ -557,9 +573,7 @@
   function buildCollapseStack(sources) {
     var specs = [
       { type: 'promotion', fallback: '本商品適用活動', open: true },
-      { type: 'payment', fallback: '付款方式', open: false },
-      { type: 'shipping', fallback: '運送方式', open: false },
-      { type: 'feature', fallback: '商品特色', open: false },
+      { type: 'feature', fallback: '商品特色', open: true },
       { type: 'related', fallback: '商品相關分類', open: false }
     ];
     var anchor = getStackAnchor();
@@ -590,6 +604,10 @@
         readyCount += 1;
       }
     }
+
+    /* 付款方式、運送方式新版完全隱藏，不產生替代 Collapse。 */
+    markOriginalHidden('payment', sources.payment);
+    markOriginalHidden('shipping', sources.shipping);
 
     if (!readyCount) { return false; }
     stack.setAttribute('data-tdpp-v1-ready-count', String(readyCount));
@@ -763,30 +781,79 @@
     return true;
   }
 
+  function ensureSingleSummaryStarDisplay(target) {
+    var score = extractRatingScore(target);
+    var group;
+    var directChildren;
+    var icon;
+    var i;
+    if (score === null || !target) { return false; }
+
+    group = safeQuery(':scope > [data-tdpp-v1-rating-stars="true"]', target);
+    directChildren = toArray(target.children);
+
+    for (i = 0; i < directChildren.length; i += 1) {
+      if (
+        directChildren[i] !== group &&
+        directChildren[i].tagName === 'I' &&
+        (
+          directChildren[i].classList.contains('ico-star') ||
+          directChildren[i].classList.contains('ico-star-fill')
+        )
+      ) {
+        target.removeChild(directChildren[i]);
+      }
+    }
+
+    if (!group) {
+      group = document.createElement('span');
+      group.className = 'tdpp-v1-rating-stars tdpp-v1-rating-stars--summary';
+      group.setAttribute('data-tdpp-v1-rating-stars', 'true');
+      target.insertBefore(group, target.firstChild);
+    }
+
+    group.setAttribute('aria-label', '評分 ' + score + '，滿分 5 分');
+    while (group.firstChild) { group.removeChild(group.firstChild); }
+
+    icon = document.createElement('i');
+    icon.className = 'ico ico-star-fill star-color';
+    icon.setAttribute('aria-hidden', 'true');
+    group.appendChild(icon);
+
+    target.setAttribute('data-tdpp-v1-rating-normalized', 'true');
+    target.setAttribute('data-tdpp-v1-rating-score', String(score));
+    target.setAttribute('data-tdpp-v1-rating-filled', '1');
+    target.setAttribute('data-tdpp-v1-rating-summary', 'single-star');
+    return true;
+  }
+
   function normalizeProductRatings() {
     var starRates = toArray(safeQueryAll('#SalePageIndexController .star-rate-wrapper .star-rate'));
-    var summaries;
+    var summaries = toArray(safeQueryAll(
+      '#SalePageIndexController [data-tdpp-v1-review="true"] .star-rate-summary-content,' +
+      '#SalePageIndexController [data-tdpp-v1-review="true"] .star-with-comment'
+    ));
     var topCount = 0;
     var summaryCount = 0;
     var i;
+
     for (i = 0; i < starRates.length; i += 1) {
       if (closestBySelector(starRates[i], '[data-tdpp-v1-generated="true"]')) { continue; }
       if (ensureFiveStarDisplay(starRates[i])) { topCount += 1; }
     }
-    if (state.mode === 'desktop') {
-      summaries = toArray(safeQueryAll('#SalePageIndexController .star-rate-wrapper .star-rate-summary-content'));
-      for (i = 0; i < summaries.length; i += 1) {
-        if (closestBySelector(summaries[i], '.star-rate')) { continue; }
-        if (closestBySelector(summaries[i], '[data-tdpp-v1-generated="true"]')) { continue; }
-        if (ensureFiveStarDisplay(summaries[i])) { summaryCount += 1; }
-      }
+
+    for (i = 0; i < summaries.length; i += 1) {
+      if (closestBySelector(summaries[i], '.star-rate')) { continue; }
+      if (closestBySelector(summaries[i], '[data-tdpp-v1-generated="true"]')) { continue; }
+      if (ensureSingleSummaryStarDisplay(summaries[i])) { summaryCount += 1; }
     }
+
     return { top: topCount, summary: summaryCount };
   }
 
   function normalizeProductRatingsWithRetry() {
     var result = normalizeProductRatings();
-    var complete = result.top > 0 && (state.mode !== 'desktop' || result.summary > 0);
+    var complete = result.top > 0 && result.summary > 0;
     if (complete || state.ratingRetryCount >= 80) { return; }
     state.ratingRetryCount += 1;
     window.clearTimeout(state.ratingTimer);

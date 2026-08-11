@@ -1,7 +1,7 @@
-/* TD_Figma_All_Pages_Core_Style_GTM_v1.8.1.html */
+/* TD_Figma_All_Pages_Core_Style_GTM_v1.8.2.html */
 (function(){window.TDFigmaStyleReady=window.TDFigmaStyleReady||{};window.TDFigmaStyleReady.allPages="1.8.0";}());
 
-/* TD_Figma_All_Pages_ProductCard_Style_GTM_v1.0.5.html */
+/* TD_Figma_All_Pages_ProductCard_Style_GTM_v1.0.6.html */
 (function () {
   window.TDFigmaStyleReady = window.TDFigmaStyleReady || {};
   window.TDFigmaStyleReady.allPagesProductCard = '1.0.2';
@@ -527,7 +527,7 @@
   flushJobs();
 }());
 
-/* TD_Figma_All_Pages_Navigation_GTM_v5.2.0.html */
+/* TD_Figma_All_Pages_Navigation_GTM_v5.3.0.html */
 (function () {
   'use strict';
 
@@ -680,7 +680,7 @@ href: item.linkUrl || ''
 };
 var closest = Core.dom.closest;
 var escapeHtml = Core.text.escapeHtml;
-var VERSION = '5.2.0';
+var VERSION = '5.3.0';
 var LOAD_ATTR = 'data-tdfn-v1-loaded';
 if (document.documentElement.getAttribute(LOAD_ATTR) === VERSION) {
 return;
@@ -1008,7 +1008,7 @@ html.push('<a class="'+wrapperCls+'" href="'+escapeHtml(getItemHref(item))+'" da
 return html.join('');
 }
 function renderSeriesDesktop() {
-return '<div class="tdfn-v1-panel tdfn-v1-mega"><div class="tdfn-v1-mega-inner tdfn-v1-series-grid"><section><div class="tdfn-v1-series-list">'+renderSeriesList(false)+'</div></section><div class="tdfn-v1-series-divider" aria-hidden="true"></div><section><h3 class="tdfn-v1-section-title">醫療專售</h3><div class="tdfn-v1-products-grid">'+renderMedicalCards(false)+'</div></section></div></div>';
+return '<div class="tdfn-v1-panel tdfn-v1-compact tdfn-v1-series-compact"><div class="tdfn-v1-series-list">'+renderSeriesList(false)+'</div></div>';
 }
 function renderClassroomDesktop() {
 var html = ['<div class="tdfn-v1-panel tdfn-v1-mega"><div class="tdfn-v1-mega-inner tdfn-v1-classroom-grid">'];
@@ -1338,7 +1338,7 @@ true,
 return html.join('');
 }
 function renderMobileSeries() {
-return '<div class="tdfn-v1-m-content">'+renderMobileHeading('系列找產品')+'<div>'+renderSeriesList(true)+'</div><div class="tdfn-v1-m-divider"></div><section><h3 class="tdfn-v1-m-section-title">醫療專售</h3><div class="tdfn-v1-m-carousel" data-tdfn-carousel="medical"><button class="tdfn-v1-m-carousel-button is-prev" type="button" data-tdfn-carousel-prev aria-label="上一個">'+smallArrow('prev')+'</button><div class="tdfn-v1-m-carousel-track" data-tdfn-carousel-track>'+renderMedicalCards(true)+'</div><button class="tdfn-v1-m-carousel-button is-next" type="button" data-tdfn-carousel-next aria-label="下一個">'+smallArrow('next')+'</button></div></section></div>';
+return '<div class="tdfn-v1-m-content">'+renderMobileHeading('系列找產品')+'<div>'+renderSeriesList(true)+'</div></div>';
 }
 function renderMobileClassroom() {
 var html = ['<div class="tdfn-v1-m-content">'+renderMobileHeading('貝膚小教室')+'<div class="tdfn-v1-m-articles">'];
@@ -1759,14 +1759,29 @@ swapHeaderIconClass(
 'ico-shopping-fill'
 );
 }
+function isSitePage() {
+var path = window.location && window.location.pathname ? window.location.pathname : '';
+return /(^|\/)site(\/|$)/i.test(path);
+}
+function findSiteElement(selector) {
+var node = null;
+try { node = document.querySelector(selector); } catch (error) { node = null; }
+return node;
+}
 function findDesktopLogoAnchor() {
-var candidates = document.querySelectorAll('.logo-container');
+var siteLogo;
+var candidates;
 var candidate;
 var best = null;
 var bestScore = -1;
 var rect;
 var score;
 var i;
+if (isSitePage()) {
+siteLogo = findSiteElement('[data-elm-id="logo"]');
+if (siteLogo) { return siteLogo; }
+}
+candidates = document.querySelectorAll('.logo-container');
 for (i = 0; i < candidates.length; i += 1) {
 candidate = candidates[i];
 if (!closest(candidate, 'header.headerA,#officialHeader', null)) {
@@ -1786,6 +1801,8 @@ return best;
 }
 function findDesktopHeaderAnchor() {
 var selectors = [
+'[data-elm-id="headerContainer"]',
+'[data-elm-id="header"]',
 'header.headerA > .headerA__top.headerA__top--fix',
 'header.headerA > .headerA__top',
 '#officialHeader > #layout-header-fix',
@@ -1978,6 +1995,9 @@ function isMobileLayout() {
 if (window.innerWidth >= BREAKPOINT) {
 return false;
 }
+if (isSitePage()) {
+return true;
+}
 if (isVisibleElement(state.mobileTrigger)) {
 return true;
 }
@@ -2024,16 +2044,20 @@ window.setTimeout(mountAll, delays[i])
 function ensureMobileTrigger() {
 var nativeButton;
 var trigger;
+var siteHost;
 if (
 state.mobileTrigger &&
 document.documentElement.contains(state.mobileTrigger) &&
-state.nativeMenuButton &&
-document.documentElement.contains(state.nativeMenuButton)
+(
+  (state.nativeMenuButton && document.documentElement.contains(state.nativeMenuButton)) ||
+  (isSitePage() && !state.nativeMenuButton)
+)
 ) {
 return state.mobileTrigger;
 }
 nativeButton = findNativeMenuButton();
-if (!nativeButton || !nativeButton.parentNode) {
+siteHost = isSitePage() ? findSiteElement('[data-elm-id="rightArea"]') : null;
+if ((!nativeButton || !nativeButton.parentNode) && !siteHost) {
 return null;
 }
 if (
@@ -2061,12 +2085,14 @@ state.nativeMenuButton.removeAttribute(
 state.nativeMenuButton.removeAttribute('aria-hidden');
 state.nativeMenuButton.removeAttribute('tabindex');
 }
+if (nativeButton) {
 nativeButton.setAttribute(
 'data-tdfn-v1-native-menu',
 'hidden'
 );
 nativeButton.setAttribute('aria-hidden', 'true');
 nativeButton.setAttribute('tabindex', '-1');
+}
 trigger = document.createElement('a');
 trigger.className =
 'main-menu-btn tdfn-v1-menu-trigger';
@@ -2089,11 +2115,13 @@ event.preventDefault();
 event.stopPropagation();
 openMobileMenu();
 }, false);
-nativeButton.parentNode.insertBefore(
-trigger,
-nativeButton
-);
-state.nativeMenuButton = nativeButton;
+if (nativeButton && nativeButton.parentNode) {
+nativeButton.parentNode.insertBefore(trigger, nativeButton);
+} else {
+siteHost.insertBefore(trigger, siteHost.firstChild);
+trigger.setAttribute('data-tdfn-v1-site-trigger', 'true');
+}
+state.nativeMenuButton = nativeButton || null;
 state.mobileTrigger = trigger;
 return trigger;
 }
@@ -2247,6 +2275,7 @@ ensureMobilePortal();
 }
 function findDesktopSource() {
 var preferredSelectors = [
+'[data-elm-id="navMenu"]',
 '.headerA__nav-menu-main > .nav-menu-ul',
 '.layout-nav-menu.nav-main-menu > .nav-menu-ul'
 ];
@@ -2420,12 +2449,12 @@ init();
   }
 }());
 
-/* TD_Figma_All_Pages_Search_GTM_v3.1.0.html */
+/* TD_Figma_All_Pages_Search_GTM_v3.2.0.html */
 (function () {
   'use strict';
 
   var job = {
-    key: 'td-figma-search-v310',
+    key: 'td-figma-search-v320',
     ready: function () {
       return !!(
         window.TDFigmaData &&
@@ -2443,7 +2472,7 @@ init();
         var SOURCE_DATA = window.TDFigmaData.allPages.search;
         var closest = Core.dom.closest;
         var escapeHtml = Core.text.escapeHtml;
-        var VERSION = '3.1.0';
+        var VERSION = '3.2.0';
         var SLOT_NAME = 'search';
         var SEARCH_PATH = '/v2/Search';
         var SEARCH_ROW_HEIGHT = 32;
@@ -2480,14 +2509,24 @@ init();
           return !!(
             element &&
             !closest(element, MOBILE_EXCLUDE_SELECTOR, null) &&
-            closest(element, 'header.headerA,#officialHeader', null)
+            (
+              closest(element, 'header.headerA,#officialHeader', null) ||
+              closest(element, '[data-elm-id="headerContainer"],[data-elm-id="header"]', null)
+            )
           );
         }
 
         function findDesktopAnchor() {
+          var site = document.querySelector('[data-elm-id="search"]');
           var product = document.querySelectorAll('.search-box');
           var defaults = document.querySelectorAll('.nav-search-box');
           var i;
+          if (site && isDesktopCandidate(site)) {
+            return {
+              anchor: site,
+              variant: 'site'
+            };
+          }
           for (i = 0; i < product.length; i += 1) {
             if (isDesktopCandidate(product[i])) {
               return {
@@ -2509,6 +2548,7 @@ init();
 
         function findDesktopNavigationAnchor() {
           var selectors = [
+            '[data-elm-id="navMenu"]',
             '.headerA__nav-menu-main > .nav-menu-ul',
             '.layout-nav-menu.nav-main-menu > .nav-menu-ul'
           ];
@@ -2936,12 +2976,12 @@ init();
   }
 }());
 
-/* TD_Figma_All_Pages_Footer_GTM_v3.0.0.html */
+/* TD_Figma_All_Pages_Footer_GTM_v3.0.1.html */
 (function () {
   'use strict';
 
   var job = {
-    key: 'td-figma-footer-v300',
+    key: 'td-figma-footer-v301',
     ready: function () {
       return !!(
         window.TDFigmaData &&
@@ -2960,7 +3000,7 @@ init();
         var sanitizeUrl = Core.url.sanitize;
         var closest = Core.dom.closest;
 
-        var VERSION = '3.0.0';
+        var VERSION = '3.0.1';
         var ROOT_ID = 'td-figma-footer-root';
         var ROOT_ATTRIBUTE = 'data-tdff-v1';
         var GLOBAL_KEY = '__TD_FIGMA_FOOTER_V3__';
@@ -3626,11 +3666,11 @@ init();
   }
 }());
 
-/* TD_Figma_All_Pages_ProductCard_GTM_v1.0.4.html */
+/* TD_Figma_All_Pages_ProductCard_GTM_v1.0.5.html */
 (function () {
   'use strict';
 
-  var VERSION = '1.0.4';
+  var VERSION = '1.0.5';
   var ROLE_ATTRIBUTE = 'data-tdpc-v1-role';
   var INJECTED_ATTRIBUTE = 'data-tdpc-v1-injected';
   var DATA_KEY = 'allPagesProductCard';
@@ -4621,6 +4661,112 @@ init();
     return true;
   }
 
+  function processSiteCard(card, dataset) {
+    var selectors = dataset.selectors.site || {};
+    var media;
+    var productImage;
+    var productBadge;
+    var infoArea;
+    var infoGrid;
+    var title;
+    var titleWrapper;
+    var detailContainer;
+    var prices;
+    var originalPrice;
+    var salePrice;
+    var actions;
+    var favoriteButton;
+    var cartButton;
+    var productName;
+    var productId;
+
+    if (!selectors.card) {
+      return false;
+    }
+
+    try {
+      media = card.querySelector(selectors.mediaContainer);
+      infoArea = card.querySelector(selectors.infoArea);
+      title = card.querySelector(selectors.productTitle);
+      salePrice = card.querySelector(selectors.salePrice);
+    } catch (error) {
+      return false;
+    }
+
+    /*
+     * /site/ 活動頁也可能有只包圖片的 SalePage 連結。
+     * 必須同時有商品卡圖片、資訊、標題與售價才視為商品卡，
+     * 避免修改一般 Banner / CTA 連結。
+     */
+    if (!media || !infoArea || !title || !salePrice) {
+      return false;
+    }
+
+    productImage = card.querySelector(selectors.productImage);
+    productBadge = card.querySelector(selectors.productBadgeImage);
+    detailContainer = card.querySelector(selectors.detailContainer);
+    prices = card.querySelector(selectors.priceContainer);
+    originalPrice = card.querySelector(selectors.originalPrice);
+    actions = card.querySelector(selectors.buttonContainer);
+    favoriteButton = card.querySelector(selectors.favoriteButton);
+    cartButton = card.querySelector(selectors.cartButton);
+    infoGrid = infoArea.firstElementChild || infoArea;
+    titleWrapper = title.parentElement || title;
+
+    card.setAttribute('data-tdpc-v1-card-type', 'site');
+    card.setAttribute('data-tdpc-v1-version', VERSION);
+
+    setRole(card, 'card');
+    setRole(media, 'media');
+    setRole(productImage, 'product-image');
+    setRole(productBadge, 'product-badge');
+    setRole(infoArea, 'content');
+    setRole(infoGrid, 'site-info-grid');
+    setRole(title, 'title');
+    setRole(detailContainer, 'details');
+    setRole(prices, 'prices');
+    setRole(originalPrice, 'original-price');
+    setRole(salePrice, 'sale-price');
+    setRole(actions, 'actions');
+    setRole(favoriteButton, 'favorite-button');
+    setRole(cartButton, 'cart-button');
+
+    productName = trimText(
+      title.textContent ||
+      (productImage ? productImage.alt : '')
+    );
+    productId = extractProductId(card);
+
+    card.setAttribute('data-tdpc-v1-product-name', productName);
+    card.setAttribute('data-tdpc-v1-product-id', productId);
+
+    if (cartButton) {
+      cartButton.setAttribute(
+        'data-tdpc-v1-cart-label',
+        (dataset.text && dataset.text.purchaseButtonText) || '立即購買'
+      );
+    }
+
+    updateProductTagRow(
+      card,
+      infoGrid,
+      titleWrapper,
+      productId,
+      productName,
+      dataset
+    );
+    updateCornerLabel(
+      card,
+      media,
+      productId,
+      productName,
+      dataset
+    );
+    updateFavoriteState(favoriteButton);
+
+    return true;
+  }
+
   function collectCards(selector) {
     if (!selector) {
       return [];
@@ -4692,10 +4838,10 @@ init();
     });
   }
 
-  function trackReady(modernCount, legacyCount) {
+  function trackReady(modernCount, legacyCount, siteCount) {
     if (
       state.readyTracked ||
-      (!modernCount && !legacyCount)
+      (!modernCount && !legacyCount && !siteCount)
     ) {
       return;
     }
@@ -4706,7 +4852,8 @@ init();
       event: 'td_all_pages_product_card_ready',
       td_all_pages_product_card_version: VERSION,
       td_all_pages_product_card_modern_count: modernCount,
-      td_all_pages_product_card_legacy_count: legacyCount
+      td_all_pages_product_card_legacy_count: legacyCount,
+      td_all_pages_product_card_site_count: siteCount
     });
   }
 
@@ -4715,8 +4862,10 @@ init();
     var selectors;
     var modernCards;
     var legacyCards;
+    var siteCards;
     var modernCount = 0;
     var legacyCount = 0;
+    var siteCount = 0;
     var i;
 
     if (!dataset || state.isApplying) {
@@ -4753,13 +4902,24 @@ init();
         }
       }
 
-      trackReady(modernCount, legacyCount);
+      siteCards = collectCards(
+        selectors.site &&
+        selectors.site.card
+      );
+
+      for (i = 0; i < siteCards.length; i += 1) {
+        if (processSiteCard(siteCards[i], dataset)) {
+          siteCount += 1;
+        }
+      }
+
+      trackReady(modernCount, legacyCount, siteCount);
     } finally {
       state.isApplying = false;
       connectObserver(dataset);
     }
 
-    return modernCount + legacyCount > 0;
+    return modernCount + legacyCount + siteCount > 0;
   }
 
   function handleClick(event) {

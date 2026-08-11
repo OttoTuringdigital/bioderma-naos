@@ -1,4 +1,4 @@
-/* TD_Figma_Product_Page_Style_GTM_v1.0.12.html */
+/* TD_Figma_Product_Page_Style_GTM_v1.0.13.html */
 /* Namespace: tdpp-v1. Product Bundle only. */
 :root {
   --tdpp-v1-navy: #0b3d70;
@@ -1058,4 +1058,73 @@ html[data-tdpp-v1-active="true"] .salepage-info span[ng-style="SalePageIndexCtrl
 /* v1.0.12 refinement: hide the native special-price label on desktop and mobile. */
 html[data-tdpp-v1-active="true"] .special-price-tag {
   display: none !important;
+}
+
+/* v1.0.13 client refinement: compact reviews and simplified product information. */
+html[data-tdpp-v1-active="true"] #SalePageIndexController .payment-group,
+html[data-tdpp-v1-active="true"] #SalePageIndexController .shipping-group,
+html[data-tdpp-v1-active="true"] .tdpp-v1-collapse-stack [data-tdpp-v1-clone-collapse="payment"],
+html[data-tdpp-v1-active="true"] .tdpp-v1-collapse-stack [data-tdpp-v1-clone-collapse="shipping"] {
+  display: none !important;
+}
+
+html[data-tdpp-v1-active="true"] [data-tdpp-v1-review="true"] {
+  min-height: 0 !important;
+}
+html[data-tdpp-v1-active="true"] [data-tdpp-v1-review="true"] .comment-block,
+html[data-tdpp-v1-active="true"] [data-tdpp-v1-review="true"] .comment-block-heading,
+html[data-tdpp-v1-active="true"] [data-tdpp-v1-review="true"] .comment-block-title,
+html[data-tdpp-v1-active="true"] [data-tdpp-v1-review="true"] .comment-block-container {
+  min-height: 0 !important;
+}
+html[data-tdpp-v1-active="true"] [data-tdpp-v1-review="true"] .comment-block-container {
+  gap: 12px !important;
+}
+html[data-tdpp-v1-active="true"] [data-tdpp-v1-review="true"] .star-rate-summary-content,
+html[data-tdpp-v1-active="true"] [data-tdpp-v1-review="true"] .star-with-comment {
+  gap: 5px !important;
+}
+html[data-tdpp-v1-active="true"] [data-tdpp-v1-review="true"] .tdpp-v1-rating-stars--summary {
+  display: inline-flex !important;
+  align-items: center !important;
+  width: auto !important;
+  min-width: 0 !important;
+  margin: 0 !important;
+  padding: 0 !important;
+}
+html[data-tdpp-v1-active="true"] [data-tdpp-v1-review="true"] .tdpp-v1-rating-stars--summary .ico {
+  margin: 0 !important;
+}
+
+html[data-tdpp-v1-mode="desktop"] [data-tdpp-v1-review="true"] {
+  width: min(960px,calc(100% - 40px)) !important;
+  max-width: 960px !important;
+  padding: 12px 0 !important;
+}
+html[data-tdpp-v1-mode="desktop"] [data-tdpp-v1-review="true"] .comment-block-heading {
+  padding: 0 0 10px !important;
+}
+html[data-tdpp-v1-mode="desktop"] [data-tdpp-v1-review="true"] .comment-title {
+  margin: 0 0 8px !important;
+  font-size: 20px !important;
+  line-height: 28px !important;
+}
+html[data-tdpp-v1-mode="desktop"] [data-tdpp-v1-review="true"] .star-rate-summary-content {
+  font-size: 15px !important;
+  line-height: 24px !important;
+}
+html[data-tdpp-v1-mode="desktop"] [data-tdpp-v1-review="true"] .comment-card {
+  margin-top: 6px !important;
+  padding: 10px 12px !important;
+}
+
+html[data-tdpp-v1-mode="mobile"] [data-tdpp-v1-review="true"] {
+  padding: 10px 0 !important;
+}
+html[data-tdpp-v1-mode="mobile"] [data-tdpp-v1-review="true"] .comment-block-title {
+  column-gap: 8px !important;
+}
+html[data-tdpp-v1-mode="mobile"] [data-tdpp-v1-review="true"] .comment-card {
+  margin-top: 6px !important;
+  padding: 8px !important;
 }
