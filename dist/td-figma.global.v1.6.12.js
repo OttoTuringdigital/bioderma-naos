@@ -1,5 +1,5 @@
-/* TD_Figma_All_Pages_Core_Style_GTM_v1.8.5.html */
-(function(){window.TDFigmaStyleReady=window.TDFigmaStyleReady||{};window.TDFigmaStyleReady.allPages="1.8.5";}());
+/* TD_Figma_All_Pages_Core_Style_GTM_v1.8.6.html */
+(function(){window.TDFigmaStyleReady=window.TDFigmaStyleReady||{};window.TDFigmaStyleReady.allPages="1.8.6";}());
 
 /* TD_Figma_All_Pages_ProductCard_Style_GTM_v1.0.7.html */
 (function () {
@@ -527,12 +527,12 @@
   flushJobs();
 }());
 
-/* TD_Figma_All_Pages_Navigation_GTM_v5.3.2.html */
+/* TD_Figma_All_Pages_Navigation_GTM_v5.4.0.html */
 (function () {
   'use strict';
 
   var job = {
-    key: 'td-figma-navigation-v532',
+    key: 'td-figma-navigation-v540',
     ready: function () {
       return !!(window.TDFigmaData && window.TDFigmaData.allPages && window.TDFigmaData.allPages.navigation && window.TDFigmaDesktopHeaderPortal);
     },
@@ -545,10 +545,14 @@ var SOURCE_DATA = window.TDFigmaData.allPages.navigation;
 function mapSimpleLinks(items) {
 var output = [];
 var i;
+var item;
 for (i = 0; i < (items || []).length; i += 1) {
+item = items[i] || {};
 output.push({
-label: items[i].label || '',
-href: items[i].linkUrl || ''
+id: item.id || '',
+label: item.label || '',
+href: item.linkUrl || '',
+children: mapSimpleLinks(item.children || [])
 });
 }
 return output;
@@ -612,8 +616,41 @@ desktopMaxWidth:
 '929px',
 logo: SOURCE_DATA.logo || ''
 };
+var NEEDS_LINKS = mapSimpleLinks(
+NEEDS_CONTENT.links || []
+);
+var LEGACY_CLASSROOM_LINKS = mapCardLinks(
+CLASSROOM_CONTENT.articleCards || []
+);
+var hasNestedClassroom = false;
+var needsIndex;
+for (needsIndex = 0; needsIndex < NEEDS_LINKS.length; needsIndex += 1) {
+if (
+NEEDS_LINKS[needsIndex].id === 'classroom' ||
+NEEDS_LINKS[needsIndex].label === '貝膚小教室'
+) {
+hasNestedClassroom = true;
+if (!NEEDS_LINKS[needsIndex].id) {
+NEEDS_LINKS[needsIndex].id = 'classroom';
+}
+if (!NEEDS_LINKS[needsIndex].children.length && LEGACY_CLASSROOM_LINKS.length) {
+NEEDS_LINKS[needsIndex].children = LEGACY_CLASSROOM_LINKS;
+}
+}
+}
+/* 向下相容舊 Dataset：即使貝膚小教室仍是第一層，也在 Runtime 自動搬進依肌膚需求。 */
+if (!hasNestedClassroom && LEGACY_CLASSROOM_LINKS.length) {
+NEEDS_LINKS.unshift({
+id: 'classroom',
+label: '貝膚小教室',
+href: '',
+children: LEGACY_CLASSROOM_LINKS
+});
+}
 var DATA = {
-menus: MENU_ITEMS.map(function (item) {
+menus: MENU_ITEMS.filter(function (item) {
+return (item.id || '') !== 'classroom';
+}).map(function (item) {
 return {
 id: item.id || '',
 label: item.label || '',
@@ -641,9 +678,7 @@ secondaryLinks: mapCardLinks(
 FEATURED_SECONDARY_CARDS.slice(4)
 )
 },
-needs: mapSimpleLinks(
-NEEDS_CONTENT.links || []
-),
+needs: NEEDS_LINKS,
 types: mapSimpleLinks(
 TYPES_CONTENT.links || []
 ),
@@ -680,7 +715,7 @@ href: item.linkUrl || ''
 };
 var closest = Core.dom.closest;
 var escapeHtml = Core.text.escapeHtml;
-var VERSION = '5.3.2';
+var VERSION = '5.4.0';
 var LOAD_ATTR = 'data-tdfn-v1-loaded';
 if (document.documentElement.getAttribute(LOAD_ATTR) === VERSION) {
 return;
@@ -715,6 +750,7 @@ layoutMode: '',
 modeRetryTimers: [],
 portal: null,
 activeDesktopId: '',
+activeDesktopChildId: '',
 desktopCloseTimer: null,
 portalCloseTimer: null,
 mobilePanelId: '',
@@ -831,6 +867,73 @@ html.push(
 '</li>'
 );
 }
+return html.join('');
+}
+function getNestedItem(items, childId) {
+var i;
+var item;
+for (i = 0; i < (items || []).length; i += 1) {
+item = items[i];
+if (item && (item.id === childId || (!item.id && item.label === childId))) {
+return item;
+}
+}
+return null;
+}
+function renderNeedsDesktop() {
+var activeChild = getNestedItem(DATA.needs, state.activeDesktopChildId);
+var html = [
+'<div class="tdfn-v1-panel tdfn-v1-needs-panel' + (activeChild ? ' has-third-level' : '') + '">',
+'<div class="tdfn-v1-needs-secondary">'
+];
+var i;
+var item;
+var label;
+var childId;
+for (i = 0; i < DATA.needs.length; i += 1) {
+item = DATA.needs[i];
+label = getItemLabel(item);
+if (item.children && item.children.length) {
+childId = item.id || label;
+html.push(
+'<button class="tdfn-v1-compact-link tdfn-v1-needs-expand' +
+(state.activeDesktopChildId === childId ? ' is-active' : '') +
+'" type="button" data-tdfn-d-child-open="' + escapeHtml(childId) + '">' +
+'<span>' + escapeHtml(label) + '</span>' + chevronRight() +
+'</button>'
+);
+} else {
+html.push(
+'<a class="tdfn-v1-compact-link" href="' + escapeHtml(getItemHref(item)) + '" ' +
+'data-tdfn-link data-menu="needs" data-label="' + escapeHtml(label) + '">' +
+escapeHtml(label) + '</a>'
+);
+}
+}
+html.push('</div>');
+if (activeChild) {
+html.push(
+'<div class="tdfn-v1-needs-third">',
+'<div class="tdfn-v1-needs-third-head">',
+'<strong>' + escapeHtml(activeChild.label) + '</strong>',
+'<button type="button" class="tdfn-v1-needs-third-close" data-tdfn-d-child-close aria-label="關閉第三層">',
+'<i class="ico ico-close" aria-hidden="true"></i>',
+'</button>',
+'</div>',
+'<div class="tdfn-v1-needs-third-list">'
+);
+for (i = 0; i < activeChild.children.length; i += 1) {
+item = activeChild.children[i];
+label = getItemLabel(item);
+html.push(
+'<a class="tdfn-v1-needs-third-link" href="' + escapeHtml(getItemHref(item)) + '" ' +
+'data-tdfn-link data-menu="needs-classroom" data-label="' + escapeHtml(label) + '">' +
+escapeHtml(label) + '</a>'
+);
+}
+html.push('</div></div>');
+}
+html.push('</div>');
 return html.join('');
 }
 function renderCompact(items, menuId) {
@@ -1037,11 +1140,8 @@ return renderFeaturedDesktop();
 if (id === 'series') {
 return renderSeriesDesktop();
 }
-if (id === 'classroom') {
-return renderClassroomDesktop();
-}
 if (id === 'needs') {
-return renderCompact(DATA.needs, id);
+return renderNeedsDesktop();
 }
 if (id === 'types') {
 return renderCompact(DATA.types, id);
@@ -1114,8 +1214,13 @@ portal.classList.add('is-mega');
 portal.style.left = '0px';
 portal.style.width = '100vw';
 } else {
+if (menuId === 'needs') {
+width = state.activeDesktopChildId ? 410 : (menu.width || 155);
+left = rect.left;
+} else {
 width = menu.width || 155;
 left = rect.left + (rect.width / 2) - (width / 2);
+}
 maxLeft = Math.max(8, window.innerWidth - width - 8);
 left = Math.max(8, Math.min(left, maxLeft));
 portal.classList.remove('is-mega');
@@ -1134,6 +1239,9 @@ menu = getMenu(menuId);
 if (!menu) {
 return;
 }
+if (state.activeDesktopId !== menuId || menuId !== 'needs') {
+state.activeDesktopChildId = '';
+}
 clearDesktopTimer();
 portal = ensurePortal();
 portal.innerHTML = renderDesktopPanel(menuId);
@@ -1151,6 +1259,7 @@ function closeDesktop(immediate) {
 var portal = state.portal;
 clearDesktopTimer();
 state.activeDesktopId = '';
+state.activeDesktopChildId = '';
 updateDesktopActive('');
 if (!portal) {
 return;
@@ -1217,8 +1326,11 @@ html.push('<button class="tdfn-v1-m-main-link" type="button" data-tdfn-m-open="'
 html.push('</div><div class="tdfn-v1-socials">'+socialIcons()+'</div></div>');
 return html.join('');
 }
-function renderMobileHeading(title) {
-return '<div class="tdfn-v1-m-heading"><button class="tdfn-v1-m-sub-close" type="button" data-tdfn-m-close aria-label="返回主選單">'+backArrow()+'</button><h2 class="tdfn-v1-m-title">'+escapeHtml(title)+'</h2></div>';
+function renderMobileHeading(title, parentId) {
+var backAttr = parentId ?
+'data-tdfn-m-back-parent="' + escapeHtml(parentId) + '" aria-label="返回上一層"' :
+'data-tdfn-m-close aria-label="返回主選單"';
+return '<div class="tdfn-v1-m-heading"><button class="tdfn-v1-m-sub-close" type="button" '+backAttr+'>'+backArrow()+'</button><h2 class="tdfn-v1-m-title">'+escapeHtml(title)+'</h2></div>';
 }
 function renderMobileSimple(id, title, items) {
 var html = ['<div class="tdfn-v1-m-content">' + renderMobileHeading(title) + '<div class="tdfn-v1-m-sublist">'];
@@ -1228,11 +1340,42 @@ var label;
 for (i = 0; i < items.length; i += 1) {
 item = items[i];
 label = getItemLabel(item);
+if (item.children && item.children.length) {
+html.push(
+'<button class="tdfn-v1-m-sub-link tdfn-v1-m-sub-expand" type="button" ' +
+'data-tdfn-m-open="' + escapeHtml(id + '::' + (item.id || label)) + '">' +
+'<span>' + escapeHtml(label) + '</span>' + chevronRight() +
+'</button>'
+);
+} else {
 html.push(
 '<a class="tdfn-v1-m-sub-link" href="' + escapeHtml(getItemHref(item)) + '" ' +
 'data-tdfn-link data-menu="' + escapeHtml(id) + '" data-label="' + escapeHtml(label) + '">' +
-escapeHtml(label) +
-'</a>'
+escapeHtml(label) + '</a>'
+);
+}
+}
+html.push('</div></div>');
+return html.join('');
+}
+function renderMobileNested(parentId, childId) {
+var source = parentId === 'needs' ? DATA.needs : [];
+var item = getNestedItem(source, childId);
+var html;
+var i;
+var child;
+var label;
+if (!item) {
+return renderMobileSimple(parentId, getMenu(parentId) ? getMenu(parentId).label : '', source);
+}
+html = ['<div class="tdfn-v1-m-content">' + renderMobileHeading(item.label, parentId) + '<div class="tdfn-v1-m-sublist">'];
+for (i = 0; i < item.children.length; i += 1) {
+child = item.children[i];
+label = getItemLabel(child);
+html.push(
+'<a class="tdfn-v1-m-sub-link" href="' + escapeHtml(getItemHref(child)) + '" ' +
+'data-tdfn-link data-menu="' + escapeHtml(parentId + '-' + childId) + '" data-label="' + escapeHtml(label) + '">' +
+escapeHtml(label) + '</a>'
 );
 }
 html.push('</div></div>');
@@ -1352,6 +1495,10 @@ html.push('</div></div>');
 return html.join('');
 }
 function renderMobilePanel(id) {
+var nestedParts = String(id || '').split('::');
+if (nestedParts.length === 2) {
+return renderMobileNested(nestedParts[0], nestedParts[1]);
+}
 if (id === 'featured') {
 return renderMobileFeatured();
 }
@@ -1366,9 +1513,6 @@ return renderMobileSeries();
 }
 if (id === 'member') {
 return renderMobileSimple(id, '會員福利', DATA.member);
-}
-if (id === 'classroom') {
-return renderMobileClassroom();
 }
 return renderMobileSimple(id, '關於品牌', DATA.about);
 }
@@ -1684,6 +1828,7 @@ root.addEventListener('touchcancel', endMobileCarouselDrag, false);
 root.addEventListener('click', function (event) {
 var open = closest(event.target, '[data-tdfn-m-open]', root);
 var close = closest(event.target, '[data-tdfn-m-close]', root);
+var backParent = closest(event.target, '[data-tdfn-m-back-parent]', root);
 var prev = closest(event.target, '[data-tdfn-carousel-prev]', root);
 var next = closest(event.target, '[data-tdfn-carousel-next]', root);
 var carouselCard = closest(event.target, '.tdfn-v1-m-carousel-card', root);
@@ -1693,6 +1838,12 @@ new Date().getTime() < state.mobileCarouselSuppressUntil
 ) {
 event.preventDefault();
 event.stopPropagation();
+return;
+}
+if (backParent) {
+event.preventDefault();
+event.stopPropagation();
+openMobilePanel(backParent.getAttribute('data-tdfn-m-back-parent'));
 return;
 }
 if (close) {
@@ -2438,6 +2589,29 @@ function bindPortalEvents() {
 var portal = ensurePortal();
 portal.addEventListener('mouseenter', clearDesktopTimer);
 portal.addEventListener('mouseleave', scheduleDesktopClose);
+portal.addEventListener('click', function (event) {
+var openChild = closest(event.target, '[data-tdfn-d-child-open]', portal);
+var closeChild = closest(event.target, '[data-tdfn-d-child-close]', portal);
+var trigger;
+if (openChild) {
+event.preventDefault();
+event.stopPropagation();
+state.activeDesktopChildId = openChild.getAttribute('data-tdfn-d-child-open') || '';
+portal.innerHTML = renderNeedsDesktop();
+trigger = state.desktopRoot ? state.desktopRoot.querySelector('[data-tdfn-d-trigger="needs"]') : null;
+positionDesktopPortal('needs', trigger);
+track('td_nav_menu_open', { td_nav_device: 'desktop', td_nav_menu: 'needs-third', td_nav_label: state.activeDesktopChildId });
+return;
+}
+if (closeChild) {
+event.preventDefault();
+event.stopPropagation();
+state.activeDesktopChildId = '';
+portal.innerHTML = renderNeedsDesktop();
+trigger = state.desktopRoot ? state.desktopRoot.querySelector('[data-tdfn-d-trigger="needs"]') : null;
+positionDesktopPortal('needs', trigger);
+}
+});
 }
 function startMountRetries() {
 function retry() {
