@@ -1,4 +1,4 @@
-/* TD_Figma_Product_Page_Style_GTM_v1.0.16.html */
+/* TD_Figma_Product_Page_Style_GTM_v1.0.17.html */
 /* Namespace: tdpp-v1. Product Bundle only. */
 :root {
   --tdpp-v1-navy: #0b3d70;
@@ -1356,3 +1356,192 @@ html[data-tdpp-v1-mode="mobile"] .tdppi-v1-card .tdhpt-v1-buy {
 html[data-tdpp-v1-mode="mobile"] .tdppi-v1-arrow { width: 30px !important; height: 38px !important; }
 
 @media(prefers-reduced-motion:reduce){ .tdppi-v1-track,.tdppi-v1-arrow{transition-duration:1ms !important;} }
+
+
+
+/* v1.0.17: 「你可能有興趣」商品卡字型／顏色改與 Global ProductCard 商品頁 Legacy 卡一致。 */
+.tdppi-v1-root {
+  --tdppi-v1-navy: #0B396A;
+  --tdppi-v1-blue: #5FA9D4;
+  --tdppi-v1-red: #FF5353;
+  --tdppi-v1-muted: #999999;
+  color: var(--tdppi-v1-navy) !important;
+  font-family: "Noto Sans TC", "PingFang TC", "Microsoft JhengHei", Arial, sans-serif !important;
+}
+
+/* 共用：顏色、字重與 Global Loader ProductCard legacy 一致。 */
+.tdppi-v1-card .tdhpt-v1-corner-label {
+  min-height: 18px !important;
+  padding: 2px 5px !important;
+  border: 1px solid var(--tdppi-v1-blue) !important;
+  border-radius: 4px !important;
+  background: var(--tdppi-v1-blue) !important;
+  color: #FFFFFF !important;
+  font-size: 9px !important;
+  font-weight: 400 !important;
+  line-height: 12px !important;
+  letter-spacing: .4px !important;
+}
+.tdppi-v1-card:hover .tdhpt-v1-corner-label,
+.tdppi-v1-card:focus-within .tdhpt-v1-corner-label {
+  background: #FFFFFF !important;
+  color: var(--tdppi-v1-blue) !important;
+}
+.tdppi-v1-card .tdhpt-v1-tags {
+  min-height: 22px !important;
+  margin: 6px 4px 7px !important;
+  gap: 3px !important;
+}
+.tdppi-v1-card .tdhpt-v1-tag {
+  min-height: 18px !important;
+  padding: 2px 5px !important;
+  border: 1px solid var(--tdppi-v1-navy) !important;
+  border-radius: 3px !important;
+  background: #FFFFFF !important;
+  color: var(--tdppi-v1-navy) !important;
+  font-size: 9px !important;
+  font-weight: 400 !important;
+  line-height: 12px !important;
+  letter-spacing: .2px !important;
+}
+.tdppi-v1-card .tdhpt-v1-name {
+  min-height: 44px !important;
+  margin: 0 4px !important;
+  color: var(--tdppi-v1-navy) !important;
+  font-size: 14px !important;
+  font-weight: 400 !important;
+  line-height: 22px !important;
+  letter-spacing: .4px !important;
+}
+.tdppi-v1-card .tdhpt-v1-price {
+  min-height: 18px !important;
+  gap: 4px !important;
+  margin: 7px 4px 0 !important;
+  padding-top: 0 !important;
+}
+.tdppi-v1-card .tdhpt-v1-original-price {
+  color: var(--tdppi-v1-muted) !important;
+  font-size: 10px !important;
+  font-weight: 400 !important;
+  line-height: 16px !important;
+  letter-spacing: 0 !important;
+}
+.tdppi-v1-card .tdhpt-v1-sale-price {
+  color: var(--tdppi-v1-red) !important;
+  font-size: 13px !important;
+  font-weight: 400 !important;
+  line-height: 18px !important;
+  letter-spacing: 0 !important;
+}
+.tdppi-v1-card .tdhpt-v1-buy,
+.tdppi-v1-card .tdhpt-v1-buy-static {
+  min-height: 28px !important;
+  height: 28px !important;
+  margin: 9px 4px 0 !important;
+  padding: 3px 10px !important;
+  border-radius: 999px !important;
+  background: var(--tdppi-v1-navy) !important;
+  color: #FFFFFF !important;
+  font-size: 11px !important;
+  font-weight: 700 !important;
+  line-height: 16px !important;
+  letter-spacing: 1.25px !important;
+}
+.tdppi-v1-card:hover .tdhpt-v1-buy,
+.tdppi-v1-card:hover .tdhpt-v1-buy-static,
+.tdppi-v1-card .tdhpt-v1-buy:hover,
+.tdppi-v1-card .tdhpt-v1-buy:focus-visible {
+  background: #E0457B !important;
+}
+
+/* Desktop：沿用 Legacy 商品頁卡的緊湊字級。 */
+html[data-tdpp-v1-mode="desktop"] .tdppi-v1-card .tdhpt-v1-content {
+  padding-top: 6px !important;
+}
+html[data-tdpp-v1-mode="desktop"] .tdppi-v1-card .tdhpt-v1-corner-label {
+  font-size: 9px !important;
+  line-height: 12px !important;
+}
+html[data-tdpp-v1-mode="desktop"] .tdppi-v1-card .tdhpt-v1-tag {
+  font-size: 9px !important;
+  line-height: 12px !important;
+}
+html[data-tdpp-v1-mode="desktop"] .tdppi-v1-card .tdhpt-v1-name {
+  font-size: 14px !important;
+  line-height: 22px !important;
+}
+html[data-tdpp-v1-mode="desktop"] .tdppi-v1-card .tdhpt-v1-original-price {
+  font-size: 10px !important;
+  line-height: 16px !important;
+}
+html[data-tdpp-v1-mode="desktop"] .tdppi-v1-card .tdhpt-v1-sale-price {
+  font-size: 13px !important;
+  line-height: 18px !important;
+}
+html[data-tdpp-v1-mode="desktop"] .tdppi-v1-card .tdhpt-v1-buy {
+  min-height: 28px !important;
+  height: 28px !important;
+  font-size: 11px !important;
+  line-height: 16px !important;
+}
+
+/* Mobile：價格／CTA 直接對齊 Global Legacy mobile 規格。 */
+html[data-tdpp-v1-mode="mobile"] .tdppi-v1-card .tdhpt-v1-content {
+  padding-top: 5px !important;
+}
+html[data-tdpp-v1-mode="mobile"] .tdppi-v1-card .tdhpt-v1-corner-label {
+  min-height: 18px !important;
+  padding: 2px 5px !important;
+  border-radius: 4px !important;
+  font-size: 9px !important;
+  line-height: 12px !important;
+}
+html[data-tdpp-v1-mode="mobile"] .tdppi-v1-card .tdhpt-v1-tags {
+  min-height: 22px !important;
+  margin: 5px 4px 6px !important;
+}
+html[data-tdpp-v1-mode="mobile"] .tdppi-v1-card .tdhpt-v1-tag {
+  min-height: 18px !important;
+  padding: 2px 5px !important;
+  font-size: 9px !important;
+  line-height: 12px !important;
+}
+html[data-tdpp-v1-mode="mobile"] .tdppi-v1-card .tdhpt-v1-name {
+  min-height: 44px !important;
+  font-size: 14px !important;
+  line-height: 22px !important;
+  letter-spacing: .4px !important;
+}
+html[data-tdpp-v1-mode="mobile"] .tdppi-v1-card .tdhpt-v1-price {
+  min-height: 17px !important;
+  gap: 4px !important;
+  margin: 8px 4px 0 !important;
+}
+html[data-tdpp-v1-mode="mobile"] .tdppi-v1-card .tdhpt-v1-original-price {
+  font-size: 9px !important;
+  line-height: 15px !important;
+}
+html[data-tdpp-v1-mode="mobile"] .tdppi-v1-card .tdhpt-v1-sale-price {
+  font-size: 12px !important;
+  line-height: 17px !important;
+}
+html[data-tdpp-v1-mode="mobile"] .tdppi-v1-card .tdhpt-v1-buy {
+  min-height: 25px !important;
+  height: 25px !important;
+  margin: 8px 4px 0 !important;
+  padding: 2px 8px !important;
+  font-size: 9px !important;
+  line-height: 13px !important;
+  letter-spacing: 1px !important;
+}
+
+@media (hover:none) {
+  .tdppi-v1-card:hover .tdhpt-v1-corner-label {
+    background: var(--tdppi-v1-blue) !important;
+    color: #FFFFFF !important;
+  }
+  .tdppi-v1-card:hover .tdhpt-v1-buy,
+  .tdppi-v1-card:hover .tdhpt-v1-buy-static {
+    background: var(--tdppi-v1-navy) !important;
+  }
+}
