@@ -1,8 +1,8 @@
-/* TD_Figma_Product_Page_GTM_v1.0.15.html */
+/* TD_Figma_Product_Page_GTM_v1.0.16.html */
 (function () {
   'use strict';
 
-  var VERSION = '1.0.15';
+  var VERSION = '1.0.16';
   var INIT_RETRY_LIMIT = 240;
   var SOURCE_RETRY_LIMIT = 100;
   var SOURCE_STABLE_REQUIRED = 4;
@@ -996,21 +996,18 @@
   window.setTimeout(initialize, 0);
 }());
 
-/* TD_Figma_Product_Page_GTM_v1.0.15.html */
+/* TD_Figma_Product_Page_GTM_v1.0.16.html */
 (function () {
   'use strict';
 
-  var VERSION = '1.0.15';
+  var VERSION = '1.0.16';
   var SHEET_ID = '1RxPEEToUuTd5tXPMBpggUZtgfFCy0lRets4mwuMmDAc';
   var SHEET_TAB = '1844415232';
   var SHEET_URL = 'https://docs.google.com/spreadsheets/d/' + SHEET_ID + '/export?format=csv&id=' + SHEET_ID + '&gid=' + SHEET_TAB;
   var externalConfig = window.TDFigmaProductInterestConfig || {};
   var CONFIG = {
-    desktopVisible: positiveInt(externalConfig.desktopVisible, 6),
-    tabletVisible: positiveInt(externalConfig.tabletVisible, 4),
+    desktopVisible: Math.max(1, positiveInt(externalConfig.desktopVisible, 6)),
     mobileVisible: Math.max(2, positiveInt(externalConfig.mobileVisible, 2)),
-    tabletBreakpoint: positiveInt(externalConfig.tabletBreakpoint, 1199),
-    mobileBreakpoint: positiveInt(externalConfig.mobileBreakpoint, 991),
     title: String(externalConfig.title || '你可能有興趣'),
     retryLimit: positiveInt(externalConfig.retryLimit, 120),
     retryDelay: positiveInt(externalConfig.retryDelay, 250)
@@ -1310,14 +1307,12 @@
   }
 
   function currentVisibleCount() {
-    var width = window.innerWidth || document.documentElement.clientWidth || 1200;
-    if (width <= CONFIG.mobileBreakpoint) { return CONFIG.mobileVisible; }
-    if (width <= CONFIG.tabletBreakpoint) { return Math.max(2, CONFIG.tabletVisible); }
-    return Math.max(2, CONFIG.desktopVisible);
+    /* v1.0.16: 商品頁本身有獨立桌機／手機 DOM，不再依 viewport breakpoint 切換張數。 */
+    return state.mode === 'mobile' ? CONFIG.mobileVisible : CONFIG.desktopVisible;
   }
 
   function getGap() {
-    return (window.innerWidth || 1200) <= CONFIG.mobileBreakpoint ? 25 : 26.6667;
+    return state.mode === 'mobile' ? 25 : 20;
   }
 
   function updateSliderLayout() {
