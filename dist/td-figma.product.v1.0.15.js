@@ -1,8 +1,8 @@
-/* TD_Figma_Product_Page_GTM_v1.0.14.html */
+/* TD_Figma_Product_Page_GTM_v1.0.15.html */
 (function () {
   'use strict';
 
-  var VERSION = '1.0.14';
+  var VERSION = '1.0.15';
   var INIT_RETRY_LIMIT = 240;
   var SOURCE_RETRY_LIMIT = 100;
   var SOURCE_STABLE_REQUIRED = 4;
@@ -994,4 +994,492 @@
   window.addEventListener('load', initialize, { once: true });
   window.addEventListener('pageshow', function () { window.setTimeout(initialize, 0); });
   window.setTimeout(initialize, 0);
+}());
+
+/* TD_Figma_Product_Page_GTM_v1.0.15.html */
+(function () {
+  'use strict';
+
+  var VERSION = '1.0.15';
+  var SHEET_ID = '1RxPEEToUuTd5tXPMBpggUZtgfFCy0lRets4mwuMmDAc';
+  var SHEET_TAB = '1844415232';
+  var SHEET_URL = 'https://docs.google.com/spreadsheets/d/' + SHEET_ID + '/export?format=csv&id=' + SHEET_ID + '&gid=' + SHEET_TAB;
+  var externalConfig = window.TDFigmaProductInterestConfig || {};
+  var CONFIG = {
+    desktopVisible: positiveInt(externalConfig.desktopVisible, 6),
+    tabletVisible: positiveInt(externalConfig.tabletVisible, 4),
+    mobileVisible: Math.max(2, positiveInt(externalConfig.mobileVisible, 2)),
+    tabletBreakpoint: positiveInt(externalConfig.tabletBreakpoint, 1199),
+    mobileBreakpoint: positiveInt(externalConfig.mobileBreakpoint, 991),
+    title: String(externalConfig.title || '你可能有興趣'),
+    retryLimit: positiveInt(externalConfig.retryLimit, 120),
+    retryDelay: positiveInt(externalConfig.retryDelay, 250)
+  };
+  var state = {
+    mode: '',
+    rows: null,
+    mounted: false,
+    fetchStarted: false,
+    fetchDone: false,
+    retryCount: 0,
+    retryTimer: null,
+    nativeRetryCount: 0,
+    nativeTimer: null,
+    index: 0,
+    visibleCount: 0,
+    cardWidth: 0,
+    gap: 0,
+    resizeTimer: null,
+    root: null,
+    viewport: null,
+    track: null,
+    prev: null,
+    next: null,
+    touchStartX: null
+  };
+
+  function positiveInt(value, fallback) {
+    var parsed = parseInt(value, 10);
+    return isFinite(parsed) && parsed > 0 ? parsed : fallback;
+  }
+
+  function safeQuery(selector, context) {
+    try { return (context || document).querySelector(selector); } catch (error) { return null; }
+  }
+
+  function safeQueryAll(selector, context) {
+    try { return (context || document).querySelectorAll(selector); } catch (error) { return []; }
+  }
+
+  function toArray(value) {
+    return Array.prototype.slice.call(value || []);
+  }
+
+  function trim(value) {
+    return String(value == null ? '' : value).replace(/^\s+|\s+$/g, '');
+  }
+
+  function normalizeText(value) {
+    return trim(String(value == null ? '' : value).replace(/\s+/g, ' '));
+  }
+
+  function isTrue(value) {
+    var normalized = trim(value).toUpperCase();
+    return normalized === 'TRUE' || normalized === '1' || normalized === 'YES' || normalized === 'Y';
+  }
+
+  function getQueryParam(name) {
+    var params;
+    var escaped;
+    var match;
+    try {
+      if (window.URLSearchParams) {
+        params = new URLSearchParams(window.location.search);
+        return params.get(name);
+      }
+    } catch (error) {}
+    escaped = String(name).replace(/[.*+?^${}()|[\]\\]/g, '\$&');
+    match = String(window.location.search || '').match(new RegExp('(?:^|[?&])' + escaped + '=([^&]*)'));
+    return match ? decodeURIComponent(match[1].replace(/\+/g, ' ')) : null;
+  }
+
+  function parseCSV(strData, strDelimiter, toObj) {
+    strDelimiter = strDelimiter || ',';
+    var objPattern = new RegExp(
+      '(\\' + strDelimiter + '|\r?\n|\r|^)' +
+      '(?:"([^"]*(?:""[^"]*)*)"|' +
+      '([^"\\' + strDelimiter + '\r\n]*))',
+      'gi'
+    );
+    var arrData = [[]];
+    var arrMatches = null;
+    var strMatchedDelimiter;
+    var strMatchedValue;
+    while ((arrMatches = objPattern.exec(strData))) {
+      strMatchedDelimiter = arrMatches[1];
+      if (strMatchedDelimiter.length && strMatchedDelimiter !== strDelimiter) { arrData.push([]); }
+      if (arrMatches[2] !== undefined) { strMatchedValue = arrMatches[2].replace(/""/g, '"'); }
+      else { strMatchedValue = arrMatches[3]; }
+      arrData[arrData.length - 1].push(strMatchedValue);
+    }
+    if (!toObj) { return arrData; }
+    if (!arrData.length) { return []; }
+    var header = arrData.shift();
+    return arrData.map(function (item) {
+      var output = {};
+      var i;
+      for (i = 0; i < header.length; i += 1) { output[trim(header[i])] = item[i] == null ? '' : item[i]; }
+      return output;
+    });
+  }
+
+  function parseSheetDate(value, isEnd) {
+    var text = trim(value);
+    var match;
+    var date;
+    if (!text) { return isEnd ? Infinity : -Infinity; }
+    match = text.match(/^(\d{4})[\/-](\d{1,2})[\/-](\d{1,2})(?:[ T]+(\d{1,2})(?::(\d{1,2}))?(?::(\d{1,2}))?)?$/);
+    if (match) {
+      date = new Date(
+        parseInt(match[1], 10),
+        parseInt(match[2], 10) - 1,
+        parseInt(match[3], 10),
+        parseInt(match[4] || '0', 10),
+        parseInt(match[5] || '0', 10),
+        parseInt(match[6] || '0', 10),
+        0
+      );
+      return date.getTime();
+    }
+    date = new Date(text);
+    return isNaN(date.getTime()) ? (isEnd ? Infinity : -Infinity) : date.getTime();
+  }
+
+  function targetMatches(row) {
+    var target = trim(row['目標網址']).toLowerCase();
+    var href = String(window.location.href || '').toLowerCase();
+    if (!target) { return false; }
+    return href.indexOf(target) !== -1;
+  }
+
+  function filterRows(rows) {
+    var debug = getQueryParam('td_debug') === '1';
+    var now = new Date().getTime();
+    return rows.filter(function (row) {
+      var preview = isTrue(row['預覽']);
+      if (preview) {
+        if (!debug) { return false; }
+      } else {
+        if (!isTrue(row['啟動'])) { return false; }
+        if (!(parseSheetDate(row['開始日期'], false) <= now && now <= parseSheetDate(row['結束日期'], true))) { return false; }
+      }
+      return targetMatches(row);
+    }).filter(function (row) {
+      return !!(trim(row['商品連結']) && trim(row['商品名稱']) && trim(row['商品圖片']));
+    });
+  }
+
+  function formatPrice(value) {
+    var raw = trim(value).replace(/[^0-9.-]/g, '');
+    var number = Number(raw);
+    if (!raw || !isFinite(number)) { return trim(value); }
+    try { return 'NT$' + Math.round(number).toLocaleString('en-US'); }
+    catch (error) { return 'NT$' + Math.round(number); }
+  }
+
+  function splitLabels(value) {
+    return String(value == null ? '' : value).split(/(?:\r?\n|\|+|；|;)+/).map(trim).filter(function (item) { return !!item; });
+  }
+
+  function createElement(tag, className, text) {
+    var node = document.createElement(tag);
+    if (className) { node.className = className; }
+    if (text != null) { node.textContent = text; }
+    return node;
+  }
+
+  function buildCornerLabels(row, media) {
+    var labels = splitLabels(row['商品角標']);
+    var holder;
+    var i;
+    if (!labels.length) { return; }
+    holder = createElement('div', 'tdhpt-v1-corner-labels');
+    for (i = 0; i < labels.length; i += 1) { holder.appendChild(createElement('span', 'tdhpt-v1-corner-label', labels[i])); }
+    media.appendChild(holder);
+  }
+
+  function buildTags(row, content) {
+    var tags = splitLabels(row['商品標籤']);
+    var holder;
+    var i;
+    if (!tags.length) { return; }
+    holder = createElement('div', 'tdhpt-v1-tags');
+    for (i = 0; i < tags.length; i += 1) { holder.appendChild(createElement('span', 'tdhpt-v1-tag', tags[i])); }
+    content.appendChild(holder);
+  }
+
+  function buildCard(row, index) {
+    var card = createElement('article', 'tdhpt-v1-card tdppi-v1-card');
+    var media = createElement('div', 'tdhpt-v1-media');
+    var imageDefault = createElement('img', 'tdhpt-v1-image tdhpt-v1-image--default');
+    var imageHover = createElement('img', 'tdhpt-v1-image tdhpt-v1-image--hover');
+    var content = createElement('div', 'tdhpt-v1-content');
+    var name = createElement('h3', 'tdhpt-v1-name', normalizeText(row['商品名稱']));
+    var price = createElement('div', 'tdhpt-v1-price');
+    var original = createElement('span', 'tdhpt-v1-original-price');
+    var sale = createElement('span', 'tdhpt-v1-sale-price');
+    var buy = createElement('a', 'tdhpt-v1-buy', '立即購買');
+    var href = trim(row['商品連結']);
+    var defaultSrc = trim(row['商品圖片']);
+    var hoverSrc = trim(row['商品Hover圖片']) || defaultSrc;
+    var originalText = formatPrice(row['商品原價']);
+    var saleText = formatPrice(row['商品特價']);
+
+    card.setAttribute('data-tdppi-v1-card', String(index));
+    imageDefault.src = defaultSrc;
+    imageDefault.alt = normalizeText(row['商品名稱']);
+    imageDefault.loading = 'lazy';
+    imageHover.src = hoverSrc;
+    imageHover.alt = '';
+    imageHover.loading = 'lazy';
+    imageHover.setAttribute('aria-hidden', 'true');
+    media.appendChild(imageDefault);
+    media.appendChild(imageHover);
+    buildCornerLabels(row, media);
+    content.appendChild(media);
+    buildTags(row, content);
+    content.appendChild(name);
+    if (originalText && (!saleText || originalText !== saleText)) { original.textContent = originalText; price.appendChild(original); }
+    if (saleText || originalText) { sale.textContent = saleText || originalText; price.appendChild(sale); content.appendChild(price); }
+    buy.href = href;
+    buy.target = '_self';
+    buy.setAttribute('aria-label', '立即購買 ' + normalizeText(row['商品名稱']));
+    content.appendChild(buy);
+    card.appendChild(content);
+    return card;
+  }
+
+  function getMode() {
+    var attr = document.documentElement.getAttribute('data-tdpp-v1-mode');
+    if (attr === 'desktop' || attr === 'mobile') { return attr; }
+    if (safeQuery('#sidemenu') && safeQuery('.salepage-top-left') && safeQuery('.salepage-top-right')) { return 'desktop'; }
+    if (safeQuery('.salepage-fix-bottom .salepage-btn') || safeQuery('.slider-nav-ul-recommend')) { return 'mobile'; }
+    return '';
+  }
+
+  function getInsertTarget() {
+    state.mode = getMode();
+    if (state.mode === 'desktop') { return safeQuery('#SalePageIndexController .salepage-product-list'); }
+    if (state.mode === 'mobile') { return safeQuery('#SalePageIndexController .slider-product-list:not(.salepage-browsing-history)'); }
+    return null;
+  }
+
+  function createArrow(direction) {
+    var button = createElement('button', 'tdppi-v1-arrow tdppi-v1-arrow--' + direction);
+    button.type = 'button';
+    button.setAttribute('aria-label', direction === 'prev' ? '上一組商品' : '下一組商品');
+    return button;
+  }
+
+  function buildRoot(rows) {
+    var root = createElement('section', 'tdhpt-v1-root tdppi-v1-root');
+    var inner = createElement('div', 'tdhpt-v1-inner');
+    var tabsWrap = createElement('div', 'tdhpt-v1-tabs-wrap');
+    var tabs = createElement('div', 'tdhpt-v1-tabs');
+    var tab = createElement('button', 'tdhpt-v1-tab is-active');
+    var desktopLabel = createElement('span', 'tdhpt-v1-tab-label-desktop', CONFIG.title);
+    var mobileLabel = createElement('span', 'tdhpt-v1-tab-label-mobile', CONFIG.title);
+    var panels = createElement('div', 'tdhpt-v1-panels tdppi-v1-panels');
+    var panel = createElement('div', 'tdhpt-v1-panel is-active');
+    var slider = createElement('div', 'tdppi-v1-slider');
+    var viewport = createElement('div', 'tdppi-v1-viewport');
+    var track = createElement('div', 'tdppi-v1-track');
+    var prev = createArrow('prev');
+    var next = createArrow('next');
+    var i;
+
+    root.id = 'tdppi-v1-root';
+    root.setAttribute('data-tdppi-v1-root', 'true');
+    root.setAttribute('data-tdppi-v1-version', VERSION);
+    root.setAttribute('data-tdppi-v1-count', String(rows.length));
+    tabs.setAttribute('role', 'tablist');
+    tab.type = 'button';
+    tab.setAttribute('role', 'tab');
+    tab.setAttribute('aria-selected', 'true');
+    tab.tabIndex = -1;
+    tab.appendChild(desktopLabel);
+    tab.appendChild(mobileLabel);
+    tabs.appendChild(tab);
+    tabsWrap.appendChild(tabs);
+    for (i = 0; i < rows.length; i += 1) { track.appendChild(buildCard(rows[i], i)); }
+    viewport.appendChild(track);
+    slider.appendChild(prev);
+    slider.appendChild(viewport);
+    slider.appendChild(next);
+    panel.appendChild(slider);
+    panels.appendChild(panel);
+    inner.appendChild(tabsWrap);
+    inner.appendChild(panels);
+    root.appendChild(inner);
+    state.root = root;
+    state.viewport = viewport;
+    state.track = track;
+    state.prev = prev;
+    state.next = next;
+    return root;
+  }
+
+  function currentVisibleCount() {
+    var width = window.innerWidth || document.documentElement.clientWidth || 1200;
+    if (width <= CONFIG.mobileBreakpoint) { return CONFIG.mobileVisible; }
+    if (width <= CONFIG.tabletBreakpoint) { return Math.max(2, CONFIG.tabletVisible); }
+    return Math.max(2, CONFIG.desktopVisible);
+  }
+
+  function getGap() {
+    return (window.innerWidth || 1200) <= CONFIG.mobileBreakpoint ? 25 : 26.6667;
+  }
+
+  function updateSliderLayout() {
+    var cards;
+    var viewportWidth;
+    var count;
+    var maxIndex;
+    var translate;
+    var i;
+    if (!state.viewport || !state.track) { return; }
+    cards = toArray(safeQueryAll('.tdppi-v1-card', state.track));
+    if (!cards.length) { return; }
+    viewportWidth = state.viewport.clientWidth || state.viewport.getBoundingClientRect().width;
+    count = Math.min(currentVisibleCount(), cards.length);
+    state.visibleCount = Math.max(1, count);
+    state.gap = getGap();
+    state.cardWidth = Math.max(1, (viewportWidth - state.gap * (state.visibleCount - 1)) / state.visibleCount);
+    for (i = 0; i < cards.length; i += 1) { cards[i].style.flex = '0 0 ' + state.cardWidth + 'px'; }
+    maxIndex = Math.max(0, cards.length - state.visibleCount);
+    if (state.index > maxIndex) { state.index = maxIndex; }
+    translate = state.index * (state.cardWidth + state.gap);
+    state.track.style.transform = 'translate3d(' + (-translate) + 'px,0,0)';
+    if (state.prev) {
+      state.prev.disabled = state.index <= 0;
+      state.prev.setAttribute('aria-hidden', maxIndex === 0 ? 'true' : 'false');
+    }
+    if (state.next) {
+      state.next.disabled = state.index >= maxIndex;
+      state.next.setAttribute('aria-hidden', maxIndex === 0 ? 'true' : 'false');
+    }
+    state.root.setAttribute('data-tdppi-v1-visible-count', String(state.visibleCount));
+  }
+
+  function moveSlider(direction) {
+    var cards = toArray(safeQueryAll('.tdppi-v1-card', state.track));
+    var maxIndex = Math.max(0, cards.length - state.visibleCount);
+    var step = Math.max(1, state.visibleCount);
+    if (direction > 0) { state.index = Math.min(maxIndex, state.index + step); }
+    else { state.index = Math.max(0, state.index - step); }
+    updateSliderLayout();
+  }
+
+  function bindSlider() {
+    if (!state.root) { return; }
+    state.prev.addEventListener('click', function () { moveSlider(-1); });
+    state.next.addEventListener('click', function () { moveSlider(1); });
+    state.viewport.addEventListener('touchstart', function (event) {
+      state.touchStartX = event.touches && event.touches[0] ? event.touches[0].clientX : null;
+    }, { passive: true });
+    state.viewport.addEventListener('touchend', function (event) {
+      var endX;
+      var delta;
+      if (state.touchStartX == null) { return; }
+      endX = event.changedTouches && event.changedTouches[0] ? event.changedTouches[0].clientX : state.touchStartX;
+      delta = endX - state.touchStartX;
+      state.touchStartX = null;
+      if (Math.abs(delta) < 35) { return; }
+      moveSlider(delta < 0 ? 1 : -1);
+    }, { passive: true });
+    window.addEventListener('resize', function () {
+      window.clearTimeout(state.resizeTimer);
+      state.resizeTimer = window.setTimeout(updateSliderLayout, 120);
+    });
+  }
+
+  function mountInterestSlider() {
+    var target;
+    var root;
+    if (state.mounted || !state.fetchDone || !state.rows || !state.rows.length) { return state.mounted; }
+    target = getInsertTarget();
+    if (!target || !target.parentNode) { return false; }
+    if (safeQuery('#tdppi-v1-root')) { state.mounted = true; return true; }
+    root = buildRoot(state.rows);
+    target.parentNode.insertBefore(root, target);
+    state.mounted = true;
+    bindSlider();
+    if (window.requestAnimationFrame) { window.requestAnimationFrame(updateSliderLayout); }
+    else { window.setTimeout(updateSliderLayout, 0); }
+    window.dataLayer = window.dataLayer || [];
+    window.dataLayer.push({
+      event: 'td_product_interest_ready',
+      td_product_interest_version: VERSION,
+      td_product_interest_count: state.rows.length,
+      td_product_interest_mode: state.mode
+    });
+    return true;
+  }
+
+  function mountWithRetry() {
+    if (mountInterestSlider() || state.retryCount >= CONFIG.retryLimit) { return; }
+    state.retryCount += 1;
+    window.clearTimeout(state.retryTimer);
+    state.retryTimer = window.setTimeout(mountWithRetry, CONFIG.retryDelay);
+  }
+
+  function fetchSheet() {
+    if (state.fetchStarted || !window.fetch) { return; }
+    state.fetchStarted = true;
+    fetch(SHEET_URL, { credentials: 'omit', cache: 'no-store' })
+      .then(function (response) {
+        if (!response || response.ok === false) { throw new Error('Google Sheet HTTP ' + (response ? response.status : 'unknown')); }
+        return response.text();
+      })
+      .then(function (text) {
+        state.rows = filterRows(parseCSV(text, ',', true));
+        state.fetchDone = true;
+        mountWithRetry();
+      })
+      .catch(function (error) {
+        state.fetchDone = true;
+        state.rows = [];
+        if (getQueryParam('td_debug') === '1' && window.console && console.warn) {
+          console.warn('[TD Product Interest] Google Sheet 載入失敗', error);
+        }
+      });
+  }
+
+  function hideCategoryTabAndSelectShop() {
+    var mode = getMode();
+    var root = mode === 'desktop'
+      ? safeQuery('#SalePageIndexController .salepage-product-list')
+      : safeQuery('#SalePageIndexController .slider-product-list:not(.salepage-browsing-history)');
+    var items;
+    var categoryItem = null;
+    var shopItem = null;
+    var shopLink;
+    var i;
+    var text;
+    if (!root || !mode) { return false; }
+    items = toArray(safeQueryAll(mode === 'desktop' ? '.panel-heading-li' : '.slider-nav-li', root));
+    for (i = 0; i < items.length; i += 1) {
+      text = normalizeText(items[i].textContent);
+      if (text.indexOf('本分類熱銷') !== -1) { categoryItem = items[i]; }
+      if (text.indexOf('全站排行') !== -1) { shopItem = items[i]; }
+    }
+    if (categoryItem) { categoryItem.setAttribute('data-tdpp-v1-category-tab-hidden', 'true'); }
+    if (!shopItem) { return false; }
+    shopLink = safeQuery('a', shopItem);
+    if (!shopItem.classList.contains('actived') && shopLink) {
+      shopLink.setAttribute('data-tdpp-v1-shop-tab-triggered', 'true');
+      try { shopLink.click(); } catch (error) {}
+    }
+    root.setAttribute('data-tdpp-v1-shop-ranking-only', 'true');
+    return !!categoryItem && shopItem.classList.contains('actived');
+  }
+
+  function nativeRankingWithRetry() {
+    if (hideCategoryTabAndSelectShop() || state.nativeRetryCount >= 80) { return; }
+    state.nativeRetryCount += 1;
+    window.clearTimeout(state.nativeTimer);
+    state.nativeTimer = window.setTimeout(nativeRankingWithRetry, 250);
+  }
+
+  function init() {
+    fetchSheet();
+    nativeRankingWithRetry();
+    if (state.fetchDone) { mountWithRetry(); }
+  }
+
+  if (document.readyState === 'loading') { document.addEventListener('DOMContentLoaded', init, { once: true }); }
+  else { init(); }
+  window.addEventListener('load', init, { once: true });
+  window.addEventListener('pageshow', function () { window.setTimeout(init, 0); });
+  window.setTimeout(init, 0);
 }());
