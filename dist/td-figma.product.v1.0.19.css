@@ -1,4 +1,4 @@
-/* TD_Figma_Product_Page_Style_GTM_v1.0.18.html */
+/* TD_Figma_Product_Page_Style_GTM_v1.0.19.html */
 /* Namespace: tdpp-v1. Product Bundle only. */
 :root {
   --tdpp-v1-navy: #0b3d70;
@@ -1548,7 +1548,7 @@ html[data-tdpp-v1-mode="mobile"] .tdppi-v1-card .tdhpt-v1-buy {
 
 
 
-/* v1.0.18: Desktop「你可能有興趣」卡片節奏再對齊商品頁原生「全站排行」。
+/* v1.0.19: Desktop「你可能有興趣」卡片節奏再對齊商品頁原生「全站排行」。
    僅調整 desktop DOM；mobile 規格完整沿用 v1.0.17。 */
 html[data-tdpp-v1-mode="desktop"] .tdppi-v1-root {
   padding: 35px 0 25px !important;
@@ -1656,4 +1656,90 @@ html[data-tdpp-v1-mode="desktop"] .tdppi-v1-arrow::before {
   height: 8px !important;
   border-top-width: 2px !important;
   border-right-width: 2px !important;
+}
+
+
+
+/* v1.0.19: Desktop slider alignment refinements.
+   1) Browsing-history klee-slider expands across the complete recommendation container.
+   2) Interest slider keeps native-like side gutters with arrows inside those gutters.
+   3) Native and custom chevrons are optically centered. */
+html[data-tdpp-v1-active="true"][data-tdpp-v1-mode="desktop"] .salepage-browsing-history klee-slider.browsing-history-slider,
+html[data-tdpp-v1-active="true"][data-tdpp-v1-mode="desktop"] .salepage-browsing-history klee-slider.browsing-history-slider > div,
+html[data-tdpp-v1-active="true"][data-tdpp-v1-mode="desktop"] .salepage-browsing-history .browsing-history-slider .klee-slider {
+  display: block !important;
+  width: 100% !important;
+  max-width: none !important;
+}
+html[data-tdpp-v1-active="true"][data-tdpp-v1-mode="desktop"] .salepage-browsing-history .browsing-history-slider .klee-slider {
+  position: relative !important;
+  min-width: 0 !important;
+  padding: 0 40px !important;
+  box-sizing: border-box !important;
+}
+html[data-tdpp-v1-active="true"][data-tdpp-v1-mode="desktop"] .salepage-browsing-history .browsing-history-slider .klee-slider-viewer {
+  display: block !important;
+  width: 100% !important;
+  max-width: none !important;
+  margin: 0 !important;
+  overflow: hidden !important;
+}
+html[data-tdpp-v1-active="true"][data-tdpp-v1-mode="desktop"] .salepage-browsing-history .browsing-history-slider .klee-slider-arrow.prev-arrow,
+html[data-tdpp-v1-active="true"][data-tdpp-v1-mode="desktop"] .salepage-browsing-history .browsing-history-slider .klee-slider-arrow.next-arrow {
+  position: absolute !important;
+  top: 50% !important;
+  margin: 0 !important;
+  transform: translateY(-50%) !important;
+}
+html[data-tdpp-v1-active="true"][data-tdpp-v1-mode="desktop"] .salepage-browsing-history .browsing-history-slider .klee-slider-arrow.prev-arrow { left: 0 !important; }
+html[data-tdpp-v1-active="true"][data-tdpp-v1-mode="desktop"] .salepage-browsing-history .browsing-history-slider .klee-slider-arrow.next-arrow { right: 0 !important; }
+
+html[data-tdpp-v1-mode="desktop"] .tdppi-v1-slider {
+  box-sizing: border-box !important;
+  padding: 0 40px !important;
+}
+html[data-tdpp-v1-mode="desktop"] .tdppi-v1-viewport {
+  width: 100% !important;
+  min-width: 0 !important;
+}
+html[data-tdpp-v1-mode="desktop"] .tdppi-v1-arrow--prev { left: 0 !important; }
+html[data-tdpp-v1-mode="desktop"] .tdppi-v1-arrow--next { right: 0 !important; }
+
+/* Native Klee arrows: replace icon-font glyph with a centered CSS chevron for consistent optical alignment. */
+html[data-tdpp-v1-mode="desktop"] .salepage-browsing-history .klee-slider-arrow,
+html[data-tdpp-v1-mode="desktop"] .salepage-product-list .klee-slider-arrow {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  padding: 0 !important;
+}
+html[data-tdpp-v1-mode="desktop"] .salepage-browsing-history .klee-slider-arrow > i,
+html[data-tdpp-v1-mode="desktop"] .salepage-product-list .klee-slider-arrow > i {
+  display: none !important;
+}
+html[data-tdpp-v1-mode="desktop"] .salepage-browsing-history .klee-slider-arrow::after,
+html[data-tdpp-v1-mode="desktop"] .salepage-product-list .klee-slider-arrow::after {
+  display: block !important;
+  width: 8px !important;
+  height: 8px !important;
+  border-top: 2px solid currentColor !important;
+  border-right: 2px solid currentColor !important;
+  content: "" !important;
+  transform-origin: 50% 50% !important;
+}
+html[data-tdpp-v1-mode="desktop"] .salepage-browsing-history .klee-slider-arrow.prev-arrow::after,
+html[data-tdpp-v1-mode="desktop"] .salepage-product-list .klee-slider-arrow.prev-arrow::after {
+  transform: translateX(1px) rotate(-135deg) !important;
+}
+html[data-tdpp-v1-mode="desktop"] .salepage-browsing-history .klee-slider-arrow.next-arrow::after,
+html[data-tdpp-v1-mode="desktop"] .salepage-product-list .klee-slider-arrow.next-arrow::after {
+  transform: translateX(-1px) rotate(45deg) !important;
+}
+
+/* Custom interest arrows use the same optical centering. */
+html[data-tdpp-v1-mode="desktop"] .tdppi-v1-arrow--prev::before {
+  transform: translateX(1px) rotate(-135deg) !important;
+}
+html[data-tdpp-v1-mode="desktop"] .tdppi-v1-arrow--next::before {
+  transform: translateX(-1px) rotate(45deg) !important;
 }
