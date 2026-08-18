@@ -1,8 +1,8 @@
-/* TD_Figma_Product_Page_GTM_v1.0.17.html */
+/* TD_Figma_Product_Page_GTM_v1.0.18.html */
 (function () {
   'use strict';
 
-  var VERSION = '1.0.17';
+  var VERSION = '1.0.18';
   var INIT_RETRY_LIMIT = 240;
   var SOURCE_RETRY_LIMIT = 100;
   var SOURCE_STABLE_REQUIRED = 4;
@@ -996,11 +996,11 @@
   window.setTimeout(initialize, 0);
 }());
 
-/* TD_Figma_Product_Page_GTM_v1.0.17.html */
+/* TD_Figma_Product_Page_GTM_v1.0.18.html */
 (function () {
   'use strict';
 
-  var VERSION = '1.0.17';
+  var VERSION = '1.0.18';
   var SHEET_ID = '1RxPEEToUuTd5tXPMBpggUZtgfFCy0lRets4mwuMmDAc';
   var SHEET_TAB = '1844415232';
   var SHEET_URL = 'https://docs.google.com/spreadsheets/d/' + SHEET_ID + '/export?format=csv&id=' + SHEET_ID + '&gid=' + SHEET_TAB;
@@ -1312,7 +1312,7 @@
   }
 
   function getGap() {
-    return state.mode === 'mobile' ? 25 : 20;
+    return state.mode === 'mobile' ? 25 : 10;
   }
 
   function updateSliderLayout() {
