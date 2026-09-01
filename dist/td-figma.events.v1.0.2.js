@@ -1,5 +1,5 @@
-/* TD Figma Events Bundle v1.0.1 | config + runtime */
-/* TD Figma Events Config v1.0.1
+/* TD Figma Events Bundle v1.0.2 | config + runtime */
+/* TD Figma Events Config v1.0.2
  * ------------------------------------------------------------
  * 維護方式：事件新增 / 修改 / 刪除，優先只改這個檔案的 rules。
  * engine 不需隨一般事件規格調整而修改。
@@ -13,7 +13,7 @@
   'use strict';
 
   window.TDFigmaEventsConfig = {
-    version: '1.0.1',
+    version: '1.0.2',
     tdVersion: 1,
     impressionThreshold: 0.5,
 
@@ -129,11 +129,11 @@
         pages: ['all'],
         trigger: 'click',
         eventName: 'td_nav',
-        selector: '.toolbox__container a, .toolbox__container button, .toolbox__container [role="button"], .toolbox__container [data-tip]',
+        selector: '.toolbox__container a, .toolbox__container button, .toolbox__container [role="button"], .toolbox__container [data-tip], .toolbox__popover, .toolbox__nails, .toolbox__popover a, .toolbox__popover button, .toolbox__popover [role="button"], .toolbox__nails a, .toolbox__nails button, .toolbox__nails [role="button"], .toolbox__popover [class*="ico-"], .toolbox__nails [class*="ico-"], .ico-message',
         predicate: 'floatingSidebar',
         params: {
           td_click: 1,
-          td_action: { source: 'strictImageAlt' },
+          td_action: { source: 'floatingSidebarAction' },
           td_position: '懸浮側邊Bar'
         }
       },
@@ -408,7 +408,7 @@
         pages: ['category'],
         trigger: 'impression',
         eventName: 'td_category_bn',
-        selector: '#SalePageCategoryController a img[alt], #SalePageCategoryController [class*="banner"] img[alt], [class*="SalePageCategory"] [class*="banner"] img[alt], [class*="category"] [class*="banner"] img[alt]',
+        selector: 'a:not([class]):not(.tdfs-v3-hotkeys a):not(.social-ul a)',
         predicate: 'categoryBanner',
         observeTarget: 'self',
         params: {
@@ -422,7 +422,7 @@
         pages: ['category'],
         trigger: 'click',
         eventName: 'td_category_bn',
-        selector: '#SalePageCategoryController a, [class*="SalePageCategory"] a, [class*="category"] [class*="banner"] a',
+        selector: 'a:not([class]):not(.tdfs-v3-hotkeys a):not(.social-ul a)',
         predicate: 'categoryBannerLink',
         params: {
           td_click: 1,
@@ -498,12 +498,12 @@
   };
 }(window));
 
-/* TD Figma Events Runtime v1.0.1 | ES5 syntax */
+/* TD Figma Events Runtime v1.0.2 | ES5 syntax */
 (function (window, document) {
   'use strict';
 
   var CONFIG = window.TDFigmaEventsConfig;
-  var VERSION = '1.0.1';
+  var VERSION = '1.0.2';
   var state = {
     pageTypes: [],
     activeRules: [],
@@ -777,6 +777,27 @@
     return value || undefined;
   }
 
+  function getFloatingSidebarAction(element) {
+    var current = element;
+    var icon;
+    var value;
+    var normalized;
+    var level = 0;
+    while (current && current !== document.body && level < 6) {
+      if (safeMatches(current, '.ico-message')) { return 'Easychat'; }
+      current = current.parentElement;
+      level += 1;
+    }
+    if (safeMatches(element, 'a,button,[role="button"]') && safeQuery('.ico-message', element)) { return 'Easychat'; }
+    value = strictImageAlt(element);
+    if (value) { return value; }
+    icon = safeQuery('img[alt]', element);
+    if (icon && trim(icon.getAttribute('alt'))) { return trim(icon.getAttribute('alt')); }
+    normalized = normalizeText(String(element && element.className || '')).toLowerCase();
+    if (normalized.indexOf('ico-message') !== -1) { return 'Easychat'; }
+    return undefined;
+  }
+
   function getRecommendationCard(element) {
     var card = closest(element, '[data-tdppi-v1-card], .product-card, li, .slider-li, .klee-slider-li', null);
     var current;
@@ -838,6 +859,7 @@
     if (source === 'documentTitle') { return trim(document.title) || undefined; }
     if (source === 'productTabLabel') { return getProductTabLabel(element); }
     if (source === 'productSidebarAction') { return getProductSidebarAction(element); }
+    if (source === 'floatingSidebarAction') { return getFloatingSidebarAction(element); }
     if (source === 'productRecommendationName') { return getProductRecommendationName(element); }
     return undefined;
   }
@@ -856,7 +878,7 @@
   }
 
   function ensureNativeToolboxClickable() {
-    var styleId = 'td-figma-events-native-toolbox-pointer-v101';
+    var styleId = 'td-figma-events-native-toolbox-pointer-v102';
     var style;
     var css;
     if (document.getElementById && document.getElementById(styleId)) { return; }
@@ -870,7 +892,8 @@
       'body.tdfh-v1-desktop-header-active #officialHeader .toolbox__container a,',
       'body.tdfh-v1-desktop-header-active #officialHeader .toolbox__container button,',
       'body.tdfh-v1-desktop-header-active #officialHeader .toolbox__container [role="button"],',
-      'body.tdfh-v1-desktop-header-active #officialHeader .toolbox__container [data-tip]{pointer-events:auto!important;}'
+      'body.tdfh-v1-desktop-header-active #officialHeader .toolbox__container [data-tip]{pointer-events:auto!important;}',
+      '.toolbox__popover,.toolbox__nails,.toolbox__popover *,.toolbox__nails *{pointer-events:auto!important;}'
     ].join('');
     style = document.createElement('style');
     if (!style) { return; }
@@ -917,10 +940,13 @@
   }
 
   function isFloatingSidebar(element) {
-    var container = closest(element, '.toolbox__container', null);
+    var container = closest(element, '.toolbox__container, .toolbox__popover, .toolbox__nails', null);
+    if (!container && safeMatches(element, '.ico-message')) {
+      container = closest(element, '.toolbox__container, .toolbox__popover, .toolbox__nails', null) || element;
+    }
     if (!container) { return false; }
     if (closest(element, '.ns-tool-box, #hsearch, .nav-search-box, .search-box', null)) { return false; }
-    return isDisplayed(container);
+    return true;
   }
 
   function isMemberBenefitTrustItem(element) {
