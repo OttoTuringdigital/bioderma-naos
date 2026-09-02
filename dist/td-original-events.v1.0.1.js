@@ -86,8 +86,8 @@
   function pushEvent(eventName, fields) {
     fields = fields || {};
     window.dataLayer = window.dataLayer || [];
-    console.table({
-    // window.dataLayer.push({
+    // console.table({
+    window.dataLayer.push({
       'event': 'cusevent',
       'event_name': eventName,
       'td_imp': Object.prototype.hasOwnProperty.call(fields, 'td_imp') ? fields.td_imp : U,
