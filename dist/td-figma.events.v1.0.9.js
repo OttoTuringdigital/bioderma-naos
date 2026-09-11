@@ -1,5 +1,5 @@
-/* TD Figma Events Bundle v1.0.8 | config + runtime */
-/* TD Figma Events Config v1.0.8
+/* TD Figma Events Bundle v1.0.9 | config + runtime */
+/* TD Figma Events Config v1.0.9
  * ------------------------------------------------------------
  * 維護方式：事件新增 / 修改 / 刪除，優先只改這個檔案的 rules。
  * engine 不需隨一般事件規格調整而修改。
@@ -13,7 +13,7 @@
   'use strict';
 
   window.TDFigmaEventsConfig = {
-    version: '1.0.8',
+    version: '1.0.9',
     tdVersion: 1,
     impressionThreshold: 0.5,
 
@@ -501,12 +501,12 @@
   };
 }(window));
 
-/* TD Figma Events Runtime v1.0.8 | ES5 syntax */
+/* TD Figma Events Runtime v1.0.9 | ES5 syntax */
 (function (window, document) {
   'use strict';
 
   var CONFIG = window.TDFigmaEventsConfig;
-  var VERSION = '1.0.8';
+  var VERSION = '1.0.9';
   var CATEGORY_BANNER_STATE_KEY = '__tdCategoryBannerReplaceState';
   var CATEGORY_BANNER_READY_EVENT = 'td:category-banner-ready';
   var CATEGORY_BANNER_READY_ATTR = 'data-td-category-banner-ready';
@@ -685,6 +685,7 @@
     var openValue;
     var parts;
     var menu;
+    var mobilePanel;
     if (!element) { return 1; }
     if (element.getAttribute && element.getAttribute('data-tdfn-d-trigger') !== null) { return 1; }
     if (element.getAttribute && element.getAttribute('data-tdfn-d-child-open') !== null) { return 2; }
@@ -693,19 +694,37 @@
     if (element.getAttribute && element.getAttribute('data-tdfn-m-open') !== null) {
       openValue = trim(element.getAttribute('data-tdfn-m-open'));
       parts = openValue ? openValue.split('::') : [];
-      return Math.min(3, Math.max(1, parts.length));
+      return Math.min(4, Math.max(1, parts.length));
     }
     if (closest(element, '.tdfn-v1-m-panel.is-main', null)) { return 1; }
+
+    /* Desktop Knowledge has an explicit fourth article column. */
+    if (closest(element, '.tdfn-v1-knowledge-fourth', null)) { return 4; }
+    if (closest(element, '.tdfn-v1-knowledge-third', null)) { return 3; }
+    if (closest(element, '.tdfn-v1-knowledge-second', null)) { return 2; }
+
+    /* Mobile nested panels encode the active path in data-tdfn-m-subpanel.
+     * The panel path is the parent level, so a link inside it is one level deeper.
+     * e.g. knowledge::skin::atopic -> article links are fourth level.
+     */
+    mobilePanel = closest(element, '[data-tdfn-m-subpanel]', null);
+    if (mobilePanel && mobilePanel.getAttribute) {
+      openValue = trim(mobilePanel.getAttribute('data-tdfn-m-subpanel'));
+      parts = openValue ? openValue.split('::') : [];
+      if (parts.length) { return Math.min(4, Math.max(2, parts.length + 1)); }
+    }
+
     menu = trim(element.getAttribute && element.getAttribute('data-menu'));
-    if (menu === 'needs-classroom' || menu === 'knowledge-article' || menu === 'classroom') { return 3; }
+    if (menu === 'knowledge-article') { return 4; }
+    if (menu === 'needs-classroom' || menu === 'classroom') { return 3; }
     if (menu) { return 2; }
     return 1;
   }
 
   function getNavPosition(element) {
     var level = getNavLevel(element);
-    var labels = ['第一層', '第二層', '第三層'];
-    return getNavDevice(element) + '_導行列_' + labels[Math.max(0, Math.min(2, level - 1))];
+    var labels = ['第一層', '第二層', '第三層', '第四層'];
+    return getNavDevice(element) + '_導行列_' + labels[Math.max(0, Math.min(3, level - 1))];
   }
 
   function getSearchKeyword(element) {
@@ -913,7 +932,7 @@
   }
 
   function ensureNativeToolboxClickable() {
-    var styleId = 'td-figma-events-native-toolbox-pointer-v108';
+    var styleId = 'td-figma-events-native-toolbox-pointer-v109';
     var style;
     var css;
     if (document.getElementById && document.getElementById(styleId)) { return; }
