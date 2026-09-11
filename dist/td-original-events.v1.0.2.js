@@ -1,3 +1,14 @@
+// ==UserScript==
+// @name         www.bioderma-naos.com.tw - 20260901 - 全站事件
+// @namespace    http://tampermonkey.net/
+// @version      2026-09-01
+// @description  try to take over the world!
+// @author       You
+// @match        https://www.bioderma-naos.com.tw/*
+// @icon         https://icons.duckduckgo.com/ip2/bioderma-naos.com.tw.ico
+// @grant        none
+// ==/UserScript==
+
 (function() {
   'use strict';
 
@@ -435,18 +446,21 @@
     {
       id: '1-3', pages: ['all'], eventName: 'td_nav_search',
       match: function(target) {
-        var btn = closest(target, '.ns-search-btn, a.searchkeyword, [data-qe-id="header-search-icon"]');
+        var btn = closest(target, '.ns-search-btn, a.searchkeyword, [data-qe-id="header-search-icon"], a.ns-search-link');
         if (!btn) return null;
-        return findVisibleSearchInput(btn) ? btn : null;
+        return findVisibleSearchInput(btn) ? btn : target;
       },
       fields: function(el) {
         var input = findVisibleSearchInput(el);
-        return { td_action: input ? (input.value || '').trim() : U, td_position: '導行列', td_version: 0 };
+        return { td_action: input ? (input.value || '').trim() : el.innerText.trim(), td_position: '導行列', td_version: 0 };
       }
     },
     {
       id: '1-4', pages: ['all'], eventName: 'td_nav',
       match: function(target) {
+        var btn = closest(target, '.ns-search-btn, a.searchkeyword, [data-qe-id="header-search-icon"], a.ns-search-link');
+        if (btn) return null;
+      
         var mobileSocial = closest(target, '.nav-slide-push-bottom .social-ul a');
         if (mobileSocial && socialLabelFromAnchor(mobileSocial)) return mobileSocial;
 
@@ -463,7 +477,7 @@
       fields: function(a) {
         var social = socialLabelFromAnchor(a);
         if (social) return { td_action: social, td_position: '導行列_第一層', td_version: 0 };
-        var first = getFirstLayerNavText(a);
+        var first = a.closest('div:has(.ico-close)') ? a.closest('div:has(.ico-close)').querySelector('.ico-close').parentNode.innerText.trim() : getFirstLayerNavText(a);
         return {
           td_action: compactText(a),
           td_position: (isMobile() ? '手機_導行列_' : '桌機_導行列_') + (first || ''),
@@ -553,7 +567,7 @@
       fields: function(a) {
         return {
           td_action: compactText(a),
-          td_position: isMobile() ? U : findFooterGroupTitle(a),
+          td_position: isMobile() ? U : a.closest('.footer-menu-content').parentNode.querySelector('div').innerText.trim(),
           td_version: 0
         };
       }
@@ -822,7 +836,7 @@
     var fields = { td_action: title ? ('影片標題：' + title) : U, td_version: 0 };
     if (kind === 'imp') fields.td_imp = 1;
     if (kind === 'click') fields.td_click = 1;
-    pushEvent('td_home_vedio', fields);
+    pushEvent('td_home_video', fields);
   }
 
   function youtubeClick(frame) {
@@ -843,7 +857,7 @@
 
       var impRule = {
         id: '4-youtube-' + i,
-        pages: ['home'], eventName: 'td_home_vedio',
+        pages: ['home'], eventName: 'td_home_video',
         fields: function(el) {
           return { td_imp: 1, td_action: youtubeTitle(el) ? ('影片標題：' + youtubeTitle(el)) : U, td_version: 0 };
         }
@@ -911,3 +925,5 @@
     init();
   }
 })();
+
+

@@ -1,5 +1,5 @@
-/* TD Figma Events Bundle v1.0.2 | config + runtime */
-/* TD Figma Events Config v1.0.2
+/* TD Figma Events Bundle v1.0.5 | config + runtime */
+/* TD Figma Events Config v1.0.5
  * ------------------------------------------------------------
  * 維護方式：事件新增 / 修改 / 刪除，優先只改這個檔案的 rules。
  * engine 不需隨一般事件規格調整而修改。
@@ -13,7 +13,7 @@
   'use strict';
 
   window.TDFigmaEventsConfig = {
-    version: '1.0.2',
+    version: '1.0.5',
     tdVersion: 1,
     impressionThreshold: 0.5,
 
@@ -68,8 +68,8 @@
         pages: ['all'],
         trigger: 'click',
         eventName: 'td_nav',
-        selector: 'a[href*="/site/campaign"]',
-        containsText: '最強美白組',
+        selector: 'a[data-qe-id="top_message"]',
+        predicate: 'announcementBar',
         params: {
           td_click: 1,
           td_action: { source: 'text' },
@@ -117,7 +117,7 @@
         pages: ['all'],
         trigger: 'click',
         eventName: 'td_nav',
-        selector: '[data-tdfn-link]',
+        selector: '[data-tdfn-link], [data-tdfn-d-trigger], [data-tdfn-d-child-open], [data-tdfn-d-knowledge-second], [data-tdfn-d-knowledge-third], [data-tdfn-m-open]',
         params: {
           td_click: 1,
           td_action: { source: 'navAction' },
@@ -272,7 +272,7 @@
         selector: '#tdhpt-v1-root [data-tdhpt-v1-product-link]',
         params: {
           td_click: 1,
-          td_action: { source: 'homeProductAlt' },
+          td_action: '官網限時活動',
           td_position: { source: 'activeHomeProductTab' },
           td_product: { source: 'homeProductName' }
         }
@@ -285,7 +285,8 @@
         selector: '#tdhur-v1-root [data-tdhur-v1-review]:not([data-tdhur-v1-clone="true"])',
         params: {
           td_click: 1,
-          td_action: { source: 'rootText', root: '#tdhur-v1-root', selector: '.tdhur-v1-title' }
+          td_action: { source: 'reviewMetaAction' },
+          td_position: '好評推薦'
         }
       },
       {
@@ -411,6 +412,7 @@
         selector: 'a:not([class]):not(.tdfs-v3-hotkeys a):not(.social-ul a)',
         predicate: 'categoryBanner',
         observeTarget: 'self',
+        waitFor: 'categoryBannerReplacement',
         params: {
           td_imp: 1,
           td_action: { source: 'imageAlt' },
@@ -498,12 +500,15 @@
   };
 }(window));
 
-/* TD Figma Events Runtime v1.0.2 | ES5 syntax */
+/* TD Figma Events Runtime v1.0.5 | ES5 syntax */
 (function (window, document) {
   'use strict';
 
   var CONFIG = window.TDFigmaEventsConfig;
-  var VERSION = '1.0.2';
+  var VERSION = '1.0.5';
+  var CATEGORY_BANNER_STATE_KEY = '__tdCategoryBannerReplaceState';
+  var CATEGORY_BANNER_READY_EVENT = 'td:category-banner-ready';
+  var CATEGORY_BANNER_READY_ATTR = 'data-td-category-banner-ready';
   var state = {
     pageTypes: [],
     activeRules: [],
@@ -669,24 +674,56 @@
     return label || undefined;
   }
 
-  function getNavPosition(element) {
-    var menu = trim(element && element.getAttribute('data-menu'));
+  function getNavDevice(element) {
+    if (closest(element, '#tdfn-v1-mobile-portal, [data-tdfn-v1="mobile"]', null)) { return '手機'; }
+    if (closest(element, '#tdfn-v1-desktop-portal, [data-tdfn-v1="desktop"]', null)) { return '桌機'; }
+    return (window.innerWidth && window.innerWidth < 992) ? '手機' : '桌機';
+  }
+
+  function getNavPositionName(element) {
+    var menu = trim(element && element.getAttribute && element.getAttribute('data-menu'));
+    var label = trim(element && element.getAttribute && element.getAttribute('data-label'));
+    var openValue;
+    var menuId;
     var labelMap = CONFIG.navFirstLevelLabels || {};
-    var firstLevel = labelMap[menu];
-    var allPages;
-    var menuItems;
-    var i;
-    if (!firstLevel && window.TDFigmaData && window.TDFigmaData.allPages) {
-      allPages = window.TDFigmaData.allPages;
-      menuItems = allPages.navigation && allPages.navigation.menuItems || [];
-      for (i = 0; i < menuItems.length; i += 1) {
-        if (menuItems[i] && menuItems[i].id === menu) {
-          firstLevel = menuItems[i].label;
-          break;
-        }
-      }
+    var mapped;
+
+    /* First-level desktop trigger: the trigger id is the actual menu id. */
+    if (element && element.getAttribute && element.getAttribute('data-tdfn-d-trigger') !== null) {
+      menuId = trim(element.getAttribute('data-tdfn-d-trigger'));
+      mapped = labelMap[menuId];
+      return mapped || textOf(element) || menuId || undefined;
     }
-    return firstLevel ? '導行列_' + firstLevel : '導行列';
+
+    /* Mobile open buttons carry the current path. Their visible text is the
+     * exact label of the level that the user clicked. */
+    if (element && element.getAttribute && element.getAttribute('data-tdfn-m-open') !== null) {
+      openValue = trim(element.getAttribute('data-tdfn-m-open'));
+      menuId = openValue ? openValue.split('::')[0] : '';
+      return textOf(element) || labelMap[menuId] || menuId || undefined;
+    }
+
+    /* Desktop nested expansion buttons do not carry data-label, but their
+     * visible text is the actual layer name. */
+    if (element && element.getAttribute && (
+      element.getAttribute('data-tdfn-d-child-open') !== null ||
+      element.getAttribute('data-tdfn-d-knowledge-second') !== null ||
+      element.getAttribute('data-tdfn-d-knowledge-third') !== null
+    )) {
+      return textOf(element) || undefined;
+    }
+
+    /* Normal navigation links already expose their real label.  Use it
+     * directly instead of the old fixed 第一層/第二層/第三層 strings. */
+    if (label) { return getNavAction(element) || label; }
+
+    mapped = labelMap[menu];
+    return mapped || getNavAction(element) || textOf(element) || menu || undefined;
+  }
+
+  function getNavPosition(element) {
+    var name = getNavPositionName(element);
+    return getNavDevice(element) + '_導行列' + (name ? '_' + name : '');
   }
 
   function getSearchKeyword(element) {
@@ -739,6 +776,21 @@
     desktop = safeQuery('.tdhpt-v1-tab-label-desktop', active);
     mobile = safeQuery('.tdhpt-v1-tab-label-mobile', active);
     return firstNonEmpty([textOf(desktop), textOf(mobile), textOf(active)]);
+  }
+
+  function getReviewMetaAction(element) {
+    var card = closest(element, '[data-tdhur-v1-review]', safeQuery('#tdhur-v1-root')) || element;
+    var date = card && safeQuery('.tdhur-v1-date', card);
+    var person = card && safeQuery('.tdhur-v1-person', card);
+    var skin = card && safeQuery('.tdhur-v1-skin', card);
+    var dateText = textOf(date);
+    var personText = textOf(person);
+    var skinText = textOf(skin);
+    var meta = [];
+    if (dateText) { meta.push(dateText); }
+    if (personText) { meta.push(personText); }
+    if (skinText) { meta.push(skinText); }
+    return meta.length ? meta.join('_') : undefined;
   }
 
   function getCategoryOptionLabel(element) {
@@ -853,6 +905,7 @@
     if (source === 'homeProductAlt') { return getHomeProductAlt(element); }
     if (source === 'activeHomeProductTab') { return getActiveHomeProductTab(); }
     if (source === 'homeProductName') { return getHomeProductName(element); }
+    if (source === 'reviewMetaAction') { return getReviewMetaAction(element); }
     if (source === 'categoryOptionLabel') { return getCategoryOptionLabel(element); }
     if (source === 'categoryGroupTitle') { return getCategoryGroupTitle(element); }
     if (source === 'footerSectionTitle') { return getFooterSectionTitle(element); }
@@ -878,7 +931,7 @@
   }
 
   function ensureNativeToolboxClickable() {
-    var styleId = 'td-figma-events-native-toolbox-pointer-v102';
+    var styleId = 'td-figma-events-native-toolbox-pointer-v105';
     var style;
     var css;
     if (document.getElementById && document.getElementById(styleId)) { return; }
@@ -939,6 +992,40 @@
     return true;
   }
 
+  function getCategoryBannerReplacementState() {
+    return trim(window[CATEGORY_BANNER_STATE_KEY]).toLowerCase();
+  }
+
+  function ensureCategoryBannerReplacementPending() {
+    var current;
+    if (!pageMatchesRule('category')) { return; }
+    current = getCategoryBannerReplacementState();
+    if (!current) { window[CATEGORY_BANNER_STATE_KEY] = 'pending'; }
+  }
+
+  function isCategoryBannerReplacementReady(element) {
+    var current = getCategoryBannerReplacementState();
+    var image;
+    if (current === 'ready' || current === 'ready-original') { return true; }
+    if (current !== 'ready-replacement') { return false; }
+    if (element && element.getAttribute && trim(element.getAttribute(CATEGORY_BANNER_READY_ATTR)) === '1') { return true; }
+    image = findImageForCategoryBanner(element);
+    return !!(image && image.getAttribute && trim(image.getAttribute(CATEGORY_BANNER_READY_ATTR)) === '1');
+  }
+
+  function impressionReady(rule, element) {
+    if (!rule || rule.waitFor !== 'categoryBannerReplacement') { return true; }
+    return isCategoryBannerReplacementReady(element);
+  }
+
+  function setupImpressionReadySignals() {
+    if (!pageMatchesRule('category')) { return; }
+    ensureCategoryBannerReplacementPending();
+    window.addEventListener(CATEGORY_BANNER_READY_EVENT, function () {
+      scanImpressions(document.documentElement);
+    }, false);
+  }
+
   function isFloatingSidebar(element) {
     var container = closest(element, '.toolbox__container, .toolbox__popover, .toolbox__nails', null);
     if (!container && safeMatches(element, '.ico-message')) {
@@ -947,6 +1034,13 @@
     if (!container) { return false; }
     if (closest(element, '.ns-tool-box, #hsearch, .nav-search-box, .search-box', null)) { return false; }
     return true;
+  }
+
+  function isAnnouncementBar(element) {
+    var qeId;
+    if (!element) { return false; }
+    qeId = trim(element.getAttribute && element.getAttribute('data-qe-id'));
+    return qeId === 'top_message' && !!textOf(element);
   }
 
   function isMemberBenefitTrustItem(element) {
@@ -998,6 +1092,7 @@
 
   function predicatePasses(name, element) {
     if (!name) { return true; }
+    if (name === 'announcementBar') { return isAnnouncementBar(element); }
     if (name === 'floatingSidebar') { return isFloatingSidebar(element); }
     if (name === 'memberBenefitTrustItem') { return isMemberBenefitTrustItem(element); }
     if (name === 'searchSubmit') { return isSearchSubmit(element); }
@@ -1082,7 +1177,7 @@
     if (!itemState) { return; }
     inside = visibleRatio(element) >= threshold;
     if (inside && !itemState.inside) {
-      if (predicatePasses(rule.predicate, element)) {
+      if (impressionReady(rule, element) && predicatePasses(rule.predicate, element)) {
         pushEvent(rule.eventName, resolveParams(rule, element, {}));
         itemState.inside = true;
       }
@@ -1152,7 +1247,7 @@
         itemState = impressionStateFor(element, ref.id);
         if (!itemState) { continue; }
         if (inside && !itemState.inside) {
-          if (predicatePasses(ref.rule.predicate, element)) {
+          if (impressionReady(ref.rule, element) && predicatePasses(ref.rule.predicate, element)) {
             pushEvent(ref.rule.eventName, resolveParams(ref.rule, element, {}));
             itemState.inside = true;
           }
@@ -1194,7 +1289,7 @@
           childList: true,
           subtree: true,
           attributes: true,
-          attributeFilter: ['src', 'srcset', 'alt', 'href', 'class', 'style']
+          attributeFilter: ['src', 'srcset', 'alt', 'href', 'class', 'style', 'data-td-category-banner-ready']
         });
       } else {
         state.mutationObserver.observe(root, { childList: true, subtree: true });
@@ -1287,6 +1382,7 @@
     firePageRules();
     setupScroll();
     if (state.clickRules.length) { document.addEventListener('click', handleClick, true); }
+    setupImpressionReadySignals();
     setupImpressions();
     window.TDFigmaEvents = {
       version: VERSION,
