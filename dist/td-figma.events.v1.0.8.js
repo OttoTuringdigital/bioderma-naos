@@ -1,5 +1,5 @@
-/* TD Figma Events Bundle v1.0.6 | config + runtime */
-/* TD Figma Events Config v1.0.6
+/* TD Figma Events Bundle v1.0.8 | config + runtime */
+/* TD Figma Events Config v1.0.8
  * ------------------------------------------------------------
  * 維護方式：事件新增 / 修改 / 刪除，優先只改這個檔案的 rules。
  * engine 不需隨一般事件規格調整而修改。
@@ -13,7 +13,7 @@
   'use strict';
 
   window.TDFigmaEventsConfig = {
-    version: '1.0.6',
+    version: '1.0.8',
     tdVersion: 1,
     impressionThreshold: 0.5,
 
@@ -27,6 +27,7 @@
       featured: '本月主打',
       needs: '依肌膚需求',
       'needs-classroom': '依肌膚需求',
+      types: '產品類型',
       series: '系列找產品',
       member: '會員福利',
       knowledge: '保養知識庫',
@@ -500,12 +501,12 @@
   };
 }(window));
 
-/* TD Figma Events Runtime v1.0.6 | ES5 syntax */
+/* TD Figma Events Runtime v1.0.8 | ES5 syntax */
 (function (window, document) {
   'use strict';
 
   var CONFIG = window.TDFigmaEventsConfig;
-  var VERSION = '1.0.6';
+  var VERSION = '1.0.8';
   var CATEGORY_BANNER_STATE_KEY = '__tdCategoryBannerReplaceState';
   var CATEGORY_BANNER_READY_EVENT = 'td:category-banner-ready';
   var CATEGORY_BANNER_READY_ATTR = 'data-td-category-banner-ready';
@@ -680,45 +681,31 @@
     return (window.innerWidth && window.innerWidth < 992) ? '手機' : '桌機';
   }
 
-  function getNavPositionName(element) {
-    var menu = trim(element && element.getAttribute && element.getAttribute('data-menu'));
+  function getNavLevel(element) {
     var openValue;
-    var menuId = '';
-    var labelMap = CONFIG.navFirstLevelLabels || {};
-    var mapped;
-
-    /* td_position represents the owning navigation section, not the clicked
-     * item's own label. Example: clicking 敏弱緊繃 inside 依肌膚需求 must
-     * produce 桌機_導行列_依肌膚需求 while td_action remains 敏弱緊繃. */
-    if (element && element.getAttribute) {
-      if (element.getAttribute('data-tdfn-d-trigger') !== null) {
-        menuId = trim(element.getAttribute('data-tdfn-d-trigger'));
-      } else if (element.getAttribute('data-tdfn-m-open') !== null) {
-        openValue = trim(element.getAttribute('data-tdfn-m-open'));
-        menuId = openValue ? openValue.split('::')[0] : '';
-      } else if (element.getAttribute('data-tdfn-d-child-open') !== null) {
-        menuId = 'needs';
-      } else if (
-        element.getAttribute('data-tdfn-d-knowledge-second') !== null ||
-        element.getAttribute('data-tdfn-d-knowledge-third') !== null
-      ) {
-        menuId = 'knowledge';
-      } else if (menu) {
-        menuId = menu;
-      }
+    var parts;
+    var menu;
+    if (!element) { return 1; }
+    if (element.getAttribute && element.getAttribute('data-tdfn-d-trigger') !== null) { return 1; }
+    if (element.getAttribute && element.getAttribute('data-tdfn-d-child-open') !== null) { return 2; }
+    if (element.getAttribute && element.getAttribute('data-tdfn-d-knowledge-second') !== null) { return 2; }
+    if (element.getAttribute && element.getAttribute('data-tdfn-d-knowledge-third') !== null) { return 3; }
+    if (element.getAttribute && element.getAttribute('data-tdfn-m-open') !== null) {
+      openValue = trim(element.getAttribute('data-tdfn-m-open'));
+      parts = openValue ? openValue.split('::') : [];
+      return Math.min(3, Math.max(1, parts.length));
     }
-
-    mapped = labelMap[menuId];
-    if (mapped) { return mapped; }
-
-    /* Safe fallback for future navigation items that do not yet have a
-     * navFirstLevelLabels mapping. */
-    return menuId || getNavAction(element) || textOf(element) || undefined;
+    if (closest(element, '.tdfn-v1-m-panel.is-main', null)) { return 1; }
+    menu = trim(element.getAttribute && element.getAttribute('data-menu'));
+    if (menu === 'needs-classroom' || menu === 'knowledge-article' || menu === 'classroom') { return 3; }
+    if (menu) { return 2; }
+    return 1;
   }
 
   function getNavPosition(element) {
-    var name = getNavPositionName(element);
-    return getNavDevice(element) + '_導行列' + (name ? '_' + name : '');
+    var level = getNavLevel(element);
+    var labels = ['第一層', '第二層', '第三層'];
+    return getNavDevice(element) + '_導行列_' + labels[Math.max(0, Math.min(2, level - 1))];
   }
 
   function getSearchKeyword(element) {
@@ -926,7 +913,7 @@
   }
 
   function ensureNativeToolboxClickable() {
-    var styleId = 'td-figma-events-native-toolbox-pointer-v106';
+    var styleId = 'td-figma-events-native-toolbox-pointer-v108';
     var style;
     var css;
     if (document.getElementById && document.getElementById(styleId)) { return; }

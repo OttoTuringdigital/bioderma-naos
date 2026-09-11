@@ -477,7 +477,7 @@
       fields: function(a) {
         var social = socialLabelFromAnchor(a);
         if (social) return { td_action: social, td_position: '導行列_第一層', td_version: 0 };
-        var first = a.closest('div:has(.ico-close)') ? a.closest('div:has(.ico-close)').querySelector('.ico-close').parentNode.innerText.trim() : getFirstLayerNavText(a);
+        var first = isMobile() ? (getComputedStyle(a.closest('li')).backgroundColor.match(/rgb\(240, 240, 240\)/) ? '第二層' : '第一層') : ( a.querySelector('.ico-chevron-down') ? '第一層' : a.closest('div:has(.ico-close)') ? '第三層' : '第二層');
         return {
           td_action: compactText(a),
           td_position: (isMobile() ? '手機_導行列_' : '桌機_導行列_') + (first || ''),
