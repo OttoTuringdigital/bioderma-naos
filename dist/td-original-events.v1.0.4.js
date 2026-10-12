@@ -795,7 +795,7 @@
   }
 
   function initPageLoadAndScroll() {
-    pushEvent('td_version_imp', { td_version: 0 });
+    // pushEvent('td_version_imp', { td_version: 0 });
     var sent = { 0: true, 25: false, 50: false, 75: false, 100: false };
     pushEvent('td_scroll', { td_action: '0%', td_version: 0 });
     function checkScroll() {
