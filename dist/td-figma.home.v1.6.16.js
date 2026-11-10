@@ -1,4 +1,4 @@
-/* TD_Figma_Home_Style_GTM_v1.1.1.html */
+/* TD_Figma_Home_Style_GTM_v1.1.2.html */
 (function () {
   'use strict';
 
@@ -221,12 +221,12 @@
   );
 }());
 
-/* TD_Figma_Home_Slider_GTM_v2.1.0.html */
+/* TD_Figma_Home_Slider_GTM_v2.1.1.html */
 (function () {
   'use strict';
 
   var job = {
-    key: 'td-figma-home-slider-v210',
+    key: 'td-figma-home-slider-v211',
     ready: function () {
       return !!(window.TDFigmaData && window.TDFigmaData.homePage && window.TDFigmaData.homePage.heroSlider);
     },
@@ -251,7 +251,7 @@ var createElement = Core.dom.createElement;
 var query = Core.dom.query;
 var closest = Core.dom.closest;
 var getSafeHref = Core.url.sanitize;
-var VERSION = '2.1.0';
+var VERSION = '2.1.1';
 var CONFIG = {
 slotId: 'slider',
 rootId: 'tdhs-v1-root',
@@ -264,7 +264,7 @@ desktopHeight: 562,
 mobileWidth: 375,
 mobileHeight: 450,
 desktopStartIndex: 0,
-mobileStartIndex: 2,
+mobileStartIndex: 0,
 dragThresholdRatio: 0.14,
 mountDelay: 60
 };

@@ -1,5 +1,5 @@
-/* TD_Figma_All_Pages_Core_Style_GTM_v1.8.8.html */
-(function(){window.TDFigmaStyleReady=window.TDFigmaStyleReady||{};window.TDFigmaStyleReady.allPages="1.8.7";}());
+/* TD_Figma_All_Pages_Core_Style_GTM_v1.8.10.html */
+(function(){window.TDFigmaStyleReady=window.TDFigmaStyleReady||{};window.TDFigmaStyleReady.allPages="1.8.10";}());
 
 /* TD_Figma_All_Pages_ProductCard_Style_GTM_v1.0.7.html */
 (function () {
@@ -7,18 +7,18 @@
   window.TDFigmaStyleReady.allPagesProductCard = '1.0.7';
 }());
 
-/* TD_Figma_All_Pages_Core_Utility_GTM_v1.3.0.html */
+/* TD_Figma_All_Pages_Core_Utility_GTM_v1.3.1.html */
 (function () {
   'use strict';
 
-  if (window.TDFigmaCore && window.TDFigmaCore.version === '1.3.0') {
+  if (window.TDFigmaCore && window.TDFigmaCore.version === '1.3.1') {
     if (window.TDFigmaCore.jobs) {
       window.TDFigmaCore.jobs.flush();
     }
     return;
   }
 
-  var VERSION = '1.3.0';
+  var VERSION = '1.3.1';
   var startedJobs = {};
 
   function createElement(tagName, className) {
@@ -86,7 +86,11 @@
   }
 
   function pushEvent(eventName, values, versionField, version) {
-    var payload = values || {};
+    var payload;
+    if (!/_ready$/.test(String(eventName || ''))) {
+      return;
+    }
+    payload = values || {};
     window.dataLayer = window.dataLayer || [];
     payload.event = eventName;
     if (versionField) {
@@ -527,12 +531,12 @@
   flushJobs();
 }());
 
-/* TD_Figma_All_Pages_Navigation_GTM_v5.5.0.html */
+/* TD_Figma_All_Pages_Navigation_GTM_v5.6.0.html */
 (function () {
   'use strict';
 
   var job = {
-    key: 'td-figma-navigation-v550',
+    key: 'td-figma-navigation-v560',
     ready: function () {
       return !!(window.TDFigmaData && window.TDFigmaData.allPages && window.TDFigmaData.allPages.navigation && window.TDFigmaDesktopHeaderPortal);
     },
@@ -586,6 +590,117 @@ href: cards[i].href
 }
 return output;
 }
+function safeFeaturedNumber(value, fallback, minimum, maximum) {
+var parsed = Number(value);
+if (!isFinite(parsed)) {
+return fallback;
+}
+if (parsed < minimum) {
+return minimum;
+}
+if (parsed > maximum) {
+return maximum;
+}
+return parsed;
+}
+function mapFeaturedLinks(items) {
+var output = [];
+var i;
+var item;
+for (i = 0; i < (items || []).length; i += 1) {
+item = items[i] || {};
+if (!(item.title || item.label)) {
+continue;
+}
+output.push({
+label: item.title || item.label || '',
+href: item.linkUrl || item.href || ''
+});
+}
+return output;
+}
+function mapFeaturedSections(content) {
+var output = [];
+var sections;
+var section;
+var sectionType;
+var items;
+var primaryCards;
+var secondaryCards;
+var oldAdditional;
+var i;
+
+if (Array.isArray(content)) {
+sections = content;
+for (i = 0; i < sections.length; i += 1) {
+section = sections[i] || {};
+sectionType = section.sectionType === 'links' ? 'links' : 'cards';
+items = Array.isArray(section.items) ? section.items : [];
+output.push({
+id: section.id || ('featured-section-' + (i + 1)),
+heading: section.heading || section.label || '',
+type: sectionType,
+weight: safeFeaturedNumber(section.desktopWeight, 1, 0.25, 12),
+columns: Math.round(safeFeaturedNumber(section.desktopColumns, sectionType === 'cards' ? 1 : 1, 1, 6)),
+visible: section.visible !== false,
+items: sectionType === 'links' ? mapFeaturedLinks(items) : mapCards(items)
+});
+}
+return output;
+}
+
+content = content || {};
+primaryCards = Array.isArray(content.primaryCards) ?
+content.primaryCards : (content.primaryCard ? [content.primaryCard] : []);
+secondaryCards = Array.isArray(content.secondaryCards) ?
+content.secondaryCards.slice(0) : [];
+oldAdditional = Array.isArray(content.additionalLinks) ? content.additionalLinks : [];
+for (i = 0; i < oldAdditional.length; i += 1) {
+secondaryCards.push({
+title: oldAdditional[i].label || '',
+linkUrl: oldAdditional[i].linkUrl || ''
+});
+}
+
+return [
+{
+id: 'sitewide-campaigns',
+heading: '全館活動',
+type: 'cards',
+weight: 1,
+columns: 1,
+visible: true,
+items: mapCards(primaryCards.slice(0, 1))
+},
+{
+id: 'hot-campaigns',
+heading: '熱銷活動',
+type: 'cards',
+weight: 4,
+columns: 4,
+visible: true,
+items: mapCards(secondaryCards.slice(0, 4))
+},
+{
+id: 'recommended',
+heading: '推薦主打',
+type: 'links',
+weight: 1.6,
+columns: 1,
+visible: true,
+items: mapFeaturedLinks(primaryCards.slice(1))
+},
+{
+id: 'official-picks',
+heading: '官網嚴選',
+type: 'links',
+weight: 1,
+columns: 1,
+visible: true,
+items: mapFeaturedLinks(secondaryCards.slice(4))
+}
+];
+}
 var MENU_ITEMS = SOURCE_DATA.menuItems || [];
 function findMenuItem(menuId) {
 var i;
@@ -608,10 +723,7 @@ var MEMBER_CONTENT = getMenuContent('member');
 var KNOWLEDGE_CONTENT = getMenuContent('knowledge');
 var CLASSROOM_CONTENT = getMenuContent('classroom');
 var ABOUT_CONTENT = getMenuContent('about');
-var FEATURED_PRIMARY_CARDS =
-FEATURED_CONTENT.primaryCards || [];
-var FEATURED_SECONDARY_CARDS =
-FEATURED_CONTENT.secondaryCards || [];
+var FEATURED_SECTIONS = mapFeaturedSections(FEATURED_CONTENT);
 var CONFIG = {
 desktopMaxWidth:
 (SOURCE_DATA.desktopLayout && SOURCE_DATA.desktopLayout.maximumWidth) ||
@@ -661,25 +773,7 @@ kind: item.panelType || '',
 width: item.panelWidthPixels
 };
 }),
-featured: {
-primaryCard: mapCards(
-FEATURED_PRIMARY_CARDS.slice(0, 1)
-)[0] || {
-image: '',
-title: '',
-sub: '',
-href: ''
-},
-primaryLinks: mapCardLinks(
-FEATURED_PRIMARY_CARDS.slice(1)
-),
-secondaryCards: mapCards(
-FEATURED_SECONDARY_CARDS.slice(0, 4)
-),
-secondaryLinks: mapCardLinks(
-FEATURED_SECONDARY_CARDS.slice(4)
-)
-},
+featured: FEATURED_SECTIONS,
 needs: NEEDS_LINKS,
 types: mapSimpleLinks(
 TYPES_CONTENT.links || []
@@ -722,7 +816,7 @@ href: item.linkUrl || ''
 };
 var closest = Core.dom.closest;
 var escapeHtml = Core.text.escapeHtml;
-var VERSION = '5.5.0';
+var VERSION = '5.6.0';
 var LOAD_ATTR = 'data-tdfn-v1-loaded';
 if (document.documentElement.getAttribute(LOAD_ATTR) === VERSION) {
 return;
@@ -1104,62 +1198,62 @@ escapeHtml(item.sub) +
 );
 }
 function renderFeaturedDesktop() {
-var primaryCard = DATA.featured.primaryCard;
-var primaryLinks = DATA.featured.primaryLinks || [];
-var secondaryCards = DATA.featured.secondaryCards || [];
-var secondaryLinks = DATA.featured.secondaryLinks || [];
-var primaryBodyClass = 'tdfn-v1-featured-primary-body';
-var secondaryBodyClass = 'tdfn-v1-featured-secondary-body';
+var sections = DATA.featured || [];
 var html = [
 '<div class="tdfn-v1-panel tdfn-v1-mega">',
-'<div class="tdfn-v1-mega-inner tdfn-v1-featured-grid' +
-(secondaryLinks.length ? ' has-secondary-links' : '') +
-'">'
+'<div class="tdfn-v1-mega-inner tdfn-v1-featured-grid">'
 ];
 var i;
-if (primaryLinks.length) {
-primaryBodyClass += ' has-text-links';
+var j;
+var section;
+var sectionClass;
+var style;
+var items;
+for (i = 0; i < sections.length; i += 1) {
+section = sections[i] || {};
+items = section.items || [];
+if (section.visible === false || !items.length) {
+continue;
 }
-if (secondaryLinks.length) {
-secondaryBodyClass += ' has-text-links';
-}
+sectionClass = 'tdfn-v1-featured-section is-' +
+(section.type === 'links' ? 'links' : 'cards');
+style = '--tdfn-v1-featured-weight:' +
+String(section.weight || 1) + ';--tdfn-v1-featured-columns:' +
+String(section.columns || 1) + ';';
 html.push(
-'<section class="tdfn-v1-featured-primary">',
-'<h3 class="tdfn-v1-section-title">全館活動</h3>',
-'<div class="' + primaryBodyClass + '">',
-renderFeaturedCard(
-primaryCard,
-'tdfn-v1-featured-primary-card'
-),
-renderFeaturedTextLinks(
-primaryLinks,
-false,
-'primary'
-),
-'</div></section>',
-'<section class="tdfn-v1-featured-secondary">',
-'<h3 class="tdfn-v1-section-title">超值組合</h3>',
-'<div class="' + secondaryBodyClass + '">',
-'<div class="tdfn-v1-featured-combos">'
+'<section class="' + sectionClass + '" style="' + style + '" data-tdfn-featured-section="' +
+escapeHtml(section.id || '') + '">'
 );
-for (i = 0; i < secondaryCards.length; i += 1) {
+if (section.heading) {
+html.push(
+'<h3 class="tdfn-v1-section-title">' +
+escapeHtml(section.heading) +
+'</h3>'
+);
+}
+if (section.type === 'links') {
+html.push(
+renderFeaturedTextLinks(
+items,
+false,
+section.id || ('section-' + i)
+)
+);
+} else {
+html.push('<div class="tdfn-v1-featured-card-grid">');
+for (j = 0; j < items.length; j += 1) {
 html.push(
 renderFeaturedCard(
-secondaryCards[i],
-'tdfn-v1-featured-secondary-card'
+items[j],
+'tdfn-v1-featured-section-card'
 )
 );
 }
-html.push(
-'</div>',
-renderFeaturedTextLinks(
-secondaryLinks,
-false,
-'secondary'
-),
-'</div></section>',
-'</div></div>'
-);
+html.push('</div>');
+}
+html.push('</section>');
+}
+html.push('</div></div>');
 return html.join('');
 }
 function renderSeriesList(mobile) {
@@ -1495,62 +1589,53 @@ html.push('<span class="tdfn-v1-m-sub-link is-disabled">' + escapeHtml(label) + 
 html.push('</div></div>');
 return html.join('');
 }
-function renderMobileFeatured() {
-var primaryCard = DATA.featured.primaryCard;
-var primaryLinks = DATA.featured.primaryLinks || [];
-var secondaryCards = DATA.featured.secondaryCards || [];
-var secondaryLinks = DATA.featured.secondaryLinks || [];
-var html = [
-'<div class="tdfn-v1-m-content">',
-renderMobileHeading('全館活動')
-];
-var i;
-var item;
-if (primaryCard && primaryCard.title) {
-html.push(
+function renderMobileFeaturedSingleCard(item) {
+if (!item || !item.title) {
+return '';
+}
+return (
 '<a class="tdfn-v1-m-feature-card" href="' +
-escapeHtml(getItemHref(primaryCard)) +
+escapeHtml(getItemHref(item)) +
 '" data-tdfn-link data-menu="featured" data-label="' +
-escapeHtml(primaryCard.title) + '">',
+escapeHtml(item.title) + '">' +
 (
-primaryCard.image ?
+item.image ?
 '<img class="tdfn-v1-m-feature-image" src="' +
-escapeHtml(primaryCard.image) +
-'" alt="' + escapeHtml(primaryCard.title) + '">' :
+escapeHtml(item.image) +
+'" alt="' + escapeHtml(item.title) + '">' :
 ''
-),
+) +
 '<h3 class="tdfn-v1-m-feature-title">' +
-escapeHtml(primaryCard.title) +
-'</h3>',
+escapeHtml(item.title) +
+'</h3>' +
 (
-primaryCard.sub ?
+item.sub ?
 '<p class="tdfn-v1-m-feature-sub">' +
-escapeHtml(primaryCard.sub) +
+escapeHtml(item.sub) +
 '</p>' :
 ''
-),
+) +
 '</a>'
 );
 }
+function renderMobileFeaturedCarousel(section) {
+var items = section.items || [];
+var html = [];
+var i;
+var item;
+if (!items.length) {
+return '';
+}
 html.push(
-renderFeaturedTextLinks(
-primaryLinks,
-true,
-'primary'
-),
-'<section class="tdfn-v1-m-block">',
-'<h3 class="tdfn-v1-m-section-title">超值組合</h3>'
-);
-if (secondaryCards.length) {
-html.push(
-'<div class="tdfn-v1-m-carousel" data-tdfn-carousel="featured">',
+'<div class="tdfn-v1-m-carousel" data-tdfn-carousel="featured-' +
+escapeHtml(section.id || '') + '">',
 '<button class="tdfn-v1-m-carousel-button is-prev" type="button" data-tdfn-carousel-prev aria-label="上一個">' +
 smallArrow('prev') +
 '</button>',
 '<div class="tdfn-v1-m-carousel-track" data-tdfn-carousel-track>'
 );
-for (i = 0; i < secondaryCards.length; i += 1) {
-item = secondaryCards[i];
+for (i = 0; i < items.length; i += 1) {
+item = items[i];
 html.push(
 '<a class="tdfn-v1-m-carousel-card" href="' +
 escapeHtml(getItemHref(item)) +
@@ -1583,15 +1668,50 @@ smallArrow('next') +
 '</button>',
 '</div>'
 );
+return html.join('');
+}
+function renderMobileFeatured() {
+var sections = DATA.featured || [];
+var html = [
+'<div class="tdfn-v1-m-content">',
+renderMobileHeading('本月主打')
+];
+var i;
+var section;
+var items;
+for (i = 0; i < sections.length; i += 1) {
+section = sections[i] || {};
+items = section.items || [];
+if (section.visible === false || !items.length) {
+continue;
 }
 html.push(
-renderFeaturedTextLinks(
-secondaryLinks,
-true,
-'secondary'
-),
-'</section></div>'
+'<section class="tdfn-v1-m-block tdfn-v1-m-featured-section" data-tdfn-featured-section="' +
+escapeHtml(section.id || '') + '">'
 );
+if (section.heading) {
+html.push(
+'<h3 class="tdfn-v1-m-section-title">' +
+escapeHtml(section.heading) +
+'</h3>'
+);
+}
+if (section.type === 'links') {
+html.push(
+renderFeaturedTextLinks(
+items,
+true,
+section.id || ('section-' + i)
+)
+);
+} else if (items.length === 1) {
+html.push(renderMobileFeaturedSingleCard(items[0]));
+} else {
+html.push(renderMobileFeaturedCarousel(section));
+}
+html.push('</section>');
+}
+html.push('</div>');
 return html.join('');
 }
 function renderMobileSeries() {
@@ -2802,12 +2922,12 @@ init();
   }
 }());
 
-/* TD_Figma_All_Pages_Search_GTM_v3.2.0.html */
+/* TD_Figma_All_Pages_Search_GTM_v3.2.1.html */
 (function () {
   'use strict';
 
   var job = {
-    key: 'td-figma-search-v320',
+    key: 'td-figma-search-v321',
     ready: function () {
       return !!(
         window.TDFigmaData &&
@@ -2825,7 +2945,8 @@ init();
         var SOURCE_DATA = window.TDFigmaData.allPages.search;
         var closest = Core.dom.closest;
         var escapeHtml = Core.text.escapeHtml;
-        var VERSION = '3.2.0';
+        var sanitizeUrl = Core.url.sanitize;
+        var VERSION = '3.2.1';
         var SLOT_NAME = 'search';
         var SEARCH_PATH = '/v2/Search';
         var SEARCH_ROW_HEIGHT = 32;
@@ -2841,7 +2962,9 @@ init();
               return {
                 label: item.text || '',
                 keyword: String(item.text || '')
-                  .replace(/^#/, '')
+                  .replace(/^#/, ''),
+                linkUrl: String(item.linkUrl || '')
+                  .replace(/^\s+|\s+$/g, '')
               };
             }
           );
@@ -3030,6 +3153,14 @@ init();
             encodeURIComponent(String(keyword || '').replace(/^\s+|\s+$/g, ''));
         }
 
+        function hotKeywordUrl(item) {
+          var directUrl = sanitizeUrl((item || {}).linkUrl || '');
+          if (directUrl) {
+            return directUrl;
+          }
+          return searchUrl((item || {}).keyword || '');
+        }
+
         function renderHotkeys() {
           var html = [];
           var item;
@@ -3038,7 +3169,7 @@ init();
             item = HOT_KEYWORDS[i];
             html.push(
               '<a href="' +
-              escapeHtml(searchUrl(item.keyword)) +
+              escapeHtml(hotKeywordUrl(item)) +
               '" data-tdfs-v3-hotkey="' +
               escapeHtml(item.keyword) +
               '">' +
